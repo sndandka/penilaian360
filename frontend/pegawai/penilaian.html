@@ -1,0 +1,2279 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Melakukan Penilaian - Sistem Penilaian 360</title>
+    <script>
+        (function () {
+            var t = localStorage.getItem('app_theme');
+            if (t === 'dark' || (!t && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+            var isNav = sessionStorage.getItem('sidebar_nav_open') === '1' || sessionStorage.getItem('sidebar_hovered') === '1';
+            if (isNav && localStorage.getItem('sidebar_pinned') !== '1' && window.innerWidth > 768) {
+                document.documentElement.classList.add('sidebar-nav-open', 'sidebar-hover-persisted');
+                function onMove(e) {
+                    if (e.clientX > 248) {
+                        document.documentElement.classList.remove('sidebar-nav-open', 'sidebar-hover-persisted');
+                        sessionStorage.removeItem('sidebar_nav_open');
+                        sessionStorage.removeItem('sidebar_hovered');
+                        window.removeEventListener('mousemove', onMove);
+                    }
+                }
+                window.addEventListener('mousemove', onMove, { passive: true });
+            }
+        })();
+    </script>
+    <link rel="stylesheet" href="../assets/css/style.css?v=20261125_mobile_v3">
+    <style>
+        .sidebar-footer,
+        .sidebar-toggle-bottom,
+        button.sidebar-toggle-bottom,
+        aside#sidebar .sidebar-footer,
+        aside#sidebar .sidebar-toggle-bottom {
+            display: none !important;
+        }
+
+        /* Mode Switcher Tabs */
+        .mode-switcher-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .mode-toggle-group {
+            display: inline-flex;
+            background: var(--bg);
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            gap: 4px;
+        }
+
+        .btn-mode-tab {
+            padding: 7px 16px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-mode-tab:hover {
+            color: var(--text);
+            background: rgba(0, 0, 0, 0.04);
+        }
+
+        .btn-mode-tab.active {
+            background: var(--primary);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(72, 128, 255, 0.35);
+        }
+
+        /* Compact Header Card */
+        .quick-eval-header-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin-bottom: 14px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+        }
+
+        .quick-eval-topline {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+
+        .evaluator-profile-compact {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .evaluator-avatar-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(72, 128, 255, 0.12);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .scale-guide-chips {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            background: var(--bg);
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .scale-guide-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            color: var(--text);
+        }
+
+        .scale-guide-chip .chip-val {
+            width: 19px;
+            height: 19px;
+            border-radius: 4px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            font-weight: 700;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+        }
+
+        /* Relasi Navigation Tabs */
+        .relasi-tabs-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .relasi-tabs-list {
+            display: inline-flex;
+            background: var(--bg);
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .relasi-tab-item {
+            padding: 7px 16px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .relasi-tab-item:hover {
+            color: var(--text);
+            background: rgba(0, 0, 0, 0.04);
+        }
+
+        .relasi-tab-item.active {
+            background: var(--primary);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(72, 128, 255, 0.35);
+        }
+
+        .relasi-tab-item .tab-count-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 1px 7px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.08);
+            color: inherit;
+        }
+
+        .relasi-tab-item.active .tab-count-badge {
+            background: rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+        }
+
+        /* Matrix Card & Table Container */
+        .matrix-container {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+            margin-bottom: 24px;
+        }
+
+        .matrix-table-wrap {
+            overflow-x: auto;
+            position: relative;
+            max-height: 72vh;
+            overflow-y: auto;
+        }
+
+        .matrix-table {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 100%;
+            font-size: 12.5px;
+            min-width: 850px;
+        }
+
+        .matrix-table th,
+        .matrix-table td {
+            border-right: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .matrix-table thead tr:first-child th {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: #f1f5f9;
+        }
+
+        [data-theme="dark"] .matrix-table thead tr:first-child th {
+            background: #1e293b;
+        }
+
+        .matrix-table thead tr:nth-child(2) th {
+            position: sticky;
+            z-index: 20;
+            background: #f8fafc;
+        }
+
+        [data-theme="dark"] .matrix-table thead tr:nth-child(2) th {
+            background: #141d33;
+        }
+
+        .matrix-table .sticky-col {
+            position: sticky;
+            left: 0;
+            z-index: 10;
+            background: var(--card-bg);
+            width: 360px;
+            min-width: 320px;
+            max-width: 420px;
+            box-shadow: 3px 0 8px rgba(0, 0, 0, 0.08);
+            border-right: 2px solid #cbd5e1 !important;
+        }
+
+        [data-theme="dark"] .matrix-table .sticky-col {
+            border-right: 2px solid #334155 !important;
+        }
+
+        .matrix-table thead tr:first-child th.sticky-col,
+        .matrix-table thead .sticky-col {
+            z-index: 40 !important;
+            top: 0;
+            left: 0;
+            background: #f1f5f9 !important;
+            box-shadow: 3px 0 8px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] .matrix-table thead tr:first-child th.sticky-col,
+        [data-theme="dark"] .matrix-table thead .sticky-col {
+            background: #1e293b !important;
+        }
+
+        /* Pembatas Kolom Antar Pegawai */
+        .matrix-table th.th-target-group {
+            border-left: 2px solid #94a3b8 !important;
+            background: #f8fafc;
+            padding: 12px 10px;
+            text-align: center;
+            vertical-align: top;
+            min-width: 195px;
+            transition: background 0.2s ease;
+        }
+
+        [data-theme="dark"] .matrix-table th.th-target-group {
+            background: #1e293b;
+            border-left: 2px solid #475569 !important;
+        }
+
+        .matrix-table th.th-target-group.complete-header {
+            background: #f0fdf4 !important;
+            border-top: 3px solid #22c55e !important;
+        }
+
+        [data-theme="dark"] .matrix-table th.th-target-group.complete-header {
+            background: #064e3b !important;
+        }
+
+        .matrix-table th.th-sub-first,
+        .matrix-table td.cell-sub-first {
+            border-left: 2px solid #94a3b8 !important;
+        }
+
+        [data-theme="dark"] .matrix-table th.th-sub-first,
+        [data-theme="dark"] .matrix-table td.cell-sub-first {
+            border-left: 2px solid #475569 !important;
+        }
+
+        .matrix-cat-row td {
+            background: #e2e8f0;
+            font-weight: 700;
+            color: var(--text);
+            padding: 9px 14px;
+            font-size: 13px;
+            letter-spacing: 0.2px;
+        }
+
+        .matrix-cat-row td.sticky-col {
+            background: #e2e8f0 !important;
+            z-index: 12;
+        }
+
+        .matrix-cat-row td.matrix-cat-fill {
+            background: #e2e8f0;
+            padding: 9px 0;
+        }
+
+        [data-theme="dark"] .matrix-cat-row td,
+        [data-theme="dark"] .matrix-cat-row td.sticky-col,
+        [data-theme="dark"] .matrix-cat-row td.matrix-cat-fill {
+            background: #243048 !important;
+        }
+
+        .matrix-table .th-sub {
+            text-align: center;
+            font-weight: 700;
+            font-size: 12px;
+            width: 38px;
+            padding: 6px 2px;
+            background: #f1f5f9;
+        }
+
+        [data-theme="dark"] .matrix-table .th-sub {
+            background: #141d33;
+        }
+
+        .matrix-table .cell-radio {
+            text-align: center;
+            vertical-align: middle;
+            padding: 4px 2px !important;
+            cursor: pointer;
+            transition: background 0.15s ease;
+            user-select: none;
+        }
+
+        .matrix-table .cell-radio:hover:not(.disabled) {
+            background: rgba(72, 128, 255, 0.14) !important;
+        }
+
+        .matrix-table .cell-radio.selected {
+            background: rgba(72, 128, 255, 0.22) !important;
+        }
+
+        .matrix-table .cell-radio input[type="radio"] {
+            width: 17px;
+            height: 17px;
+            cursor: pointer;
+            margin: 0;
+            vertical-align: middle;
+            accent-color: var(--primary);
+        }
+
+        .matrix-table .cell-radio.disabled {
+            cursor: not-allowed;
+            opacity: 0.85;
+        }
+
+        .matrix-table .cell-radio.disabled input[type="radio"] {
+            cursor: not-allowed;
+        }
+
+        /* Comment Row in Matrix */
+        .matrix-table tr.comment-row td {
+            background: var(--bg);
+            color: var(--text);
+            border-top: 2px solid var(--border);
+        }
+
+        .matrix-table tr.comment-row td.sticky-col {
+            background: var(--bg) !important;
+            color: var(--text);
+            box-shadow: 3px 0 6px rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="dark"] .matrix-table tr.comment-row td,
+        [data-theme="dark"] .matrix-table tr.comment-row td.sticky-col {
+            background: #1e293b !important;
+        }
+
+        .matrix-comment-input {
+            width: 100%;
+            min-height: 58px;
+            font-size: 11.5px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--card-bg);
+            color: var(--text);
+            padding: 8px 10px;
+            resize: vertical;
+            box-sizing: border-box;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            font-family: inherit;
+        }
+
+        .matrix-comment-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(72, 128, 255, 0.2);
+        }
+
+        .matrix-comment-input::placeholder {
+            color: var(--text-muted);
+            opacity: 0.8;
+        }
+
+        .sticky-action-bar {
+            position: sticky;
+            bottom: 16px;
+            z-index: 99;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        .sticky-action-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        /* Mobile Quick-Eval Accordion Cards (<= 768px) */
+        .mobile-eval-summary {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .mobile-eval-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .mobile-eval-card.complete-header {
+            border-color: #86efac;
+        }
+
+        .mobile-eval-card-header {
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            cursor: pointer;
+            background: var(--card-bg);
+            user-select: none;
+        }
+
+        .mobile-eval-card.complete-header .mobile-eval-card-header {
+            background: rgba(34, 197, 94, 0.08);
+        }
+
+        .mobile-eval-card.is-expanded .mobile-eval-card-header {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .mobile-eval-card-arrow {
+            width: 20px;
+            height: 20px;
+            fill: var(--text-muted);
+            flex-shrink: 0;
+            transition: transform 0.2s ease;
+        }
+
+        .mobile-eval-card.is-expanded .mobile-eval-card-arrow {
+            transform: rotate(180deg);
+            fill: var(--primary);
+        }
+
+        .mobile-eval-card-body {
+            display: none;
+            padding: 12px 14px 14px;
+        }
+
+        .mobile-eval-card.is-expanded .mobile-eval-card-body {
+            display: block;
+        }
+
+        .mobile-eval-cat-title {
+            background: var(--bg);
+            color: var(--text);
+            font-size: 12px;
+            font-weight: 700;
+            padding: 8px 10px;
+            border-radius: 7px;
+            border-left: 3px solid var(--primary);
+            margin: 12px 0 10px;
+            letter-spacing: 0.2px;
+        }
+
+        .mobile-eval-cat-title:first-child {
+            margin-top: 0;
+        }
+
+        .mobile-eval-q-item {
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .mobile-eval-q-item:last-child {
+            border-bottom: none;
+        }
+
+        .mobile-eval-q-text {
+            font-size: 13px;
+            line-height: 1.45;
+            color: var(--text);
+            margin-bottom: 10px;
+        }
+
+        .mobile-scale-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+        }
+
+        .mobile-scale-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 40px;
+            border-radius: 8px;
+            border: 1.5px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            margin: 0 !important;
+            transition: all 0.15s ease;
+            user-select: none;
+            position: relative;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .mobile-scale-btn span {
+            pointer-events: none;
+        }
+        .mobile-scale-btn input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 0 !important;
+            height: 0 !important;
+            min-width: 0 !important;
+            min-height: 0 !important;
+            pointer-events: none;
+        }
+
+        .mobile-scale-btn.selected {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(27, 79, 140, 0.28);
+        }
+
+        .mobile-scale-btn.disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
+        .mobile-scale-hints {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10.5px;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        /* Dark Mode Mobile Matrix Overrides */
+        [data-theme="dark"] .mobile-eval-card.complete-header {
+            border-color: rgba(34, 197, 94, 0.45);
+        }
+        [data-theme="dark"] .mobile-eval-card.complete-header .mobile-eval-card-header {
+            background: rgba(34, 197, 94, 0.12);
+        }
+        [data-theme="dark"] .sticky-action-bar {
+            box-shadow: 0 -4px 22px rgba(0, 0, 0, 0.5);
+        }
+        [data-theme="dark"] .mobile-scale-btn {
+            background: #0E162A;
+            border-color: var(--border);
+        }
+
+        /* Responsive Mobile Styles for Penilaian Page */
+        @media (max-width: 768px) {
+            .quick-eval-header-card {
+                padding: 12px 14px;
+            }
+
+            .scale-guide-chips {
+                width: 100%;
+                justify-content: space-between;
+                padding: 8px 10px;
+                gap: 6px;
+            }
+
+            .sticky-action-bar {
+                bottom: calc(62px + env(safe-area-inset-bottom, 0px));
+                padding: 10px 12px;
+                gap: 10px;
+                border-radius: 10px;
+            }
+
+            .sticky-action-bar .progress-wrap-outer {
+                width: 100%;
+            }
+
+            .sticky-action-buttons {
+                width: 100%;
+            }
+
+            .sticky-action-buttons .btn {
+                flex: 1;
+                justify-content: center;
+                padding: 10px 10px;
+                font-size: 12.5px;
+            }
+            body.has-mobile-bottom-nav #matriks-section {
+                padding-bottom: 140px;
+            }
+            body.has-mobile-bottom-nav #form-section {
+                padding-bottom: 60px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .mode-switcher-bar {
+                gap: 8px;
+                margin-bottom: 12px;
+            }
+
+            .mode-toggle-group {
+                display: flex;
+                width: 100%;
+            }
+
+            .btn-mode-tab {
+                flex: 1;
+                justify-content: center;
+                text-align: center;
+                padding: 9px 8px;
+                font-size: 12px;
+                line-height: 1.25;
+            }
+
+            .relasi-tabs-list {
+                width: 100%;
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .relasi-tab-item {
+                justify-content: center;
+                padding: 8px 8px;
+                font-size: 12px;
+                gap: 6px;
+            }
+
+            .form-action-bar {
+                flex-direction: column-reverse;
+                gap: 10px !important;
+            }
+
+            .form-action-bar .btn {
+                width: 100%;
+                justify-content: center;
+                padding: 11px 16px;
+            }
+
+            .eval-scale-grid {
+                grid-template-columns: repeat(5, 1fr) !important;
+                gap: 6px !important;
+            }
+
+            .eval-scale-option {
+                padding: 8px 4px !important;
+            }
+
+            .eval-scale-option .opt-label {
+                display: none !important;
+            }
+
+            .eval-scale-mobile-hints {
+                display: flex !important;
+            }
+        }
+
+        /* Single Form Evaluation View (#form-section) */
+        .eval-form-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding-bottom: 16px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .eval-form-meta {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 6px;
+            font-size: 12.5px;
+            color: var(--text-secondary);
+        }
+
+        .eval-form-progress-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary);
+            border: 1px solid rgba(59, 130, 246, 0.22);
+        }
+
+        .eval-readonly-banner {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            color: #065F46;
+            border-radius: 10px;
+            padding: 11px 14px;
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+
+        [data-theme="dark"] .eval-readonly-banner {
+            background: rgba(16, 185, 129, 0.14);
+            border-color: rgba(52, 211, 153, 0.35);
+            color: #6EE7B7;
+        }
+
+        .eval-cat-block {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 18px;
+            background: var(--card-bg);
+        }
+
+        .eval-cat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 12px 16px;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+        }
+
+        .eval-cat-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .eval-cat-num {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            background: var(--primary);
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .eval-cat-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .eval-cat-count {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 3px 10px;
+            border-radius: 20px;
+        }
+
+        .eval-q-list {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .eval-q-item {
+            padding: 16px 18px;
+            border-bottom: 1px solid var(--border);
+            transition: background-color 0.15s ease;
+        }
+
+        .eval-q-item:last-child {
+            border-bottom: none;
+        }
+
+        .eval-q-item.is-answered {
+            background: rgba(59, 130, 246, 0.025);
+        }
+
+        [data-theme="dark"] .eval-q-item.is-answered {
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .eval-q-label {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 13.5px;
+            font-weight: 500;
+            color: var(--text);
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        .eval-q-code {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--primary);
+            background: rgba(59, 130, 246, 0.1);
+            padding: 2px 7px;
+            border-radius: 5px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .eval-scale-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 8px;
+            max-width: 720px;
+        }
+
+        .eval-scale-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            padding: 9px 6px;
+            border-radius: 9px;
+            border: 1.5px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: inherit;
+            text-align: center;
+        }
+
+        .eval-scale-option:hover:not(:disabled) {
+            border-color: var(--primary);
+            background: rgba(59, 130, 246, 0.06);
+            transform: translateY(-1px);
+        }
+
+        .eval-scale-option .opt-num {
+            font-size: 15px;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        .eval-scale-option .opt-label {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            line-height: 1.2;
+        }
+
+        .eval-scale-option.is-selected {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #ffffff;
+            box-shadow: 0 3px 10px rgba(27, 79, 140, 0.25);
+        }
+
+        .eval-scale-option.is-selected .opt-label {
+            color: rgba(255, 255, 255, 0.92);
+            font-weight: 600;
+        }
+
+        .eval-scale-option:disabled {
+            cursor: default;
+        }
+
+        .eval-scale-option:disabled:not(.is-selected) {
+            opacity: 0.45;
+        }
+
+        .eval-scale-option.is-selected:disabled {
+            opacity: 1 !important;
+        }
+
+        .eval-scale-mobile-hints {
+            display: none;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 6px;
+            max-width: 720px;
+        }
+
+        [data-theme="dark"] .eval-scale-option:not(.is-selected) {
+            background: #0E162A;
+        }
+        @media (max-width: 480px) {
+            .sticky-action-buttons {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .sticky-action-buttons .btn {
+                width: 100%;
+                min-height: 42px;
+            }
+            .scale-guide-chips {
+                gap: 4px;
+                padding: 6px 8px;
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-shell">
+        <aside class="sidebar" id="sidebar"></aside>
+        <div class="main-content">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <h1 id="page-title">Kerjakan Penilaian</h1>
+                </div>
+                <div id="topbar-user"></div>
+            </header>
+            <main class="page">
+                <!-- Mode Switcher Bar -->
+                <div class="mode-switcher-bar" id="mode-switcher-bar">
+                    <div class="mode-toggle-group">
+                        <button id="btn-mode-standar" class="btn-mode-tab active"
+                            onclick="setEvaluationMode('standar')">
+                            <svg style="width:15px;height:15px;fill:currentColor;" viewBox="0 0 24 24">
+                                <path
+                                    d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" />
+                            </svg>
+                            Mode Standar (Daftar)
+                        </button>
+                        <button id="btn-mode-matriks" class="btn-mode-tab" onclick="setEvaluationMode('matriks')">
+                            <svg style="width:15px;height:15px;fill:currentColor;" viewBox="0 0 24 24">
+                                <path
+                                    d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM8 20H4v-4h4v4zm0-6H4v-4h4v4zm0-6H4V4h4v4zm6 12h-4v-4h4v4zm0-6h-4v-4h4v4zm0-6h-4V4h4v4zm6 12h-4v-4h4v4zm0-6h-4v-4h4v4zm0-6h-4V4h4v4z" />
+                            </svg>
+                            Mode Penilaian Cepat (Matriks 360)
+                        </button>
+                    </div>
+                    <div id="quick-mode-hint" class="text-muted" style="font-size:12.5px;">
+                        Gunakan <strong>Mode Penilaian Cepat</strong> untuk mengisi penilaian beberapa rekan sekaligus
+                        dalam tabel matriks 360.
+                    </div>
+                </div>
+
+                <!-- 1. DAFTAR TUGAS (MODE STANDAR) -->
+                <div class="card" id="tugas-section">
+                    <div class="flex-between mb-16">
+                        <div>
+                            <div class="card-title" style="margin-bottom:4px;">Daftar Tugas Penilaian</div>
+                            <p class="text-muted" style="font-size:13px;">Pilih rekan kerja/atasan/bawahan yang perlu
+                                Anda nilai pada periode berjalan.</p>
+                        </div>
+                    </div>
+                    <div id="tugas-list" class="table-wrap">
+                        <div class="empty-state" style="padding:20px;">
+                            <p>Memuat data tugas...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. FORM PENILAIAN SATU PER SATU (MODE STANDAR) -->
+                <div class="card hidden" id="form-section">
+                    <div class="eval-form-header">
+                        <div style="min-width:0; flex:1;">
+                            <div class="card-title" style="margin-bottom:0; font-size:16.5px;" id="form-title">Form Penilaian</div>
+                            <div class="eval-form-meta" id="form-subtitle"></div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                            <span class="eval-form-progress-pill" id="form-progress-pill">0 / 0 Butir Terisi</span>
+                            <button class="btn btn-secondary btn-sm" onclick="backToList()">
+                                <svg style="width:14px;height:14px;fill:currentColor;" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                                Kembali ke Daftar
+                            </button>
+                        </div>
+                    </div>
+                    <div id="form-alert"></div>
+                    <div id="kriteria-form"></div>
+                    <div id="overall-comment-section"
+                        style="margin-top:18px; padding:16px; background:var(--bg); border:1px solid var(--border); border-radius:10px;">
+                        <label style="margin-bottom:8px; font-weight:600; display:flex; align-items:center; gap:6px;">
+                            <svg style="width:16px;height:16px;fill:var(--primary);" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+                            Komentar / Masukan Keseluruhan
+                        </label>
+                        <textarea
+                            placeholder="Berikan komentar, apresiasi, atau masukan membangun untuk pegawai ini (opsional)..."
+                            id="overall-comment" style="margin-bottom:0; min-height:80px;"></textarea>
+                    </div>
+                    <div class="flex-between form-action-bar" id="form-action-bar"
+                        style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border);">
+                        <button class="btn btn-secondary" id="btn-draft" onclick="saveDraft()">Simpan Draft</button>
+                        <button class="btn btn-primary" id="btn-final" onclick="submitFinal()">Submit Penilaian Final</button>
+                    </div>
+                </div>
+
+                <!-- 3. MODE PENILAIAN CEPAT (MATRIKS VIEW) -->
+                <div id="matriks-section" class="hidden">
+                    <!-- Compact Top Bar: Penilai Info & Scale Legend -->
+                    <div class="quick-eval-header-card">
+                        <div class="quick-eval-topline">
+                            <div class="evaluator-profile-compact">
+                                <div class="evaluator-avatar-icon">
+                                    <svg style="width:20px;height:20px;fill:currentColor;" viewBox="0 0 24 24">
+                                        <path
+                                            d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div style="font-size:14px; font-weight:700; color:var(--text); line-height:1.3;">
+                                        <span id="m-nama">-</span>
+                                        <span id="m-nip"
+                                            style="font-weight:normal; font-size:12px; color:var(--text-muted); margin-left:6px;">-</span>
+                                    </div>
+                                    <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">
+                                        <span id="m-jabatan">-</span> • <span id="m-unit">-</span>
+                                        <span id="m-periode-badge" class="badge badge-gray"
+                                            style="font-size:10.5px; margin-left:8px;">Periode Aktif</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Horizontal Scale Legend Guide -->
+                            <div class="scale-guide-chips">
+                                <span
+                                    style="font-size:11.5px; font-weight:700; color:var(--text-muted); margin-right:4px;">PANDUAN
+                                    SKALA:</span>
+                                <span class="scale-guide-chip"><span class="chip-val">1</span> Sangat Kurang</span>
+                                <span class="scale-guide-chip"><span class="chip-val">2</span> Kurang</span>
+                                <span class="scale-guide-chip"><span class="chip-val">3</span> Cukup</span>
+                                <span class="scale-guide-chip"><span class="chip-val">4</span> Baik</span>
+                                <span class="scale-guide-chip"><span class="chip-val">5</span> Sangat Baik</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Navigation Relasi Tabs -->
+                    <div class="relasi-tabs-nav">
+                        <div class="relasi-tabs-list" id="matriks-filter-pills">
+                            <!-- Dynamic tabs: Rekan Kerja, Atasan Langsung, Diri Sendiri, Bawahan Langsung -->
+                        </div>
+                        <div>
+                            <label
+                                style="display:flex; align-items:center; gap:6px; cursor:pointer; margin:0; font-size:12.5px; user-select:none;">
+                                <input type="checkbox" id="matriks-hide-completed"
+                                    onchange="toggleHideCompleted(this.checked)" style="cursor:pointer;">
+                                <span>Sembunyikan yang sudah selesai</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Alert feedback area -->
+                    <div id="matriks-alert"></div>
+
+                    <!-- Container Tabel Matriks -->
+                    <div id="matriks-tables-wrap">
+                        <div class="empty-state" style="padding:30px;">
+                            <p>Memuat data matriks penilaian...</p>
+                        </div>
+                    </div>
+
+                    <!-- Sticky Bottom Action Bar -->
+                    <div class="sticky-action-bar" id="matriks-action-bar">
+                        <div class="progress-wrap-outer"
+                            style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+                            <div>
+                                <div style="font-size:13px; font-weight:600; color:var(--text);">
+                                    Progress Pengisian: <span id="m-progress-text">0 / 0 butir (0%)</span>
+                                </div>
+                                <div style="font-size:12px; color:var(--text-muted);" id="m-ready-text">
+                                    Siap Submit Final: 0 dari 0 pegawai
+                                </div>
+                            </div>
+                            <div
+                                style="width:160px; max-width:100%; height:8px; background:var(--bg); border:1px solid var(--border); border-radius:4px; overflow:hidden;">
+                                <div id="m-progress-bar-fill"
+                                    style="height:100%; width:0%; background:var(--primary); transition:width 0.3s ease;">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="sticky-action-buttons">
+                            <button type="button" class="btn btn-secondary" onclick="saveDraftMatriks()"
+                                id="btn-matriks-draft">
+                                <svg style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;fill:currentColor;"
+                                    viewBox="0 0 24 24">
+                                    <path
+                                        d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z" />
+                                </svg>
+                                Simpan Draft Semua
+                            </button>
+                            <button type="button" class="btn btn-primary" onclick="submitFinalMatriks()"
+                                id="btn-matriks-final">
+                                <svg style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;fill:currentColor;"
+                                    viewBox="0 0 24 24">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                                </svg>
+                                Submit Penilaian Final
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="../assets/js/config.js?v=20261126"></script>
+    <script src="../assets/js/api.js?v=20261126"></script>
+    <script src="../assets/js/searchable-select.js?v=20261116_search"></script>
+    <script src="../assets/js/auth.js?v=20261125_mobile_v3"></script>
+    <script>
+        let currentMode = 'standar'; // 'standar' or 'matriks'
+        let currentMappingId = null;
+        let currentKriteria = [];
+        let isReadOnly = false;
+
+        // State untuk Mode Matriks
+        let matriksData = null; // { evaluator, periode, mappings, pertanyaan, jawaban }
+        let matriksState = {};  // mapping_id -> { [pertanyaan_id]: skor }
+        let matriksComments = {}; // mapping_id -> string komentar
+        let expandedMobileCards = {}; // mapping_id -> boolean
+        let lastMatriksIsMobile = window.innerWidth <= 768;
+        let currentRelasiFilter = '';
+        let currentHideCompleted = false;
+        let matriksDirty = false;
+
+        // ==========================================
+        // MODE SWITCHER
+        // ==========================================
+        function setEvaluationMode(mode) {
+            currentMode = mode;
+            localStorage.setItem('penilaian_view_mode', mode);
+
+            const btnStandar = document.getElementById("btn-mode-standar");
+            const btnMatriks = document.getElementById("btn-mode-matriks");
+            const hint = document.getElementById("quick-mode-hint");
+
+            if (mode === 'matriks') {
+                btnMatriks.classList.add("active");
+                btnStandar.classList.remove("active");
+                document.getElementById("tugas-section").classList.add("hidden");
+                document.getElementById("form-section").classList.add("hidden");
+                document.getElementById("matriks-section").classList.remove("hidden");
+                hint.innerHTML = `Mode <strong>Penilaian Cepat</strong>: Isi seluruh kolom nilai 1–5 untuk pegawai yang Anda nilai.`;
+                loadMatriksData();
+            } else {
+                btnStandar.classList.add("active");
+                btnMatriks.classList.remove("active");
+                document.getElementById("matriks-section").classList.add("hidden");
+                document.getElementById("form-section").classList.add("hidden");
+                document.getElementById("tugas-section").classList.remove("hidden");
+                hint.innerHTML = `Gunakan <strong>Mode Penilaian Cepat</strong> untuk mengisi penilaian beberapa rekan sekaligus dalam tabel matriks 360.`;
+                loadTugas();
+            }
+        }
+
+        // ==========================================
+        // 1. LOGIKA MODE STANDAR (DAFTAR & FORM SATU PER SATU)
+        // ==========================================
+        async function loadTugas() {
+            const res = await apiCall("evaluations.php?action=tugas");
+            const container = document.getElementById("tugas-list");
+            if (!res.success) { container.innerHTML = `<p class="text-muted">${res.message}</p>`; return; }
+            if (res.data.length === 0) {
+                container.innerHTML = `<div class="empty-state">Tidak ada tugas penilaian pada periode berjalan saat ini.</div>`;
+                return;
+            }
+
+            if (typeof sortTugasPenilaian === 'function') {
+                sortTugasPenilaian(res.data);
+            }
+
+            let html = `<div class="table-wrap"><table class="mobile-cards"><thead><tr><th>Yang Dinilai</th><th>Unit Kerja</th><th>Relasi</th><th>Status</th><th>Aksi</th></tr></thead><tbody>`;
+            res.data.forEach(t => {
+                const isSelesai = t.status === 'selesai';
+                html += `<tr>
+                    <td style="font-weight:500;">
+                        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                            <span>${t.nama_dinilai}</span>
+                            ${t.golongan_dinilai && t.golongan_dinilai !== '-' ? `<span class="badge" style="font-size:10px;padding:1px 5px;background:var(--primary-light);color:var(--primary);border-radius:8px;font-weight:600;">${t.golongan_dinilai}</span>` : ''}
+                            ${t.jenis_relasi === 'diri' ? '<span class="badge badge-gray" style="font-size:10px;">Anda</span>' : ''}
+                        </div>
+                        ${t.jabatan ? `<div style="font-size:11.5px; color:var(--text-muted); font-weight:normal; margin-top:2px;">${t.jabatan}</div>` : ''}
+                    </td>
+                    <td data-label="Unit Kerja">
+                        <div style="font-size:13px; font-weight:500;">${t.unit_kerja || '-'}</div>
+                    </td>
+                    <td data-label="Relasi"><span class="badge badge-blue">${relasiTargetLabel(t.jenis_relasi)}</span></td>
+                    <td data-label="Status">${statusBadge(t.status)}</td>
+                    <td class="td-action"><button class="btn ${isSelesai ? 'btn-secondary' : 'btn-primary'} btn-sm" onclick="openForm(${t.mapping_id}, ${isSelesai})"
+                        title="${isSelesai ? 'Lihat jawaban (tidak dapat diubah)' : 'Isi penilaian sekarang'}">
+                        ${isSelesai ? 'Lihat Jawaban' : 'Isi Sekarang'}
+                    </button></td>
+                </tr>`;
+            });
+            html += `</tbody></table></div>`;
+            container.innerHTML = html;
+        }
+
+        async function openForm(mappingId, readOnly = false) {
+            currentMappingId = mappingId;
+            isReadOnly = readOnly;
+            const res = await apiCall(`evaluations.php?action=form&mapping_id=${mappingId}`);
+            if (!res.success) { alert(res.message); return; }
+
+            const { mapping, pertanyaan, jawaban } = res.data;
+            currentKriteria = pertanyaan;
+
+            const gol = mapping.golongan_dinilai && mapping.golongan_dinilai !== '-' ? ` <span class="badge" style="font-size:11px;padding:2px 8px;background:var(--primary-light);color:var(--primary);border-radius:10px;font-weight:600;">${escapeHtml(mapping.golongan_dinilai)}</span>` : '';
+            document.getElementById("form-title").innerHTML = `Penilaian untuk: ${escapeHtml(mapping.nama_dinilai)}${gol}`;
+            let metaParts = [`<span class="badge badge-blue">${escapeHtml(relasiTargetLabel(mapping.jenis_relasi))}</span>`];
+            if (mapping.unit_kerja) metaParts.push(`<span>${escapeHtml(mapping.unit_kerja)}</span>`);
+            if (mapping.jabatan) metaParts.push(`<span>&bull; ${escapeHtml(mapping.jabatan)}</span>`);
+            document.getElementById("form-subtitle").innerHTML = metaParts.join(' ');
+
+            const alertEl = document.getElementById("form-alert");
+            if (readOnly) {
+                alertEl.innerHTML = `<div class="eval-readonly-banner">
+                    <svg style="width:18px;height:18px;flex-shrink:0;fill:currentColor;" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    <span>Penilaian ini sudah <strong>disubmit final</strong>. Data ditampilkan dalam mode baca saja.</span>
+                </div>`;
+            } else {
+                alertEl.innerHTML = '';
+            }
+
+            const grouped = {};
+            pertanyaan.forEach(k => {
+                if (!grouped[k.nama_kategori]) grouped[k.nama_kategori] = [];
+                grouped[k.nama_kategori].push(k);
+            });
+
+            const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+            let html = "";
+            Object.entries(grouped).forEach(([kategori, items], catIdx) => {
+                const catNum = catIdx + 1;
+                const answeredInCat = items.filter(k => jawaban[k.id] && jawaban[k.id].skor).length;
+                html += `<div class="eval-cat-block">
+                    <div class="eval-cat-header">
+                        <div class="eval-cat-title-wrap">
+                            <span class="eval-cat-num">${catNum}</span>
+                            <span class="eval-cat-name">${escapeHtml(kategori)}</span>
+                        </div>
+                        <span class="eval-cat-count" id="cat-count-${catNum}">${answeredInCat} / ${items.length} Butir</span>
+                    </div>
+                    <div class="eval-q-list">`;
+                items.forEach((k, qIdx) => {
+                    const existing = jawaban[k.id];
+                    const skorSaatIni = existing ? existing.skor : "";
+                    const itemCode = `${catNum}${letters[qIdx] || (qIdx + 1)}`;
+                    html += `
+                        <div class="eval-q-item ${skorSaatIni ? 'is-answered' : ''}" id="q-item-${k.id}">
+                            <div class="eval-q-label">
+                                <span class="eval-q-code">${itemCode}</span>
+                                <span>${escapeHtml(k.pertanyaan)}</span>
+                            </div>
+                            <div class="eval-scale-grid score-scale-row" id="scale-${k.id}" data-cat="${catNum}">
+                                ${renderScale(k, skorSaatIni, readOnly)}
+                            </div>
+                            <div class="eval-scale-mobile-hints"><span>1: Sangat Kurang</span><span>5: Sangat Baik</span></div>
+                        </div>
+                    `;
+                });
+                html += `</div></div>`;
+            });
+
+            document.getElementById("kriteria-form").innerHTML = html || `<p class="text-muted">Belum ada kriteria penilaian yang dikonfigurasi Admin.</p>`;
+
+            const overallComment = document.getElementById("overall-comment");
+            overallComment.value = mapping.komentar_masukan || "";
+            overallComment.disabled = readOnly;
+            overallComment.placeholder = readOnly
+                ? "Tidak ada komentar atau masukan tambahan."
+                : "Berikan komentar, apresiasi, atau masukan membangun untuk pegawai ini (opsional)...";
+
+            pertanyaan.forEach(k => {
+                const existing = jawaban[k.id];
+                if (existing && existing.skor) {
+                    const container = document.getElementById(`scale-${k.id}`);
+                    if (container) container.dataset.selected = existing.skor;
+                }
+            });
+
+            updateFormProgress();
+
+            const actionBar = document.getElementById("form-action-bar");
+            document.getElementById("btn-draft").style.display = readOnly ? 'none' : '';
+            document.getElementById("btn-final").style.display = readOnly ? 'none' : '';
+            document.getElementById("btn-final").disabled = readOnly;
+            if (actionBar) actionBar.style.display = readOnly ? 'none' : 'flex';
+
+            const switcher = document.getElementById("mode-switcher-bar");
+            if (switcher) switcher.classList.add("hidden");
+            document.getElementById("tugas-section").classList.add("hidden");
+            document.getElementById("form-section").classList.remove("hidden");
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        const SKALA_LABELS = {
+            1: 'Sangat Kurang',
+            2: 'Kurang',
+            3: 'Cukup',
+            4: 'Baik',
+            5: 'Sangat Baik'
+        };
+
+        function renderScale(kriteria, selected, disabled = false) {
+            let html = "";
+            for (let i = kriteria.skor_min; i <= kriteria.skor_max; i++) {
+                const isSelected = String(selected) === String(i);
+                const disabledAttr = disabled ? 'disabled' : '';
+                const labelTxt = SKALA_LABELS[i] || `Skor ${i}`;
+                html += `<button type="button"
+                    class="eval-scale-option score-btn ${isSelected ? 'is-selected' : ''}"
+                    data-kriteria="${kriteria.id}" data-value="${i}"
+                    onclick="${disabled ? '' : `selectScore(${kriteria.id}, ${i})`}"
+                    ${disabledAttr}>
+                    <span class="opt-num">${i}</span>
+                    <span class="opt-label">${labelTxt}</span>
+                </button>`;
+            }
+            return html;
+        }
+
+        function updateFormProgress() {
+            const total = currentKriteria.length;
+            let filled = 0;
+            const catTotals = {};
+            const catFilled = {};
+            currentKriteria.forEach(k => {
+                const container = document.getElementById(`scale-${k.id}`);
+                const catNum = container ? container.dataset.cat : null;
+                if (catNum) {
+                    catTotals[catNum] = (catTotals[catNum] || 0) + 1;
+                    catFilled[catNum] = catFilled[catNum] || 0;
+                }
+                if (container && container.dataset.selected) {
+                    filled++;
+                    if (catNum) catFilled[catNum]++;
+                }
+            });
+            Object.keys(catTotals).forEach(catNum => {
+                const el = document.getElementById(`cat-count-${catNum}`);
+                if (el) el.textContent = `${catFilled[catNum]} / ${catTotals[catNum]} Butir`;
+            });
+            const pill = document.getElementById("form-progress-pill");
+            if (pill) {
+                pill.textContent = `${filled} / ${total} Butir Terisi`;
+                if (total > 0 && filled === total) {
+                    pill.style.background = "rgba(16, 185, 129, 0.12)";
+                    pill.style.color = "var(--success)";
+                    pill.style.borderColor = "rgba(16, 185, 129, 0.3)";
+                } else {
+                    pill.style.background = "";
+                    pill.style.color = "";
+                    pill.style.borderColor = "";
+                }
+            }
+        }
+
+        function selectScore(kriteriaId, value) {
+            const container = document.getElementById(`scale-${kriteriaId}`);
+            container.querySelectorAll(".score-btn").forEach(btn => {
+                const isMatch = btn.dataset.value == value;
+                btn.classList.toggle("is-selected", isMatch);
+            });
+            container.dataset.selected = value;
+            const itemBox = document.getElementById(`q-item-${kriteriaId}`);
+            if (itemBox) itemBox.classList.add("is-answered");
+            updateFormProgress();
+        }
+
+        function collectJawaban() {
+            const jawaban = [];
+            let allFilled = true;
+            currentKriteria.forEach(k => {
+                const container = document.getElementById(`scale-${k.id}`);
+                const skor = container?.dataset.selected;
+                if (!skor) { allFilled = false; return; }
+                jawaban.push({ pertanyaan_id: k.id, skor: parseInt(skor) });
+            });
+            const komentar_masukan = document.getElementById("overall-comment").value;
+            return { jawaban, allFilled, komentar_masukan };
+        }
+
+        async function saveDraft() {
+            const { jawaban, komentar_masukan } = collectJawaban();
+            if (jawaban.length === 0) { showAlert(document.getElementById("form-alert"), "Isi minimal satu penilaian sebelum menyimpan draft."); return; }
+
+            const ok = await showConfirmModal({
+                title: "Konfirmasi Simpan Draft",
+                message: "Apakah Anda yakin ingin menyimpan draft penilaian ini? Anda masih dapat memperbaikinya kembali sebelum disubmit final.",
+                confirmText: "Ya, Simpan Draft",
+                cancelText: "Batal",
+                type: "primary",
+                icon: "edit"
+            });
+            if (!ok) return;
+
+            const res = await apiCall("evaluations.php?action=submit", "POST", { mapping_id: currentMappingId, jawaban, komentar_masukan, final: false });
+            showAlert(document.getElementById("form-alert"), res.message, res.success ? "success" : "error");
+        }
+
+        async function submitFinal() {
+            const { jawaban, allFilled, komentar_masukan } = collectJawaban();
+            if (!allFilled) { showAlert(document.getElementById("form-alert"), "Harap isi semua kriteria penilaian sebelum submit final."); return; }
+
+            const ok = await showConfirmModal({
+                title: "Konfirmasi Submit Penilaian Final",
+                message: "Apakah Anda yakin ingin mengirim penilaian final ini?\nSetelah disubmit, penilaian ini akan dikunci dan digunakan dalam perhitungan skor 360.",
+                confirmText: "Ya, Submit Final",
+                cancelText: "Batal",
+                type: "success",
+                icon: "check"
+            });
+            if (!ok) return;
+
+            const res = await apiCall("evaluations.php?action=submit", "POST", { mapping_id: currentMappingId, jawaban, komentar_masukan, final: true });
+            if (!res.success) { showAlert(document.getElementById("form-alert"), res.message); return; }
+            showCenterFeedback(res.message || "Penilaian berhasil dikirim!", "success", 4000);
+            backToList();
+        }
+
+        function backToList() {
+            const switcher = document.getElementById("mode-switcher-bar");
+            if (switcher) switcher.classList.remove("hidden");
+            document.getElementById("form-section").classList.add("hidden");
+            document.getElementById("tugas-section").classList.remove("hidden");
+            loadTugas();
+        }
+
+        // ==========================================
+        // 2. LOGIKA MODE PENILAIAN CEPAT (MATRIKS 360)
+        // ==========================================
+        async function loadMatriksData() {
+            const wrap = document.getElementById("matriks-tables-wrap");
+            wrap.innerHTML = `<div class="empty-state" style="padding:30px;"><p>Memuat data matriks penilaian...</p></div>`;
+
+            const res = await apiCall("evaluations.php?action=matriks_data");
+            if (!res.success) {
+                wrap.innerHTML = `<div class="alert alert-error">${res.message}</div>`;
+                return;
+            }
+
+            matriksData = res.data;
+
+            // Inisialisasi matriksState & matriksComments dari jawaban yang sudah ada
+            matriksState = {};
+            matriksComments = {};
+            matriksData.mappings.forEach(m => {
+                matriksState[m.mapping_id] = {};
+                matriksComments[m.mapping_id] = m.komentar_masukan || '';
+                const mJawaban = matriksData.jawaban[m.mapping_id] || {};
+                Object.entries(mJawaban).forEach(([qId, item]) => {
+                    matriksState[m.mapping_id][qId] = item.skor;
+                });
+            });
+
+            // Render Info Penilai
+            const ev = matriksData.evaluator || {};
+            document.getElementById("m-nip").textContent = ev.nip ? `NIP: ${ev.nip}` : '';
+            document.getElementById("m-nama").textContent = ev.nama_lengkap || '-';
+            document.getElementById("m-jabatan").textContent = ev.jabatan || '-';
+            document.getElementById("m-unit").textContent = ev.unit_kerja || '-';
+
+            const per = matriksData.periode || {};
+            document.getElementById("m-periode-badge").textContent = per.nama_periode || 'Periode Aktif';
+
+            renderFilterPills();
+            renderMatriksTables();
+            updateMatriksProgress();
+        }
+
+        function getQuestionsForRelasi(jenis_relasi) {
+            if (!matriksData || !matriksData.pertanyaan) return [];
+            return matriksData.pertanyaan.filter(q => {
+                if (!q.target_relasi) return true;
+                const targets = q.target_relasi.split(',').map(s => s.trim());
+                return targets.includes(jenis_relasi);
+            });
+        }
+
+        function renderFilterPills() {
+            const container = document.getElementById("matriks-filter-pills");
+            if (!matriksData || !matriksData.mappings) { container.innerHTML = ''; return; }
+
+            const counts = {
+                diri: 0,
+                bawahan: 0, // evaluator adalah bawahan => target yang dinilai adalah Atasan
+                rekan: 0,   // target yang dinilai adalah Rekan Kerja
+                atasan: 0   // evaluator adalah atasan => target yang dinilai adalah Bawahan
+            };
+
+            matriksData.mappings.forEach(m => {
+                if (counts[m.jenis_relasi] !== undefined) {
+                    counts[m.jenis_relasi]++;
+                }
+            });
+
+            const iconMap = {
+                rekan: `<svg style="width:15px;height:15px;vertical-align:-2px;fill:currentColor;" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>`,
+                bawahan: `<svg style="width:15px;height:15px;vertical-align:-2px;fill:currentColor;" viewBox="0 0 24 24"><path d="M16.5 12c1.38 0 2.49-1.12 2.49-2.5S17.88 7 16.5 7C15.12 7 14 8.12 14 9.5s1.12 2.5 2.5 2.5zM9 11c1.66 0 2.99-1.34 2.99-3S10.66 5 9 5C7.34 5 6 6.34 6 8s1.34 3 3 3zm7.5 3c-1.83 0-5.5.92-5.5 2.75V19h11v-2.25c0-1.83-3.67-2.75-5.5-2.75zM9 13c-2.33 0-7 1.17-7 3.5V19h7v-2.25c0-.85.33-1.64.92-2.27C9.62 13.62 9.34 13 9 13z"/></svg>`,
+                diri: `<svg style="width:15px;height:15px;vertical-align:-2px;fill:currentColor;" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`,
+                atasan: `<svg style="width:15px;height:15px;vertical-align:-2px;fill:currentColor;" viewBox="0 0 24 24"><path d="M9 13.75c-2.34 0-7 1.17-7 3.5V19h14v-1.75c0-2.33-4.66-3.5-7-3.5zM4.34 17c.84-.58 2.87-1.25 4.66-1.25s3.82.67 4.66 1.25H4.34zM9 12c1.93 0 3.5-1.57 3.5-3.5S10.93 5 9 5 5.5 6.57 5.5 8.5 7.07 12 9 12zm0-5c.83 0 1.5.67 1.5 1.5S9.83 10 9 10s-1.5-.67-1.5-1.5S8.17 7 9 7zm7.5 6.75c-.37 0-.74.04-1.1.1 1.05.8 1.6 1.8 1.6 2.9V19h5v-1.75c0-2.33-4.66-3.5-5.5-3.5zm0-1.75c1.93 0 3.5-1.57 3.5-3.5S18.43 5 16.5 5c-.53 0-1.04.13-1.5.35.63.89 1 1.98 1 3.15s-.37 2.26-1 3.15c.46.22.97.35 1.5.35z"/></svg>`
+            };
+
+            const pillConfigs = [
+                { id: 'rekan', label: 'Rekan Kerja', count: counts.rekan, icon: iconMap.rekan },
+                { id: 'bawahan', label: 'Atasan Langsung', count: counts.bawahan, icon: iconMap.bawahan },
+                { id: 'diri', label: 'Diri Sendiri', count: counts.diri, icon: iconMap.diri },
+                { id: 'atasan', label: 'Bawahan Langsung', count: counts.atasan, icon: iconMap.atasan }
+            ];
+
+            const availablePills = pillConfigs.filter(cfg => cfg.count > 0);
+
+            // Jika relasi aktif belum valid, default ke relasi pertama yang tersedia
+            if (!currentRelasiFilter || !availablePills.some(p => p.id === currentRelasiFilter)) {
+                if (availablePills.length > 0) {
+                    currentRelasiFilter = availablePills[0].id;
+                }
+            }
+
+            let html = "";
+            availablePills.forEach(cfg => {
+                const isActive = currentRelasiFilter === cfg.id ? 'active' : '';
+                html += `
+                    <button type="button" class="relasi-tab-item ${isActive}" onclick="setRelasiFilter('${cfg.id}')">
+                        <span>${cfg.icon}</span>
+                        <span>${cfg.label}</span>
+                        <span class="tab-count-badge">${cfg.count}</span>
+                    </button>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function setRelasiFilter(relasi) {
+            currentRelasiFilter = relasi;
+            renderFilterPills();
+            renderMatriksTables();
+        }
+
+        function toggleHideCompleted(checked) {
+            currentHideCompleted = checked;
+            renderMatriksTables();
+        }
+
+        function renderMatriksTables() {
+            const wrap = document.getElementById("matriks-tables-wrap");
+            if (!matriksData || !matriksData.mappings || matriksData.mappings.length === 0) {
+                wrap.innerHTML = `<div class="empty-state" style="padding:30px;"><p>Tidak ada pegawai yang perlu dinilai.</p></div>`;
+                return;
+            }
+
+            // Filter mapping berdasarkan relasi aktif dan status selesai
+            let filteredMappings = matriksData.mappings.filter(m => {
+                if (currentHideCompleted && m.status === 'selesai') return false;
+                return m.jenis_relasi === currentRelasiFilter;
+            });
+
+            if (filteredMappings.length === 0) {
+                wrap.innerHTML = `<div class="empty-state" style="padding:30px;">
+                    <p>Tidak ada data pegawai pada relasi <strong>${relasiTargetLabel(currentRelasiFilter)}</strong>${currentHideCompleted ? ' yang belum selesai' : ''}.</p>
+                </div>`;
+                return;
+            }
+
+            const targetRelasiPaket = currentRelasiFilter === 'bawahan' ? 'bawahan' : 'atasan,rekan,diri';
+            const title = `Matriks Penilaian ${relasiTargetLabel(currentRelasiFilter)}`;
+
+            if (window.innerWidth <= 768) {
+                wrap.innerHTML = renderSingleMatrixMobile(title, filteredMappings, targetRelasiPaket);
+            } else {
+                wrap.innerHTML = renderSingleMatrixTable("matriks-table-" + currentRelasiFilter, title, filteredMappings, targetRelasiPaket);
+                setTimeout(alignStickyHeaders, 50);
+            }
+        }
+
+        function onMatriksCommentInput(mId, val) {
+            matriksComments[mId] = val;
+            matriksDirty = true;
+        }
+
+        function toggleMobileEvalCard(mId) {
+            const card = document.getElementById(`hdr-target-${mId}`);
+            if (!card) return;
+            const willExpand = !card.classList.contains('is-expanded');
+            card.classList.toggle('is-expanded', willExpand);
+            expandedMobileCards[mId] = willExpand;
+        }
+
+        function renderSingleMatrixMobile(title, mappings, targetRelasiPaket) {
+            const questions = matriksData.pertanyaan.filter(q => {
+                if (!q.target_relasi) return true;
+                const targets = q.target_relasi.split(',').map(s => s.trim());
+                if (targetRelasiPaket === 'bawahan') {
+                    return targets.includes('bawahan');
+                } else {
+                    return targets.includes('rekan') || targets.includes('diri') || targets.includes('atasan');
+                }
+            });
+
+            const categoriesMap = {};
+            questions.forEach(q => {
+                if (!categoriesMap[q.nama_kategori]) {
+                    categoriesMap[q.nama_kategori] = {
+                        nama: q.nama_kategori,
+                        urutan: q.kategori_urutan || 99,
+                        items: []
+                    };
+                }
+                categoriesMap[q.nama_kategori].items.push(q);
+            });
+            const categories = Object.values(categoriesMap).sort((a, b) => a.urutan - b.urutan);
+
+            // Auto-expand kartu pertama yang belum selesai (atau kartu pertama jika belum ada state)
+            const hasExplicitExpanded = mappings.some(m => expandedMobileCards[m.mapping_id] !== undefined);
+            if (!hasExplicitExpanded && mappings.length > 0) {
+                const firstPending = mappings.find(m => m.status !== 'selesai') || mappings[0];
+                expandedMobileCards[firstPending.mapping_id] = true;
+            }
+
+            let html = `
+                <div class="mobile-eval-summary">
+                    <div style="font-size:13.5px; font-weight:700; color:var(--text);">${title}</div>
+                    <div style="font-size:11.5px; color:var(--text-muted);">${mappings.length} Pegawai &bull; ${questions.length} Butir (1–5)</div>
+                </div>
+            `;
+
+            mappings.forEach(m => {
+                const mId = m.mapping_id;
+                const isSelesai = m.status === 'selesai';
+                const userAnswers = matriksState[mId] || {};
+                const answeredCount = questions.filter(q => userAnswers[q.id] !== undefined && userAnswers[q.id] !== null && userAnswers[q.id] !== '').length;
+                const isFull = answeredCount === questions.length && questions.length > 0;
+                const isExpanded = !!expandedMobileCards[mId];
+
+                let statusBadgeHtml = '';
+                if (isSelesai) {
+                    statusBadgeHtml = `<span class="badge badge-green" style="font-size:10.5px;">✓ Final Terkunci</span>`;
+                } else if (isFull) {
+                    statusBadgeHtml = `<span class="badge" id="hdr-badge-${mId}" style="font-size:10.5px; background:#dcfce7; color:#15803d; font-weight:700;">✓ Lengkap (${answeredCount}/${questions.length})</span>`;
+                } else if (answeredCount > 0) {
+                    statusBadgeHtml = `<span class="badge" id="hdr-badge-${mId}" style="font-size:10.5px; background:#e0f2fe; color:#0369a1; font-weight:600;">Draft (${answeredCount}/${questions.length})</span>`;
+                } else {
+                    statusBadgeHtml = `<span class="badge badge-gray" id="hdr-badge-${mId}" style="font-size:10.5px;">Belum (${answeredCount}/${questions.length})</span>`;
+                }
+
+                let bodyHtml = '';
+                categories.forEach((cat, catIdx) => {
+                    const catNumber = catIdx + 1;
+                    bodyHtml += `<div class="mobile-eval-cat-title">${catNumber}. ${cat.nama.toUpperCase()}</div>`;
+                    cat.items.forEach((q, qIdx) => {
+                        const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+                        const letter = letters[qIdx] || (qIdx + 1);
+                        const itemLabel = `${catNumber}${letter}.`;
+                        const currentSkor = userAnswers[q.id];
+
+                        let scaleBtns = '';
+                        [1, 2, 3, 4, 5].forEach(val => {
+                            const isSelected = String(currentSkor) === String(val);
+                            scaleBtns += `
+                                <label class="mobile-scale-btn ${isSelected ? 'selected' : ''} ${isSelesai ? 'disabled' : ''}" id="cell-${mId}-${q.id}-${val}">
+                                    <input type="radio"
+                                           name="matriks_radio_${mId}_${q.id}"
+                                           id="radio-${mId}-${q.id}-${val}"
+                                           value="${val}"
+                                           ${isSelected ? 'checked' : ''}
+                                           ${isSelesai ? 'disabled' : ''}
+                                           onchange="onMatriksRadioChange(${mId}, ${q.id}, ${val})">
+                                    <span>${val}</span>
+                                </label>`;
+                        });
+
+                        bodyHtml += `
+                            <div class="mobile-eval-q-item">
+                                <div class="mobile-eval-q-text"><strong>${itemLabel}</strong> ${q.pertanyaan}</div>
+                                <div class="mobile-scale-row">${scaleBtns}</div>
+                                <div class="mobile-scale-hints"><span>1: Sangat Kurang</span><span>5: Sangat Baik</span></div>
+                            </div>`;
+                    });
+                });
+
+                const commentVal = matriksComments[mId] !== undefined ? matriksComments[mId] : (m.komentar_masukan || '');
+                bodyHtml += `
+                    <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--border);">
+                        <label style="font-size:12px; font-weight:700; color:var(--text); margin-bottom:6px;">Komentar / Masukan (Opsional)</label>
+                        <textarea id="matriks-comment-${mId}"
+                                  class="matrix-comment-input"
+                                  placeholder="Catatan untuk ${m.nama_dinilai}..."
+                                  ${isSelesai ? 'disabled' : ''}
+                                  oninput="onMatriksCommentInput(${mId}, this.value);">${escapeHtml(commentVal)}</textarea>
+                    </div>
+                `;
+
+                html += `
+                    <div class="mobile-eval-card ${isFull ? 'complete-header' : ''} ${isExpanded ? 'is-expanded' : ''}" id="hdr-target-${mId}">
+                        <div class="mobile-eval-card-header" onclick="toggleMobileEvalCard(${mId})">
+                            <div style="min-width:0; flex:1;">
+                                <div style="font-weight:700; font-size:13.5px; color:var(--text); line-height:1.3;">${m.nama_dinilai}</div>
+                                ${m.jabatan ? `<div style="font-size:11.5px; color:var(--text-muted); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${m.jabatan}</div>` : ''}
+                                <div style="margin-top:6px;">${statusBadgeHtml}</div>
+                            </div>
+                            <svg class="mobile-eval-card-arrow" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+                        </div>
+                        <div class="mobile-eval-card-body">
+                            ${bodyHtml}
+                        </div>
+                    </div>
+                `;
+            });
+
+            return html;
+        }
+
+        function renderSingleMatrixTable(tableId, title, mappings, targetRelasiPaket) {
+            // Ambil pertanyaan untuk paket ini
+            const questions = matriksData.pertanyaan.filter(q => {
+                if (!q.target_relasi) return true;
+                const targets = q.target_relasi.split(',').map(s => s.trim());
+                if (targetRelasiPaket === 'bawahan') {
+                    return targets.includes('bawahan');
+                } else {
+                    return targets.includes('rekan') || targets.includes('diri') || targets.includes('atasan');
+                }
+            });
+
+            // Kelompokkan pertanyaan per kategori
+            const categoriesMap = {};
+            questions.forEach(q => {
+                if (!categoriesMap[q.nama_kategori]) {
+                    categoriesMap[q.nama_kategori] = {
+                        nama: q.nama_kategori,
+                        urutan: q.kategori_urutan || 99,
+                        items: []
+                    };
+                }
+                categoriesMap[q.nama_kategori].items.push(q);
+            });
+
+            const categories = Object.values(categoriesMap).sort((a, b) => a.urutan - b.urutan);
+
+            let html = `
+            <div class="matrix-container">
+                <div class="matrix-table-wrap">
+                    <table class="matrix-table" id="${tableId}">
+                        <thead>
+                            <tr>
+                                <th rowspan="2" class="sticky-col" style="text-align:left; vertical-align:middle; padding:12px 14px;">
+                                    <div style="font-size:13.5px; font-weight:700; color:var(--text);">${title}</div>
+                                    <div style="font-size:11px; font-weight:normal; color:var(--text-muted); margin-top:3px;">
+                                        ${mappings.length} Pegawai • ${questions.length} Butir Penilaian (Skala 1–5)
+                                    </div>
+                                </th>`;
+
+            // Row 1 Header Pegawai Dinilai (Dengan border pemisah antar pegawai)
+            mappings.forEach((m, idx) => {
+                const isSelesai = m.status === 'selesai';
+                const userAnswers = matriksState[m.mapping_id] || {};
+                const answeredCount = questions.filter(q => userAnswers[q.id] !== undefined && userAnswers[q.id] !== null && userAnswers[q.id] !== '').length;
+                const isFull = answeredCount === questions.length;
+
+                let statusBadgeHtml = '';
+                if (isSelesai) {
+                    statusBadgeHtml = `<span class="badge badge-green" style="font-size:10.5px;">✓ Final Terkunci</span>`;
+                } else if (isFull) {
+                    statusBadgeHtml = `<span class="badge" id="hdr-badge-${m.mapping_id}" style="font-size:10.5px; background:#dcfce7; color:#15803d; font-weight:700;">✓ Lengkap (${answeredCount}/${questions.length})</span>`;
+                } else if (answeredCount > 0) {
+                    statusBadgeHtml = `<span class="badge" id="hdr-badge-${m.mapping_id}" style="font-size:10.5px; background:#e0f2fe; color:#0369a1; font-weight:600;">Draft (${answeredCount}/${questions.length})</span>`;
+                } else {
+                    statusBadgeHtml = `<span class="badge badge-gray" id="hdr-badge-${m.mapping_id}" style="font-size:10.5px;">Belum Diisi (0/${questions.length})</span>`;
+                }
+
+                html += `
+                    <th colspan="5" class="th-target-group ${isFull ? 'complete-header' : ''}" id="hdr-target-${m.mapping_id}">
+                        <div style="font-weight:700; font-size:13px; color:var(--text); line-height:1.35; margin-bottom:4px; min-height:34px; display:flex; align-items:center; justify-content:center;">
+                            ${m.nama_dinilai}
+                        </div>
+                        ${m.jabatan ? `<div style="font-size:11px; color:var(--text-muted); font-weight:normal; max-width:200px; margin:0 auto 6px auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${m.jabatan}">${m.jabatan}</div>` : ''}
+                        <div style="margin-top:2px;">
+                            ${statusBadgeHtml}
+                        </div>
+                    </th>`;
+            });
+
+            html += `</tr><tr>`;
+
+            // Row 2 Sub-header Skala Nilai 1 | 2 | 3 | 4 | 5 (Dari kiri ke kanan)
+            mappings.forEach((m, mIdx) => {
+                [1, 2, 3, 4, 5].forEach((val, vIdx) => {
+                    const isFirst = vIdx === 0 ? 'th-sub-first' : '';
+                    html += `<th class="th-sub ${isFirst}">${val}</th>`;
+                });
+            });
+
+            html += `</tr></thead><tbody>`;
+
+            // Body: Render Kategori & Butir Pertanyaan
+            categories.forEach((cat, catIdx) => {
+                const catNumber = catIdx + 1;
+                html += `
+                    <tr class="matrix-cat-row">
+                        <td class="sticky-col">
+                            ${catNumber}. ${cat.nama.toUpperCase()}
+                        </td>
+                        <td colspan="${mappings.length * 5}" class="matrix-cat-fill"></td>
+                    </tr>`;
+
+                cat.items.forEach((q, qIdx) => {
+                    const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+                    const letter = letters[qIdx] || (qIdx + 1);
+                    const itemLabel = `${catNumber}${letter}.`;
+
+                    html += `
+                        <tr class="question-row" id="row-${q.id}">
+                            <td class="sticky-col" style="padding:9px 14px; line-height:1.45; vertical-align:middle;">
+                                <div style="display:flex; gap:8px;">
+                                    <span style="font-weight:700; color:var(--text); min-width:24px;">${itemLabel}</span>
+                                    <span style="color:var(--text);">${q.pertanyaan}</span>
+                                </div>
+                            </td>`;
+
+                    // Sel radio untuk tiap target pegawai (skala 1-5 dari kiri ke kanan)
+                    mappings.forEach((m, mIdx) => {
+                        const mId = m.mapping_id;
+                        const isSelesai = m.status === 'selesai';
+                        const currentSkor = matriksState[mId] ? matriksState[mId][q.id] : null;
+
+                        [1, 2, 3, 4, 5].forEach((val, vIdx) => {
+                            const isSelected = String(currentSkor) === String(val);
+                            const selectedClass = isSelected ? 'selected' : '';
+                            const disabledClass = isSelesai ? 'disabled' : '';
+                            const isFirst = vIdx === 0 ? 'cell-sub-first' : '';
+
+                            html += `
+                                <td class="cell-radio ${selectedClass} ${disabledClass} ${isFirst}" 
+                                    id="cell-${mId}-${q.id}-${val}"
+                                    onclick="selectCellRadio(${mId}, ${q.id}, ${val}, ${isSelesai})">
+                                    <input type="radio" 
+                                           name="matriks_radio_${mId}_${q.id}" 
+                                           id="radio-${mId}-${q.id}-${val}"
+                                           value="${val}" 
+                                           ${isSelected ? 'checked' : ''} 
+                                           ${isSelesai ? 'disabled' : ''}
+                                           onchange="onMatriksRadioChange(${mId}, ${q.id}, ${val})">
+                                </td>`;
+                        });
+                    });
+
+                    html += `</tr>`;
+                });
+            });
+
+            // Row Komentar / Masukan Keseluruhan (Opsional)
+            html += `
+                <tr class="comment-row">
+                    <td class="sticky-col" style="padding:14px 16px; vertical-align:top;">
+                        <div style="display:flex; align-items:center; gap:6px; font-weight:700; color:var(--text); font-size:12.5px;">
+                            <svg style="width:15px;height:15px;fill:currentColor;flex-shrink:0;color:var(--primary);" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+                            <span>Komentar / Masukan (Opsional)</span>
+                        </div>
+                        <div style="font-size:11px; font-weight:normal; color:var(--text-muted); margin-top:4px; line-height:1.4;">
+                            Catatan, apresiasi, atau masukan membangun untuk pegawai yang dinilai.
+                        </div>
+                    </td>`;
+
+            mappings.forEach((m, mIdx) => {
+                const mId = m.mapping_id;
+                const isSelesai = m.status === 'selesai';
+                const commentVal = matriksComments[mId] !== undefined ? matriksComments[mId] : (m.komentar_masukan || '');
+                html += `
+                    <td colspan="5" class="cell-sub-first" style="padding:10px; vertical-align:top;">
+                        <textarea id="matriks-comment-${mId}" 
+                                  class="matrix-comment-input"
+                                  placeholder="Catatan untuk ${m.nama_dinilai}..." 
+                                  ${isSelesai ? 'disabled' : ''}
+                                  oninput="onMatriksCommentInput(${mId}, this.value);">${escapeHtml(commentVal)}</textarea>
+                    </td>`;
+            });
+
+            html += `</tr></tbody></table></div></div>`;
+            return html;
+        }
+
+        function alignStickyHeaders() {
+            document.querySelectorAll('.matrix-table').forEach(tbl => {
+                const row1 = tbl.querySelector('thead tr:first-child');
+                const row2 = tbl.querySelector('thead tr:nth-child(2)');
+                if (row1 && row2) {
+                    const h1 = row1.offsetHeight;
+                    row2.querySelectorAll('th').forEach(th => {
+                        th.style.top = `${h1}px`;
+                    });
+                }
+            });
+        }
+
+        window.addEventListener('resize', () => {
+            const isMob = window.innerWidth <= 768;
+            if (isMob !== lastMatriksIsMobile && currentMode === 'matriks' && matriksData) {
+                lastMatriksIsMobile = isMob;
+                renderMatriksTables();
+            } else {
+                alignStickyHeaders();
+            }
+        });
+
+        function selectCellRadio(mappingId, pertanyaanId, val, isReadOnly) {
+            if (isReadOnly) return;
+            const radioEl = document.getElementById(`radio-${mappingId}-${pertanyaanId}-${val}`);
+            if (radioEl) {
+                radioEl.checked = true;
+                onMatriksRadioChange(mappingId, pertanyaanId, val);
+            }
+        }
+
+        function onMatriksRadioChange(mappingId, pertanyaanId, val) {
+            if (!matriksState[mappingId]) matriksState[mappingId] = {};
+            matriksState[mappingId][pertanyaanId] = val;
+            matriksDirty = true;
+
+            // Update visual highlight pada sel radio (skala 1-5)
+            [1, 2, 3, 4, 5].forEach(score => {
+                const cell = document.getElementById(`cell-${mappingId}-${pertanyaanId}-${score}`);
+                if (cell) {
+                    if (score === val) {
+                        cell.classList.add('selected');
+                    } else {
+                        cell.classList.remove('selected');
+                    }
+                }
+            });
+
+            updateTargetHeaderBadge(mappingId);
+            updateMatriksProgress();
+        }
+
+        function updateTargetHeaderBadge(mappingId) {
+            const badgeEl = document.getElementById(`hdr-badge-${mappingId}`);
+            const targetTh = document.getElementById(`hdr-target-${mappingId}`);
+            if (!badgeEl) return;
+
+            const mapping = matriksData.mappings.find(m => m.mapping_id === mappingId);
+            if (!mapping || mapping.status === 'selesai') return;
+
+            const questions = getQuestionsForRelasi(mapping.jenis_relasi);
+            const userAnswers = matriksState[mappingId] || {};
+            const answeredCount = questions.filter(q => userAnswers[q.id] !== undefined && userAnswers[q.id] !== null && userAnswers[q.id] !== '').length;
+
+            if (answeredCount === questions.length && questions.length > 0) {
+                badgeEl.className = "badge";
+                badgeEl.style.background = "#dcfce7";
+                badgeEl.style.color = "#15803d";
+                badgeEl.style.fontWeight = "700";
+                badgeEl.textContent = `✓ Lengkap (${answeredCount}/${questions.length})`;
+                if (targetTh) targetTh.classList.add('complete-header');
+            } else if (answeredCount > 0) {
+                badgeEl.className = "badge";
+                badgeEl.style.background = "#e0f2fe";
+                badgeEl.style.color = "#0369a1";
+                badgeEl.style.fontWeight = "600";
+                badgeEl.textContent = `Draft (${answeredCount}/${questions.length})`;
+                if (targetTh) targetTh.classList.remove('complete-header');
+            } else {
+                badgeEl.className = "badge badge-gray";
+                badgeEl.style.background = "";
+                badgeEl.style.color = "";
+                badgeEl.style.fontWeight = "";
+                badgeEl.textContent = `Belum Diisi (0/${questions.length})`;
+                if (targetTh) targetTh.classList.remove('complete-header');
+            }
+        }
+
+        function updateMatriksProgress() {
+            if (!matriksData || !matriksData.mappings) return;
+
+            let totalExpected = 0;
+            let totalAnswered = 0;
+            let readyCount = 0;
+            let totalTargets = matriksData.mappings.length;
+
+            matriksData.mappings.forEach(m => {
+                const reqQuestions = getQuestionsForRelasi(m.jenis_relasi);
+                const userAnswers = matriksState[m.mapping_id] || {};
+                totalExpected += reqQuestions.length;
+
+                let mAnswered = 0;
+                reqQuestions.forEach(q => {
+                    if (userAnswers[q.id] !== undefined && userAnswers[q.id] !== null && userAnswers[q.id] !== '') {
+                        totalAnswered++;
+                        mAnswered++;
+                    }
+                });
+
+                if (m.status === 'selesai' || (mAnswered === reqQuestions.length && reqQuestions.length > 0)) {
+                    readyCount++;
+                }
+            });
+
+            const pct = totalExpected > 0 ? Math.round((totalAnswered / totalExpected) * 100) : 0;
+            const progressText = document.getElementById("m-progress-text");
+            const readyText = document.getElementById("m-ready-text");
+            const barFill = document.getElementById("m-progress-bar-fill");
+            const finalBtn = document.getElementById("btn-matriks-final");
+
+            if (progressText) progressText.textContent = `${totalAnswered} / ${totalExpected} butir (${pct}%)`;
+            if (readyText) readyText.textContent = `Siap Submit Final: ${readyCount} dari ${totalTargets} pegawai`;
+            if (barFill) barFill.style.width = `${pct}%`;
+            if (finalBtn) {
+                finalBtn.innerHTML = `<svg style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;fill:currentColor;" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Submit Penilaian Final (${readyCount})`;
+            }
+        }
+
+        async function saveDraftMatriks() {
+            const btn = document.getElementById("btn-matriks-draft");
+            const originalHtml = btn.innerHTML;
+
+            const submissions = [];
+            matriksData.mappings.forEach(m => {
+                if (m.status === 'selesai') return; // Lewati yang sudah final
+                const mId = m.mapping_id;
+                const userAnswers = matriksState[mId] || {};
+                const jwb = [];
+                Object.entries(userAnswers).forEach(([qId, s]) => {
+                    if (s !== null && s !== undefined && s !== '') {
+                        jwb.push({ pertanyaan_id: parseInt(qId), skor: parseInt(s) });
+                    }
+                });
+                if (jwb.length > 0) {
+                    const commentEl = document.getElementById(`matriks-comment-${mId}`);
+                    const savedComment = commentEl ? commentEl.value : (matriksComments[mId] !== undefined ? matriksComments[mId] : (m.komentar_masukan || ""));
+                    submissions.push({
+                        mapping_id: mId,
+                        final: false,
+                        jawaban: jwb,
+                        komentar_masukan: savedComment
+                    });
+                }
+            });
+
+            if (submissions.length === 0) {
+                showAlert(document.getElementById("matriks-alert"), "Belum ada butir penilaian yang diisi untuk disimpan sebagai draft.");
+                return;
+            }
+
+            try {
+                btn.disabled = true;
+                btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Menyimpan...`;
+
+                const res = await apiCall("evaluations.php?action=batch_submit", "POST", { submissions });
+                if (res.success) {
+                    matriksDirty = false;
+                    showAlert(document.getElementById("matriks-alert"), res.message || "Draft berhasil disimpan!", "success");
+                    loadMatriksData();
+                } else {
+                    showAlert(document.getElementById("matriks-alert"), res.message, "error");
+                }
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        }
+
+        async function submitFinalMatriks() {
+            const readyToSubmit = [];
+            const incomplete = [];
+
+            matriksData.mappings.forEach(m => {
+                if (m.status === 'selesai') return; // Sudah submit final sebelumnya
+                const mId = m.mapping_id;
+                const reqQuestions = getQuestionsForRelasi(m.jenis_relasi);
+                const userAnswers = matriksState[mId] || {};
+                const isComplete = reqQuestions.length > 0 && reqQuestions.every(q => userAnswers[q.id] !== undefined && userAnswers[q.id] !== null && userAnswers[q.id] !== '');
+
+                if (isComplete) {
+                    const commentEl = document.getElementById(`matriks-comment-${mId}`);
+                    const savedComment = commentEl ? commentEl.value : (matriksComments[mId] !== undefined ? matriksComments[mId] : (m.komentar_masukan || ""));
+                    readyToSubmit.push({
+                        mapping: m,
+                        jawaban: reqQuestions.map(q => ({ pertanyaan_id: q.id, skor: parseInt(userAnswers[q.id]) })),
+                        komentar_masukan: savedComment
+                    });
+                } else {
+                    const answeredCnt = reqQuestions.filter(q => userAnswers[q.id] !== undefined && userAnswers[q.id] !== null && userAnswers[q.id] !== '').length;
+                    if (answeredCnt > 0) {
+                        const commentEl = document.getElementById(`matriks-comment-${mId}`);
+                        const savedComment = commentEl ? commentEl.value : (matriksComments[mId] !== undefined ? matriksComments[mId] : (m.komentar_masukan || ""));
+                        const partialJwb = [];
+                        reqQuestions.forEach(q => {
+                            if (userAnswers[q.id] !== undefined && userAnswers[q.id] !== null && userAnswers[q.id] !== '') {
+                                partialJwb.push({ pertanyaan_id: q.id, skor: parseInt(userAnswers[q.id]) });
+                            }
+                        });
+                        incomplete.push({
+                            mapping_id: mId,
+                            jawaban: partialJwb,
+                            komentar_masukan: savedComment
+                        });
+                    }
+                }
+            });
+
+            if (readyToSubmit.length === 0) {
+                showAlert(document.getElementById("matriks-alert"), "Belum ada pegawai yang butir penilaiannya telah terisi lengkap (100%). Lengkapi seluruh butir pertanyaan sebelum submit final.", "error");
+                return;
+            }
+
+            const namesListHtml = readyToSubmit.map(item => `<li><strong>${item.mapping.nama_dinilai}</strong> (${relasiTargetLabel(item.mapping.jenis_relasi)})</li>`).join('');
+            const incompleteNotice = incomplete.length > 0
+                ? `<p style="margin-top:10px; font-size:12.5px; color:var(--text-muted);"><em>Catatan: ${incomplete.length} pegawai lainnya yang belum lengkap akan tetap otomatis disimpan sebagai draft.</em></p>`
+                : '';
+
+            const ok = await showConfirmModal({
+                title: "Konfirmasi Submit Penilaian Final",
+                message: `<div style="text-align:left;">
+                            <p>Apakah Anda yakin ingin mengirim penilaian final untuk <strong>${readyToSubmit.length} pegawai</strong> berikut?</p>
+                            <ul style="margin:8px 0 8px 20px; font-size:13px; max-height:160px; overflow-y:auto;">${namesListHtml}</ul>
+                            <p style="font-size:12.5px; color:#b91c1c;">Setelah disubmit final, penilaian untuk pegawai di atas akan <strong>dikunci permanen</strong> dan tidak dapat diubah lagi.</p>
+                            ${incompleteNotice}
+                          </div>`,
+                confirmText: `Ya, Submit Final (${readyToSubmit.length} Pegawai)`,
+                cancelText: "Batal",
+                type: "success",
+                icon: "check"
+            });
+            if (!ok) return;
+
+            const btn = document.getElementById("btn-matriks-final");
+            const originalHtml = btn.innerHTML;
+
+            try {
+                btn.disabled = true;
+                btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Mengirim...`;
+
+                const submissions = [];
+                // Yang lengkap disubmit final: true
+                readyToSubmit.forEach(item => {
+                    submissions.push({
+                        mapping_id: item.mapping.mapping_id,
+                        final: true,
+                        jawaban: item.jawaban,
+                        komentar_masukan: item.komentar_masukan
+                    });
+                });
+                // Yang belum lengkap disimpan sebagai draft (final: false)
+                incomplete.forEach(item => {
+                    submissions.push({
+                        mapping_id: item.mapping_id,
+                        final: false,
+                        jawaban: item.jawaban,
+                        komentar_masukan: item.komentar_masukan
+                    });
+                });
+
+                const res = await apiCall("evaluations.php?action=batch_submit", "POST", { submissions });
+                if (res.success) {
+                    matriksDirty = false;
+                    showCenterFeedback(res.message || `Berhasil mengirim ${readyToSubmit.length} penilaian final!`, "success", 4000);
+                    loadMatriksData();
+                } else {
+                    showAlert(document.getElementById("matriks-alert"), res.message, "error");
+                }
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return "";
+            return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        // ==========================================
+        // INISIALISASI
+        // ==========================================
+        (async () => {
+            const user = await initLayout("penilaian", ["pegawai"]);
+            if (!user) return;
+
+            const savedMode = localStorage.getItem('penilaian_view_mode') || 'standar';
+            setEvaluationMode(savedMode);
+        })();
+    </script>
+</body>
+
+</html>

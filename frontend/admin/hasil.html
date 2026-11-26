@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hasil Penilaian - Sistem Penilaian 360</title>
+    <script>
+    (function(){
+                var t = localStorage.getItem('app_theme');
+        if (t === 'dark' || (!t && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+        var isNav = sessionStorage.getItem('sidebar_nav_open') === '1' || sessionStorage.getItem('sidebar_hovered') === '1';
+        if (isNav && localStorage.getItem('sidebar_pinned') !== '1') {
+            document.documentElement.classList.add('sidebar-nav-open', 'sidebar-hover-persisted');
+            function onMove(e) {
+                if (e.clientX > 248) {
+                    document.documentElement.classList.remove('sidebar-nav-open', 'sidebar-hover-persisted');
+                    sessionStorage.removeItem('sidebar_nav_open');
+                    sessionStorage.removeItem('sidebar_hovered');
+                    window.removeEventListener('mousemove', onMove);
+                }
+            }
+            window.addEventListener('mousemove', onMove, { passive: true });
+        }
+    })();
+    </script>
+    <link rel="stylesheet" href="../assets/css/style.css?v=20261117_notif">
+    <style>.sidebar-footer, .sidebar-toggle-bottom, button.sidebar-toggle-bottom, aside#sidebar .sidebar-footer, aside#sidebar .sidebar-toggle-bottom { display: none !important; }</style>
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="main-content">
+        <header class="topbar">
+            <div class="topbar-left"><h1 id="page-title">Hasil Penilaian</h1></div>
+            <div id="topbar-user"></div>
+        </header>
+        <main class="page">
+            <div class="card">
+                <div class="flex-between" style="flex-wrap:wrap; gap:10px;">
+                    <div>
+                        <label>Pilih Periode</label>
+                        <select id="select-periode" style="max-width:400px;"></select>
+                        <div class="text-muted" style="font-size:11.5px; margin-top:6px;">
+                            Skor akhir dihitung otomatis saat penilaian disubmit final atau periode ditutup. Gunakan tombol di samping jika ingin menghitung ulang seluruh skor.
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" id="btn-hitung" onclick="hitungUlang()" style="margin-top:20px;">
+                        <svg style="width:14px;height:14px;fill:currentColor;" viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+                        Hitung Ulang Semua
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Rekap Skor Akhir 360° Seluruh Pegawai</h3>
+                <div id="alert-box"></div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Nama</th><th>Jabatan</th><th>Unit Kerja</th><th>Skor Akhir</th><th>Predikat</th><th>Aksi</th></tr></thead>
+                        <tbody id="table-body"><tr><td colspan="6" class="text-muted">Pilih periode terlebih dahulu.</td></tr></tbody>
+                    </table>
+                </div>
+                <div id="pagination-hasil"></div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div class="modal-overlay hidden" id="modal">
+    <div class="modal-box wide" style="max-width:980px; width:95%; max-height:90vh; overflow-y:auto;">
+        <div class="modal-header"><h3 id="modal-title">Detail Hasil Penilaian</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+        <div id="modal-body"></div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script src="../assets/js/config.js?v=20261126"></script>
+<script src="../assets/js/api.js?v=20261126"></script>
+<script src="../assets/js/searchable-select.js?v=20261116_search"></script>
+    <script src="../assets/js/auth.js?v=20261117_notif"></script>
+<script>
+let currentPeriodeId = null;
+let currentHasilPage = 1;
+const PAGE_LIMIT = 20;
+
+async function loadPeriodOptions() {
+    const res = await apiCall("periode.php");
+    const select = document.getElementById("select-periode");
+    if (!res.success || res.data.length === 0) { select.innerHTML = `<option value="">Belum ada periode</option>`; return; }
+    select.innerHTML = `<option value="">-- Pilih Periode --</option>` + res.data.map(p => `<option value="${p.id}">${p.nama_periode}</option>`).join("");
+    const aktif = res.data.filter(p => p.status === 'aktif');
+    if (aktif.length > 0) { aktif.sort((a, b) => new Date(b.tanggal_mulai) - new Date(a.tanggal_mulai)); select.value = aktif[0].id; }
+    select.addEventListener("change", () => { currentPeriodeId = select.value; loadResults(select.value); });
+    currentPeriodeId = select.value;
+    loadResults(select.value);
+}
+
+async function loadResults(periodeId, page = 1) {
+    const tbody = document.getElementById("table-body");
+    currentHasilPage = page;
+    if (!periodeId) { tbody.innerHTML = `<tr><td colspan="6" class="text-muted">Pilih periode terlebih dahulu.</td></tr>`; return; }
+    tbody.innerHTML = `<tr><td colspan="6" class="text-muted">Memuat data...</td></tr>`;
+    const res = await apiCall(`results.php?periode_id=${periodeId}&limit=${PAGE_LIMIT}&page=${page}`);
+    if (!res.success) { tbody.innerHTML = `<tr><td colspan="6" class="text-muted">${res.message}</td></tr>`; return; }
+    if (res.data.length === 0) { tbody.innerHTML = `<tr><td colspan="6" class="text-muted">Belum ada data pegawai yang dinilai pada periode ini.</td></tr>`; renderPagination(null,'pagination-hasil',()=>{}); return; }
+    tbody.innerHTML = res.data.map(p => `<tr>
+        <td>
+            <div style="font-weight:600; display:flex; align-items:center; gap:6px;">
+                <span>${p.nama_lengkap}</span>
+                ${p.golongan_ruang ? `<span class="badge" style="font-size:10px;padding:1px 6px;background:var(--primary-light);color:var(--primary);border-radius:10px;font-weight:600;">${p.golongan_ruang}</span>` : ''}
+            </div>
+        </td><td>${p.jabatan || '-'}</td><td>${p.unit_kerja || '-'}</td>
+        <td><strong>${p.nilai_akhir ?? '-'}</strong></td>
+        <td>${predikatBadge(p.predikat)}</td>
+        <td>
+            <div style="display:flex; gap:6px;">
+                <button class="btn btn-secondary btn-sm" onclick="viewDetail(${p.id}, ${periodeId})">Lihat Detail</button>
+                <button class="btn btn-primary btn-sm" onclick="cetakLaporanPegawai(${p.id}, ${periodeId})" title="Cetak Laporan Pegawai" style="display:inline-flex; align-items:center; gap:4px;">
+                    <svg style="width:13px;height:13px;fill:currentColor;" viewBox="0 0 24 24"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg> Cetak
+                </button>
+            </div>
+        </td>
+    </tr>`).join("");
+    renderPagination(res.meta, 'pagination-hasil', (p) => loadResults(periodeId, p));
+}
+
+function cetakLaporanPegawai(pegawaiId, periodeId) {
+    const pid = periodeId || currentPeriodeId;
+    window.open(`cetak_pegawai.html?periode_id=${pid}&pegawai_id=${pegawaiId}`, '_blank');
+}
+
+async function hitungUlang() {
+    if (!currentPeriodeId) { showCenterFeedback("Pilih periode terlebih dahulu.", "warning"); return; }
+    const ok = await showConfirmModal({
+        title: "Konfirmasi Hitung Ulang",
+        message: "Hitung ulang skor akhir untuk seluruh pegawai pada periode ini? Hasil sebelumnya akan diperbarui.",
+        confirmText: "Ya, Hitung Ulang",
+        cancelText: "Batal",
+        type: "primary",
+        icon: "check"
+    });
+    if (!ok) return;
+    const btn = document.getElementById("btn-hitung");
+    btn.disabled = true; btn.textContent = "Menghitung...";
+    const res = await apiCall(`results.php?action=hitung&periode_id=${currentPeriodeId}`, "POST");
+    btn.disabled = false; btn.innerHTML = `<svg style="width:14px;height:14px;fill:currentColor;" viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg> Hitung Ulang Semua`;
+    showAlert(document.getElementById("alert-box"), res.message, res.success ? "success" : "error");
+    if (res.success) loadResults(currentPeriodeId);
+}
+
+async function viewDetail(pegawaiId, periodeId) {
+    const res = await apiCall(`results.php?periode_id=${periodeId}&pegawai_id=${pegawaiId}`);
+    if (!res.success) { alert(res.message); return; }
+    const d = res.data;
+    const gol = d.pegawai.golongan_ruang ? ` (${d.pegawai.golongan_ruang})` : '';
+    document.getElementById("modal-title").textContent = `Detail Penilaian - ${d.pegawai.nama_lengkap}${gol}`;
+
+    const h = d.hasil || {};
+    const bobotPakai = d.bobot_digunakan || {};
+    const relasiOrder = Boolean(d.has_bawahan) ? ['atasan', 'rekan', 'bawahan', 'diri'] : ['atasan', 'rekan', 'diri'];
+    const relasiVal = { atasan: h.nilai_atasan, rekan: h.nilai_rekan, bawahan: h.nilai_bawahan, diri: h.nilai_diri };
+    let relasiHtml = relasiOrder.filter(rel => relasiVal[rel] !== null && relasiVal[rel] !== undefined).map(relasi => {
+        const val = Number(relasiVal[rel]).toFixed(2);
+        const b = bobotPakai[relasi] !== undefined ? `${bobotPakai[relasi]}%` : '';
+        const bBadge = b ? `<span style="font-size:11px; color:var(--text-muted); font-weight:normal;"> (Bobot ${b})</span>` : '';
+        return `<div class="card stat-card" style="padding:14px;"><div class="value" style="font-size:20px;">${val} <span style="font-size:11px; font-weight:500; color:var(--text-muted);">/ 100</span></div><div class="label">${relasiLabel(relasi)}${bBadge}</div></div>`;
+    }).join("");
+
+    const allComments = [];
+    (d.detail_penilai || []).forEach(dp => {
+        if (dp.komentar_masukan && dp.komentar_masukan.trim() !== '') {
+            allComments.push(dp.komentar_masukan.trim());
+        }
+        (dp.jawaban || []).forEach(j => {
+            if (j.komentar && j.komentar.trim() !== '') {
+                allComments.push(j.komentar.trim());
+            }
+        });
+    });
+
+    let detailHtml = "";
+    if (allComments.length === 0) {
+        detailHtml = `<div style="border:1px solid var(--border); border-radius:8px; padding:16px; margin-bottom:12px; font-size:13px; color:var(--text-muted);">Tidak ada komentar atau masukan dari penilai.</div>`;
+    } else {
+        const MAX_COMMENTS = 5;
+        allComments.sort(() => Math.random() - 0.5);
+
+        const commentItemHtml = c => `<div style="padding:12px 0; border-bottom:1px solid var(--border); font-size:13px; color:var(--text); font-style:italic;">"${c}"</div>`;
+        const visibleHtml = allComments.slice(0, MAX_COMMENTS).map(commentItemHtml).join("");
+        const hiddenHtml  = allComments.length > MAX_COMMENTS
+            ? allComments.slice(MAX_COMMENTS).map(commentItemHtml).join("")
+            : "";
+        const toggleId  = `cmts-extra-${pegawaiId}`;
+        const btnId     = `cmts-btn-${pegawaiId}`;
+        const toggleBtn = allComments.length > MAX_COMMENTS ? `
+            <div id="${toggleId}" style="display:none;">${hiddenHtml}</div>
+            <button id="${btnId}" class="btn btn-secondary btn-sm" style="margin-top:12px; font-size:12px;"
+                onclick="(function(){
+                    var el=document.getElementById('${toggleId}');
+                    var btn=document.getElementById('${btnId}');
+                    var expanded=el.style.display!=='none';
+                    el.style.display=expanded?'none':'block';
+                    btn.textContent=expanded?'Lihat semua komentar (${allComments.length})':'Sembunyikan komentar';
+                })()">Lihat semua komentar (${allComments.length})</button>
+        ` : "";
+        detailHtml = `<div style="border:1px solid var(--border); border-radius:8px; padding:16px; margin-bottom:12px;">${visibleHtml}${toggleBtn}</div>`;
+    }
+
+    const rincianHtml = buildRincianIndikatorHtml(d.rincian_indikator, 'admin', { hasBawahan: d.has_bawahan, bobotDigunakan: bobotPakai });
+
+    document.getElementById("modal-body").innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:12px 16px;">
+            <div>
+                <div class="score-pill" style="font-size:30px; display:inline-block;">${h.nilai_akhir !== null && h.nilai_akhir !== undefined ? Number(h.nilai_akhir).toFixed(2) : 'Belum dihitung'}</div>
+                <span style="margin-left:10px;">${predikatBadge(h.predikat)}</span>
+                <div style="font-size:11.5px; color:var(--text-muted); margin-top:4px;">
+                    ${d.pegawai.jabatan || '-'} &bull; ${d.pegawai.unit_kerja || '-'} &bull; <strong>${d.has_bawahan ? 'Pejabat Struktural' : 'Pegawai Pelaksana / Fungsional'}</strong>
+                </div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="cetakLaporanPegawai(${d.pegawai.id}, ${periodeId})" style="display:inline-flex; align-items:center; gap:6px; padding:8px 14px; font-weight:600;">
+                <svg style="width:15px;height:15px;fill:currentColor;" viewBox="0 0 24 24"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg> Cetak Laporan Pegawai
+            </button>
+        </div>
+        <div class="card mb-20" style="padding:16px; margin-bottom:16px;">
+            <div class="card-title" style="font-size:14px; margin-bottom:12px;">Perbandingan Skor Kategori per Relasi</div>
+            <div style="position: relative; height:300px; width:100%; display:flex; justify-content:center; align-items:center;">
+                <canvas id="adminLineChart"></canvas>
+            </div>
+        </div>
+        <div class="grid grid-4" style="margin-bottom:20px;">${relasiHtml || '<p class="text-muted">Belum ada penilaian selesai.</p>'}</div>
+        ${rincianHtml}
+        <h4 style="margin-top:24px; margin-bottom:12px; font-size:15px; font-weight:700;">Daftar Komentar dan Masukan dari Penilai</h4>
+        ${detailHtml || '<p class="text-muted">Belum ada penilaian yang selesai.</p>'}
+    `;
+    document.getElementById("modal").classList.remove("hidden");
+    if (d.detail_penilai && d.detail_penilai.length > 0) renderAdminCharts(d);
+}
+
+let adminLineChartInstance = null;
+function renderAdminCharts(d) {
+    const style = getComputedStyle(document.body);
+    const primary = style.getPropertyValue('--primary').trim() || '#1B4F8C';
+    const success = style.getPropertyValue('--success').trim() || '#10B981';
+    const warning = style.getPropertyValue('--warning').trim() || '#F59E0B';
+    const purple = style.getPropertyValue('--purple').trim() || '#8B5CF6';
+    const textColor = style.getPropertyValue('--text').trim() || '#1F2937';
+    const textMuted = style.getPropertyValue('--text-muted').trim() || '#9CA3AF';
+    const border = style.getPropertyValue('--border').trim() || '#E3E7ED';
+    const relasiColors = { atasan: primary, rekan: warning, bawahan: success, diri: purple };
+
+    const categories = new Set();
+    const statsPerRelasi = {};
+    (d.detail_penilai || []).forEach(dp => {
+        if (!statsPerRelasi[dp.jenis_relasi]) statsPerRelasi[dp.jenis_relasi] = {};
+        (dp.jawaban || []).forEach(j => {
+            categories.add(j.nama_kategori);
+            if (!statsPerRelasi[dp.jenis_relasi][j.nama_kategori]) statsPerRelasi[dp.jenis_relasi][j.nama_kategori] = { sum: 0, count: 0 };
+            statsPerRelasi[dp.jenis_relasi][j.nama_kategori].sum += parseFloat(j.skor);
+            statsPerRelasi[dp.jenis_relasi][j.nama_kategori].count += 1;
+        });
+    });
+    const categoryList = Array.from(categories);
+    const datasets = [];
+    for (const relasi in statsPerRelasi) {
+        const dataPoints = categoryList.map(cat => {
+            const stats = statsPerRelasi[relasi][cat];
+            return stats && stats.count > 0 ? parseFloat((stats.sum / stats.count).toFixed(2)) : null;
+        });
+        datasets.push({ label: relasiLabel(relasi), data: dataPoints, borderColor: relasiColors[relasi] || primary, backgroundColor: relasiColors[relasi] || primary, borderWidth: 2, tension: 0.1, pointRadius: 4, spanGaps: true });
+    }
+    if (adminLineChartInstance) adminLineChartInstance.destroy();
+    const ctx = document.getElementById('adminLineChart');
+    if (categoryList.length > 0 && ctx && typeof Chart !== 'undefined') {
+        adminLineChartInstance = new Chart(ctx, {
+            type: 'line', data: { labels: categoryList, datasets: datasets },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: { y: { min: 0, max: 5, grid: { color: border }, ticks: { color: textMuted } }, x: { grid: { display: false }, ticks: { color: textColor, font: { family: 'Inter', size: 11 } } } },
+                plugins: { legend: { display: true, labels: { color: textColor, font: { family: 'Inter', size: 11 }, usePointStyle: true, boxWidth: 8 } } }
+            }
+        });
+    } else if (ctx) {
+        const msg = (typeof Chart === 'undefined' && categoryList.length > 0)
+            ? 'Grafik tidak tersedia (library Chart.js gagal dimuat)'
+            : 'Belum ada data kategori untuk ditampilkan';
+        ctx.parentElement.innerHTML = `<div class="empty-state" style="padding:0;"><p>${msg}</p></div>`;
+    }
+}
+
+function closeModal() { document.getElementById("modal").classList.add("hidden"); }
+
+(async () => {
+    const user = await initLayout("hasil", ["super_admin", "admin"]);
+    if (!user) return;
+    if (user.role !== 'super_admin' && user.role !== 'admin') document.getElementById('btn-hitung').style.display = 'none';
+    loadPeriodOptions();
+})();
+</script>
+</body>
+</html>

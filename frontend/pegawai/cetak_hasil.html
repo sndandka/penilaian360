@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cetak Hasil Penilaian Saya - Sistem Penilaian 360&deg;</title>
+    <script>
+    (function(){
+        // Dokumen cetak fisik selalu menggunakan tema terang (tinta gelap di atas kertas putih)
+        document.documentElement.setAttribute('data-theme', 'light');
+    })();
+    </script>
+    <link rel="stylesheet" href="../assets/css/style.css?v=20261125_cetak">
+    <style>
+        /* Gaya Khusus Dokumen Cetak Kedinasan */
+        @page {
+            size: A4 portrait;
+            margin: 12mm 15mm 15mm 15mm;
+        }
+
+        body {
+            background: #E5E7EB;
+            color: #111827;
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            font-size: 11.5px;
+            line-height: 1.45;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Action bar di atas (hanya saat preview di layar) */
+        .print-toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: #1B4F8C;
+            color: #ffffff;
+            padding: 10px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .print-toolbar .toolbar-info {
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .print-toolbar .toolbar-btns {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* Lembar Dokumen Kertas A4 */
+        .sheet {
+            background: #ffffff !important;
+            width: 210mm;
+            min-height: 297mm;
+            margin: 20px auto 40px auto;
+            padding: 16mm 18mm 18mm 18mm;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            box-sizing: border-box;
+            color: #111827 !important;
+        }
+
+        /* Penegasan Kontras Tinggi Cetak Kedinasan (Cegah Teks Pudar / Tembus Dark Mode) */
+        .sheet, .sheet * {
+            color: #111827 !important;
+        }
+        .sheet .text-muted, 
+        .sheet .s-lbl, 
+        .sheet .doc-subtitle, 
+        .sheet .instansi-alamat,
+        .sheet .ttd-nip {
+            color: #4B5563 !important;
+        }
+        .sheet th {
+            background: #F3F4F6 !important;
+            color: #111827 !important;
+            border: 1px solid #9CA3AF !important;
+        }
+        .sheet td {
+            color: #111827 !important;
+            border: 1px solid #D1D5DB !important;
+        }
+        .sheet .data-table.borderless td {
+            border: none !important;
+            color: #111827 !important;
+        }
+        .sheet .data-table.borderless td strong {
+            color: #111827 !important;
+            font-weight: 700 !important;
+        }
+        .sheet .section-header {
+            background: #F3F4F6 !important;
+            color: #111827 !important;
+            border-left: 4px solid #1B4F8C !important;
+        }
+        .sheet .score-box {
+            background: #F9FAFB !important;
+            border: 1px solid #D1D5DB !important;
+        }
+        .sheet .score-box .s-val {
+            color: #111827 !important;
+        }
+        .sheet .score-box .s-lbl {
+            color: #4B5563 !important;
+        }
+        .sheet .score-box.disabled {
+            background: #F3F4F6 !important;
+            border-color: #E5E7EB !important;
+        }
+        .sheet .score-box.disabled .s-val,
+        .sheet .score-box.disabled .s-lbl {
+            color: #6B7280 !important;
+        }
+        .sheet .score-box.final {
+            background: #EFF6FF !important;
+            border-color: #93C5FD !important;
+        }
+        .sheet .score-box.final .s-val {
+            color: #1B4F8C !important;
+        }
+
+        /* Kop Surat Resmi Pemprov Jatim */
+        .kop-surat {
+            position: relative;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #000000;
+            margin-bottom: 2px;
+            min-height: 78px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .kop-surat::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -5px;
+            border-bottom: 1px solid #000000;
+        }
+        .kop-logo {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 10px;
+            margin: auto 0;
+            width: 72px;
+            height: 72px;
+            object-fit: contain;
+        }
+        .kop-text {
+            width: 100%;
+            text-align: center;
+            padding: 0 80px;
+            box-sizing: border-box;
+        }
+        .kop-text .instansi-1 {
+            font-size: 13.5px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+        .kop-text .instansi-2 {
+            font-size: 16.5px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            margin-bottom: 3px;
+            text-transform: uppercase;
+            color: #111827;
+        }
+        .kop-text .instansi-alamat,
+        .kop-text .alamat,
+        .kop-text .kontak,
+        .kop-text .webmail {
+            font-size: 10px;
+            color: #374151;
+            line-height: 1.35;
+        }
+
+        /* Judul Dokumen */
+        .doc-title-box {
+            text-align: center;
+            margin-top: 16px;
+            margin-bottom: 14px;
+        }
+        .doc-title {
+            font-size: 13.5px;
+            font-weight: 800;
+            text-decoration: underline;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+        .doc-subtitle {
+            font-size: 11px;
+            color: #4B5563;
+            font-weight: 600;
+        }
+
+        /* Section Title */
+        .section-header {
+            font-size: 11.5px;
+            font-weight: 700;
+            background: #F3F4F6;
+            padding: 5px 10px;
+            border-left: 4px solid #1B4F8C;
+            margin-top: 14px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        /* Tabel Data & Identitas */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 12px;
+            font-size: 11px;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #D1D5DB;
+            padding: 5px 7px;
+        }
+        .data-table th {
+            background: #F9FAFB;
+            font-weight: 700;
+            text-align: center;
+            color: #1F2937;
+        }
+        .data-table.borderless td {
+            border: none;
+            padding: 3.5px 5px;
+        }
+
+        /* Highlight Score Box */
+        .score-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr) 1.4fr;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .score-box {
+            border: 1px solid #E5E7EB;
+            border-radius: 6px;
+            padding: 8px 6px;
+            text-align: center;
+            background: #FAFAFA;
+        }
+        .score-box .s-val {
+            font-size: 17px;
+            font-weight: 800;
+            color: #111827;
+            margin-bottom: 2px;
+        }
+        .score-box .s-lbl {
+            font-size: 10px;
+            color: #6B7280;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .score-box.disabled {
+            background: #F3F4F6;
+            border-color: #E5E7EB;
+            opacity: 0.75;
+        }
+        .score-box.disabled .s-val {
+            color: #9CA3AF;
+        }
+        .score-box.final {
+            background: #EFF6FF;
+            border-color: #BFDBFE;
+        }
+        .score-box.final .s-val {
+            font-size: 20px;
+            color: #1B4F8C;
+        }
+
+        /* Tanda Tangan Kedinasan */
+        .ttd-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 24px;
+            page-break-inside: avoid;
+        }
+        .ttd-box {
+            width: 45%;
+            text-align: center;
+            font-size: 11px;
+        }
+        .ttd-space {
+            height: 55px;
+        }
+        .ttd-name {
+            font-weight: 700;
+            text-decoration: underline;
+        }
+        .ttd-nip {
+            font-size: 10.5px;
+            color: #374151;
+            margin-top: 2px;
+        }
+
+        @media screen and (max-width: 800px) {
+            .sheet {
+                width: 100%;
+                margin: 10px 0;
+                padding: 14px;
+                box-shadow: none;
+                border-radius: 0;
+            }
+            .score-summary-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .score-box.final {
+                grid-column: span 2;
+            }
+            .ttd-container {
+                flex-direction: column;
+                gap: 20px;
+            }
+            .ttd-box {
+                width: 100%;
+            }
+        }
+
+        /* Mode Cetak */
+        @media print {
+            body {
+                background: #ffffff !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .sheet {
+                width: 100% !important;
+                min-height: auto !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+            }
+            .page-break {
+                page-break-before: always;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="print-toolbar no-print">
+    <div class="toolbar-info">
+        <strong>Laporan Hasil Penilaian Pegawai</strong> &bull; Arsip Pribadi Penilaian Kinerja 360&deg;
+    </div>
+    <div class="toolbar-btns">
+        <button class="btn btn-secondary btn-sm" onclick="kembaliKeHasil()" style="background:#ffffff; color:#1B4F8C; border:none; font-weight:600; cursor:pointer;">
+            &larr; Kembali
+        </button>
+        <button class="btn btn-secondary btn-sm" onclick="exportDataExcel()" style="background:#10B981; border:none; font-weight:700; color:#ffffff; display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+            <svg style="width:14px;height:14px;fill:currentColor;" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            Unduh Excel (CSV)
+        </button>
+        <button class="btn btn-primary btn-sm" onclick="window.print()" style="background:#F59E0B; border:none; font-weight:700; color:#111827; display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+            <svg style="width:14px;height:14px;fill:currentColor;" viewBox="0 0 24 24"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg>
+            Cetak Dokumen / Simpan PDF
+        </button>
+    </div>
+</div>
+
+<div class="sheet">
+    <!-- Kop Surat Resmi -->
+    <div class="kop-surat">
+        <img src="../assets/logo/OIP.webp" alt="Logo Pemprov Jatim" class="kop-logo" onerror="this.src='../assets/logo/OIP.png'">
+        <div class="kop-text">
+            <div class="instansi-1">PEMERINTAH PROVINSI JAWA TIMUR</div>
+            <div class="instansi-2">DINAS PEKERJAAN UMUM BINA MARGA</div>
+            <div class="instansi-alamat">
+                Jl. Gayung Kebonsari 167, Surabaya Telp. (031) 8280919, 8288773<br>
+                Fax. (031) 8293026 Kode Pos 60235 Website:binamarga.jatimprov.go.id<br>
+                Email: binamarga@jatimprov.go.id
+            </div>
+        </div>
+    </div>
+
+    <!-- Judul Dokumen -->
+    <div class="doc-title-box">
+        <div class="doc-title">Laporan Hasil Penilaian Kinerja 360&deg; Pegawai</div>
+        <div class="doc-subtitle" id="periode-subtitle">Memuat data periode...</div>
+    </div>
+
+    <!-- Bagian I: Identitas Pegawai -->
+    <div class="section-header">I. Data Pegawai yang Dinilai</div>
+    <table class="data-table borderless" style="margin-bottom:12px;">
+        <tr>
+            <td style="width:18%;"><strong>Nama Lengkap</strong></td>
+            <td style="width:2%;">:</td>
+            <td style="width:30%;" id="p-nama">-</td>
+            <td style="width:18%;"><strong>Jabatan</strong></td>
+            <td style="width:2%;">:</td>
+            <td style="width:30%;" id="p-jabatan">-</td>
+        </tr>
+        <tr>
+            <td><strong>NIP</strong></td>
+            <td>:</td>
+            <td id="p-nip">-</td>
+            <td><strong>Unit Kerja</strong></td>
+            <td>:</td>
+            <td id="p-unit">-</td>
+        </tr>
+        <tr>
+            <td><strong>Pangkat / Gol. Ruang</strong></td>
+            <td>:</td>
+            <td id="p-golongan">-</td>
+            <td><strong>Kategori Penilaian</strong></td>
+            <td>:</td>
+            <td id="p-kategori-role" style="font-weight:600;">-</td>
+        </tr>
+        <tr>
+            <td><strong>Status Penilaian</strong></td>
+            <td>:</td>
+            <td id="p-status-hitung" colspan="4">-</td>
+        </tr>
+    </table>
+
+    <!-- Bagian II: Rekapitulasi Nilai 360 Derajat -->
+    <div class="section-header">II. Rekapitulasi Capaian Skor Akhir 360&deg;</div>
+    <div class="score-summary-grid">
+        <div class="score-box">
+            <div class="s-val" id="skor-atasan">-</div>
+            <div class="s-lbl" id="lbl-atasan">Atasan (<span id="bobot-atasan">50%</span>)</div>
+        </div>
+        <div class="score-box">
+            <div class="s-val" id="skor-rekan">-</div>
+            <div class="s-lbl" id="lbl-rekan">Rekan Kerja (<span id="bobot-rekan">15%</span>)</div>
+        </div>
+        <div class="score-box" id="box-bawahan">
+            <div class="s-val" id="skor-bawahan">-</div>
+            <div class="s-lbl" id="lbl-bawahan">Bawahan (<span id="bobot-bawahan">25%</span>)</div>
+        </div>
+        <div class="score-box">
+            <div class="s-val" id="skor-diri">-</div>
+            <div class="s-lbl" id="lbl-diri">Diri Sendiri (<span id="bobot-diri">10%</span>)</div>
+        </div>
+        <div class="score-box final">
+            <div class="s-val" id="skor-akhir">-</div>
+            <div class="s-lbl">Skor Akhir: <strong id="predikat-akhir">-</strong></div>
+        </div>
+    </div>
+    <div style="font-size: 10px; color: #64748B; margin-top: 5px; font-style: italic;">
+        *Catatan Pembobotan: Pejabat Struktural (Atasan 50%, Rekan 15%, Bawahan 25%, Diri Sendiri 10%). Pegawai Pelaksana (Atasan 50%, Rekan 40%, Diri Sendiri 10%).
+    </div>
+
+    <!-- Bagian III: Rincian Capaian Kriteria Penilaian -->
+    <div class="section-header">III. Rincian Capaian per Kriteria Penilaian</div>
+    <div style="overflow-x:auto;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width:35px;">No</th>
+                    <th style="text-align:left;">Kriteria Penilaian</th>
+                    <th style="width:75px;">Instrumen</th>
+                    <th style="width:55px;">Atasan</th>
+                    <th style="width:55px;">Rekan</th>
+                    <th style="width:55px;">Bawahan</th>
+                    <th style="width:55px;">Diri</th>
+                    <th style="width:65px;">Rata-rata</th>
+                    <th style="width:65px;">Capaian</th>
+                    <th style="width:85px;">Predikat</th>
+                </tr>
+            </thead>
+            <tbody id="rincian-table-body">
+                <tr><td colspan="10" style="text-align:center; color:#6B7280; padding:16px;">Memuat rincian kriteria penilaian...</td></tr>
+            </tbody>
+            <tfoot id="rincian-table-foot"></tfoot>
+        </table>
+    </div>
+
+    <!-- Bagian IV: Komentar dan Masukan Penilai -->
+    <div class="section-header">IV. Catatan dan Masukan Pengembangan Kompetensi</div>
+    <div id="komentar-box" style="border:1px solid #D1D5DB; border-radius:6px; padding:8px 12px; min-height:45px; background:#FAFAFA; font-size:11px; margin-bottom:12px;">
+        <em>Memuat catatan...</em>
+    </div>
+
+    <!-- Bagian V: Pengesahan Kedinasan -->
+    <div class="ttd-container">
+        <div class="ttd-box">
+            <div>Pegawai yang Dinilai,</div>
+            <div class="ttd-space"></div>
+            <div class="ttd-name" id="ttd-pegawai-nama">................................................</div>
+            <div class="ttd-nip" id="ttd-pegawai-nip">NIP. -</div>
+        </div>
+        <div class="ttd-box">
+            <div id="ttd-tanggal">Surabaya, -</div>
+            <div>Kepala Dinas Pekerjaan Umum Bina Marga<br>Provinsi Jawa Timur</div>
+            <div class="ttd-space"></div>
+            <div class="ttd-name" id="ttd-kd-nama">Ir. Edy Tambeng Widjaja, CES, DEA</div>
+            <div class="ttd-nip" id="ttd-kd-nip">NIP. 196501011990031001</div>
+        </div>
+    </div>
+
+    <div style="margin-top:18px; text-align:right; font-size:9.5px; color:#9CA3AF;" class="no-print">
+        Dicetak pada: <span id="print-time">-</span> melalui Sistem Penilaian 360&deg; DPU Bina Marga Jatim
+    </div>
+</div>
+
+<script src="../assets/js/config.js?v=20261126"></script>
+<script src="../assets/js/api.js?v=20261126"></script>
+<script src="../assets/js/auth.js?v=20261125_cetak"></script>
+<script>
+let globalData = null;
+
+function kembaliKeHasil() {
+    if (window.opener && !window.opener.closed) {
+        window.close();
+    } else {
+        window.location.href = 'hasil.html';
+    }
+}
+
+function formatNamaLengkap(p) {
+    if (!p) return '-';
+    let nama = (p.nama_lengkap || '').trim();
+    const depan = (p.gelar_depan || '').trim();
+    const belakang = (p.gelar_belakang || '').trim();
+
+    if (depan && !nama.toLowerCase().startsWith(depan.toLowerCase())) {
+        nama = `${depan} ${nama}`;
+    }
+    if (belakang && !nama.toLowerCase().includes(belakang.toLowerCase())) {
+        nama = `${nama}, ${belakang}`;
+    }
+    return nama;
+}
+
+function formatPangkatGolongan(gol) {
+    if (!gol) return '-';
+    const g = gol.trim();
+    const pangkatMap = {
+        'I/a': 'Juru Muda',
+        'I/b': 'Juru Muda Tk. I',
+        'I/c': 'Juru',
+        'I/d': 'Juru Tk. I',
+        'II/a': 'Pengatur Muda',
+        'II/b': 'Pengatur Muda Tk. I',
+        'II/c': 'Pengatur',
+        'II/d': 'Pengatur Tk. I',
+        'III/a': 'Penata Muda',
+        'III/b': 'Penata Muda Tk. I',
+        'III/c': 'Penata',
+        'III/d': 'Penata Tk. I',
+        'IV/a': 'Pembina',
+        'IV/b': 'Pembina Tk. I',
+        'IV/c': 'Pembina Utama Muda',
+        'IV/d': 'Pembina Utama Madya',
+        'IV/e': 'Pembina Utama'
+    };
+    const pangkat = pangkatMap[g];
+    return pangkat ? `${pangkat} (${g})` : g;
+}
+
+function formatScore(val) {
+    if (val === null || val === undefined || isNaN(val)) return '-';
+    return Number(val).toFixed(2);
+}
+
+function getPredikatBadgeStyle(pred) {
+    if (!pred) return '-';
+    const map = {
+        'Sangat Baik': 'background:#DEF7EC; color:#03543F;',
+        'Baik': 'background:#E1EFFE; color:#1E429F;',
+        'Cukup': 'background:#FEF08A; color:#854D0E;',
+        'Kurang': 'background:#FDE8E8; color:#9B1C1C;',
+        'Buruk': 'background:#FEE2E2; color:#991B1B;'
+    };
+    const style = map[pred] || 'background:#F3F4F6; color:#374151;';
+    return `<span style="display:inline-block; padding:2px 8px; border-radius:4px; font-weight:700; font-size:10px; ${style}">${pred}</span>`;
+}
+
+function exportDataExcel() {
+    if (!globalData) {
+        alert("Data penilaian belum selesai dimuat.");
+        return;
+    }
+    const d = globalData;
+    const p = d.pegawai || {};
+    const h = d.hasil || {};
+    const per = d.periode || {};
+    const hasBawahan = Boolean(d.has_bawahan);
+    const bobotPakai = d.bobot_digunakan || {};
+    const bobot = d.bobot_config || {};
+    const hasCalc = h.nilai_akhir !== null && h.nilai_akhir !== undefined && h.tanggal_hitung;
+    const sumPakai = (Number(bobotPakai.atasan) || 0) + (Number(bobotPakai.rekan) || 0) + (Number(bobotPakai.bawahan) || 0) + (Number(bobotPakai.diri) || 0);
+    const useActualWeights = Boolean(hasCalc && sumPakai > 0);
+
+    const bAtasan = useActualWeights ? (bobotPakai.atasan ?? 0) : (hasBawahan ? (bobot.bobot_atasan ?? 50) : (bobot.bobot_pelaksana_atasan ?? 50));
+    const bRekan = useActualWeights ? (bobotPakai.rekan ?? 0) : (hasBawahan ? (bobot.bobot_rekan ?? 15) : (bobot.bobot_pelaksana_rekan ?? 40));
+    const bBawahan = useActualWeights ? (bobotPakai.bawahan ?? 0) : (hasBawahan ? (bobot.bobot_bawahan ?? 25) : 0);
+    const bDiri = useActualWeights ? (bobotPakai.diri ?? 0) : (hasBawahan ? (bobot.bobot_diri_sendiri ?? 10) : (bobot.bobot_pelaksana_diri_sendiri ?? bobot.bobot_diri_sendiri ?? 10));
+
+    const escapeCsv = (str) => {
+        if (str === null || str === undefined) return '""';
+        const s = String(str).replace(/"/g, '""');
+        return `"${s}"`;
+    };
+
+    let csv = [];
+    csv.push([escapeCsv("LAPORAN HASIL PENILAIAN KINERJA 360 DERAJAT")]);
+    csv.push([escapeCsv("DINAS PEKERJAAN UMUM BINA MARGA PROVINSI JAWA TIMUR")]);
+    csv.push([]);
+    csv.push([escapeCsv("I. IDENTITAS PEGAWAI")]);
+    csv.push([escapeCsv("Nama Lengkap"), escapeCsv(formatNamaLengkap(p))]);
+    csv.push([escapeCsv("NIP"), escapeCsv(p.nip || '-')]);
+    csv.push([escapeCsv("Jabatan"), escapeCsv(p.jabatan || '-')]);
+    csv.push([escapeCsv("Unit Kerja"), escapeCsv(p.unit_kerja || '-')]);
+    csv.push([escapeCsv("Pangkat / Golongan"), escapeCsv(formatPangkatGolongan(p.golongan_ruang))]);
+    csv.push([escapeCsv("Kategori Penilaian"), escapeCsv(hasBawahan ? "Pejabat Struktural (Manajerial)" : "Pegawai Pelaksana / Fungsional")]);
+    csv.push([escapeCsv("Periode Penilaian"), escapeCsv(`${per.nama_periode || '-'} (${per.tanggal_mulai || ''} s/d ${per.tanggal_selesai || ''})`)]);
+    csv.push([escapeCsv("Tanggal Ekspor"), escapeCsv(new Date().toLocaleString("id-ID"))]);
+    csv.push([]);
+
+    csv.push([escapeCsv("II. REKAPITULASI CAPAIAN SKOR 360 DERAJAT")]);
+    csv.push([
+        escapeCsv("Relasi Penilai"),
+        escapeCsv("Bobot (%)"),
+        escapeCsv("Skor Diperoleh"),
+        escapeCsv("Skala Maksimal")
+    ]);
+    csv.push([escapeCsv("Atasan"), escapeCsv(bAtasan + "%"), escapeCsv(formatScore(h.nilai_atasan)), escapeCsv("100")]);
+    csv.push([escapeCsv("Rekan Kerja"), escapeCsv(bRekan + "%"), escapeCsv(formatScore(h.nilai_rekan)), escapeCsv("100")]);
+    if (hasBawahan) {
+        csv.push([escapeCsv("Bawahan"), escapeCsv(bBawahan + "%"), escapeCsv(formatScore(h.nilai_bawahan)), escapeCsv("100")]);
+    } else {
+        csv.push([escapeCsv("Bawahan"), escapeCsv("N/A"), escapeCsv("N/A"), escapeCsv("N/A")]);
+    }
+    csv.push([escapeCsv("Diri Sendiri"), escapeCsv(bDiri + "%"), escapeCsv(formatScore(h.nilai_diri)), escapeCsv("100")]);
+    csv.push([escapeCsv("SKOR AKHIR TERBOBOT"), escapeCsv("100%"), escapeCsv(h.nilai_akhir !== null ? Number(h.nilai_akhir).toFixed(2) : '-'), escapeCsv("100")]);
+    csv.push([escapeCsv("PREDIKAT KINERJA"), escapeCsv("-"), escapeCsv(h.predikat || '-'), escapeCsv("-")]);
+    csv.push([]);
+
+    csv.push([escapeCsv("III. RINCIAN CAPAIAN PER KRITERIA PENILAIAN")]);
+    csv.push([
+        escapeCsv("No"),
+        escapeCsv("Kode Kategori"),
+        escapeCsv("Kriteria Penilaian"),
+        escapeCsv("Jumlah Instrumen"),
+        escapeCsv("Skor Atasan"),
+        escapeCsv("Skor Rekan"),
+        escapeCsv("Skor Bawahan"),
+        escapeCsv("Skor Diri"),
+        escapeCsv("Rata-rata Skor (Skala 5)"),
+        escapeCsv("Capaian (%)"),
+        escapeCsv("Predikat")
+    ]);
+
+    const rincian = d.rincian_indikator || [];
+    let no = 1;
+    rincian.forEach(kat => {
+        const jml = kat.total_pertanyaan || (hasBawahan ? (kat.kode_kategori === 'KEP' ? 5 : 3) : 4);
+        const skorAtasan = kat.skor_relasi ? kat.skor_relasi.atasan : null;
+        const skorRekan  = kat.skor_relasi ? kat.skor_relasi.rekan : null;
+        const skorBawahan= kat.skor_relasi ? kat.skor_relasi.bawahan : null;
+        const skorDiri   = kat.skor_relasi ? kat.skor_relasi.diri : null;
+
+        csv.push([
+            escapeCsv(no++),
+            escapeCsv(kat.kode_kategori || ''),
+            escapeCsv(kat.nama_kategori || ''),
+            escapeCsv(jml + " Butir"),
+            escapeCsv(formatScore(skorAtasan)),
+            escapeCsv(formatScore(skorRekan)),
+            escapeCsv(hasBawahan ? formatScore(skorBawahan) : "N/A"),
+            escapeCsv(formatScore(skorDiri)),
+            escapeCsv(formatScore(kat.rata_skor)),
+            escapeCsv(kat.persentase !== null ? kat.persentase + "%" : "-"),
+            escapeCsv(kat.predikat || "-")
+        ]);
+    });
+    csv.push([]);
+
+    // Komentar
+    const allComments = [];
+    (d.detail_penilai || []).forEach(dp => {
+        if (dp.komentar_masukan && dp.komentar_masukan.trim() !== '') {
+            allComments.push(dp.komentar_masukan.trim());
+        }
+        (dp.jawaban || []).forEach(j => {
+            if (j.komentar && j.komentar.trim() !== '') {
+                allComments.push(j.komentar.trim());
+            }
+        });
+    });
+
+    csv.push([escapeCsv("IV. CATATAN DAN MASUKAN PENGEMBANGAN KOMPETENSI (ANONIM)")]);
+    if (allComments.length === 0) {
+        csv.push([escapeCsv("Tidak ada catatan atau masukan dari penilai pada periode ini.")]);
+    } else {
+        allComments.forEach((c, idx) => {
+            csv.push([escapeCsv((idx + 1) + ". " + c)]);
+        });
+    }
+
+    const csvContent = "\uFEFF" + csv.map(row => row.join(";")).join("\r\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const cleanNama = (p.nama_lengkap || 'Pegawai').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const cleanPeriode = (per.nama_periode || 'Periode').replace(/[^a-zA-Z0-9_-]/g, '_');
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Hasil_Penilaian_360_${p.nip || 'NIP'}_${cleanNama}_${cleanPeriode}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
+(async function() {
+    const params = new URLSearchParams(window.location.search);
+    const periodeId = params.get('periode_id');
+
+    document.getElementById("print-time").textContent = new Date().toLocaleString("id-ID");
+
+    if (!periodeId) {
+        alert("Periode penilaian belum dipilih.");
+        window.location.href = 'hasil.html';
+        return;
+    }
+
+    const res = await apiCall(`results.php?periode_id=${periodeId}`);
+    if (!res.success) {
+        alert(res.message || "Gagal memuat hasil penilaian.");
+        return;
+    }
+
+    const d = res.data;
+    globalData = d;
+    const p = d.pegawai || {};
+    const h = d.hasil || {};
+    const per = d.periode || {};
+    const bobot = d.bobot_config || {};
+    const hasBawahan = Boolean(d.has_bawahan);
+    const kd = d.kepala_dinas || {};
+
+    // 1. Data Pegawai
+    const namaLengkap = formatNamaLengkap(p);
+    document.getElementById("p-nama").textContent = namaLengkap;
+    document.getElementById("p-nip").textContent = p.nip || '-';
+    document.getElementById("p-jabatan").textContent = p.jabatan || '-';
+    document.getElementById("p-unit").textContent = p.unit_kerja || '-';
+    document.getElementById("p-golongan").textContent = formatPangkatGolongan(p.golongan_ruang);
+    document.getElementById("p-kategori-role").textContent = hasBawahan 
+        ? "Pejabat Struktural (Manajerial / Atasan)" 
+        : "Pegawai Pelaksana / Fungsional (Non-Supervisi)";
+    
+    document.getElementById("p-status-hitung").textContent = h.tanggal_hitung 
+        ? `Sudah Selesai Dihitung (${formatDate(h.tanggal_hitung)})` 
+        : "Belum Dihitung (Menunggu Evaluator Menyelesaikan Penilaian)";
+
+    // TTD Pegawai
+    document.getElementById("ttd-pegawai-nama").textContent = namaLengkap;
+    document.getElementById("ttd-pegawai-nip").textContent = p.nip ? `NIP. ${p.nip}` : 'NIP. -';
+    document.getElementById("ttd-tanggal").textContent = `Surabaya, ${formatDate(new Date().toISOString().split('T')[0])}`;
+
+    // TTD Kepala Dinas
+    if (kd.nama_lengkap) {
+        document.getElementById("ttd-kd-nama").textContent = formatNamaLengkap(kd);
+        document.getElementById("ttd-kd-nip").textContent = kd.nip ? `NIP. ${kd.nip}` : 'NIP. -';
+    }
+
+    // 2. Data Periode
+    if (per.nama_periode) {
+        let pName = String(per.nama_periode).trim();
+        pName = pName.replace(/^Penilaian\s+Penilaian/i, 'Penilaian');
+        pName = pName.replace(/^Periode:\s*/i, '');
+        document.getElementById("periode-subtitle").textContent = 
+            `Periode: ${pName} (${formatDate(per.tanggal_mulai)} s/d ${formatDate(per.tanggal_selesai)})`;
+    }
+
+    // 3. Bobot Relasi & Box Ringkasan
+    const bobotPakai = d.bobot_digunakan || {};
+    const hasCalc = h.nilai_akhir !== null && h.nilai_akhir !== undefined && h.tanggal_hitung;
+    const sumPakai = (Number(bobotPakai.atasan) || 0) + (Number(bobotPakai.rekan) || 0) + (Number(bobotPakai.bawahan) || 0) + (Number(bobotPakai.diri) || 0);
+    const useActualWeights = Boolean(hasCalc && sumPakai > 0);
+
+    const bAtasan = useActualWeights ? (bobotPakai.atasan ?? 0) : (hasBawahan ? (bobot.bobot_atasan ?? 50) : (bobot.bobot_pelaksana_atasan ?? 50));
+    const bRekan = useActualWeights ? (bobotPakai.rekan ?? 0) : (hasBawahan ? (bobot.bobot_rekan ?? 15) : (bobot.bobot_pelaksana_rekan ?? 40));
+    const bBawahan = useActualWeights ? (bobotPakai.bawahan ?? 0) : (hasBawahan ? (bobot.bobot_bawahan ?? 25) : 0);
+    const bDiri = useActualWeights ? (bobotPakai.diri ?? 0) : (hasBawahan ? (bobot.bobot_diri_sendiri ?? 10) : (bobot.bobot_pelaksana_diri_sendiri ?? bobot.bobot_diri_sendiri ?? 10));
+
+    document.getElementById("bobot-atasan").textContent = `${bAtasan}%`;
+    document.getElementById("bobot-rekan").textContent = `${bRekan}%`;
+    document.getElementById("bobot-diri").textContent = `${bDiri}%`;
+
+    document.getElementById("skor-atasan").textContent = formatScore(h.nilai_atasan);
+    document.getElementById("skor-rekan").textContent = formatScore(h.nilai_rekan);
+    document.getElementById("skor-diri").textContent = formatScore(h.nilai_diri);
+    document.getElementById("skor-akhir").textContent = h.nilai_akhir !== null && h.nilai_akhir !== undefined ? Number(h.nilai_akhir).toFixed(2) : '-';
+    document.getElementById("predikat-akhir").textContent = h.predikat || 'Belum dihitung';
+
+    if (hasBawahan) {
+        document.getElementById("skor-bawahan").textContent = formatScore(h.nilai_bawahan);
+        document.getElementById("bobot-bawahan").textContent = `${bBawahan}%`;
+        document.getElementById("box-bawahan").classList.remove("disabled");
+        document.getElementById("lbl-bawahan").innerHTML = `Bawahan (<span id="bobot-bawahan">${bBawahan}%</span>)`;
+    } else {
+        document.getElementById("box-bawahan").classList.add("disabled");
+        document.getElementById("skor-bawahan").textContent = "N/A";
+        document.getElementById("lbl-bawahan").innerHTML = `Bawahan <span style="font-size:9px;">(Tidak Berlaku)</span>`;
+    }
+
+    // 4. Rincian Kriteria Penilaian
+    const rincian = d.rincian_indikator || [];
+    const tbody = document.getElementById("rincian-table-body");
+    const tfoot = document.getElementById("rincian-table-foot");
+
+    if (rincian.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; color:#6B7280; padding:20px;">Belum ada rincian kriteria penilaian untuk pegawai ini.</td></tr>`;
+        tfoot.innerHTML = "";
+    } else {
+        let rowsHtml = "";
+        let counter = 1;
+        let totalButir = 0;
+        let sumRataKriteria = 0;
+        let countRataKriteria = 0;
+
+        let atasanScores = [];
+        let rekanScores = [];
+        let bawahanScores = [];
+        let diriScores = [];
+
+        rincian.forEach(kat => {
+            const jml = kat.total_pertanyaan || (hasBawahan ? (kat.kode_kategori === 'KEP' ? 5 : 3) : 4);
+            totalButir += jml;
+
+            const skorAtasan = kat.skor_relasi ? kat.skor_relasi.atasan : null;
+            const skorRekan  = kat.skor_relasi ? kat.skor_relasi.rekan : null;
+            const skorBawahan= kat.skor_relasi ? kat.skor_relasi.bawahan : null;
+            const skorDiri   = kat.skor_relasi ? kat.skor_relasi.diri : null;
+
+            if (skorAtasan !== null) atasanScores.push(skorAtasan);
+            if (skorRekan !== null) rekanScores.push(skorRekan);
+            if (skorBawahan !== null) bawahanScores.push(skorBawahan);
+            if (skorDiri !== null) diriScores.push(skorDiri);
+
+            if (kat.rata_skor !== null) {
+                sumRataKriteria += kat.rata_skor;
+                countRataKriteria++;
+            }
+
+            const persenText = kat.persentase !== null ? `${kat.persentase}%` : '-';
+            const bawahanCell = hasBawahan 
+                ? formatScore(skorBawahan) 
+                : `<span style="color:#9CA3AF; font-size:10px;">N/A</span>`;
+
+            rowsHtml += `
+                <tr>
+                    <td style="text-align:center; font-weight:600; color:#4B5563;">${counter++}</td>
+                    <td style="padding:6px 10px;">
+                        <strong style="color:#111827; font-size:11.5px;">${kat.nama_kategori}</strong>
+                    </td>
+                    <td style="text-align:center; font-weight:600; white-space:nowrap;">${jml} Butir</td>
+                    <td style="text-align:center;">${formatScore(skorAtasan)}</td>
+                    <td style="text-align:center;">${formatScore(skorRekan)}</td>
+                    <td style="text-align:center;">${bawahanCell}</td>
+                    <td style="text-align:center;">${formatScore(skorDiri)}</td>
+                    <td style="text-align:center; font-weight:700;">${formatScore(kat.rata_skor)}</td>
+                    <td style="text-align:center; font-weight:700;">${persenText}</td>
+                    <td style="text-align:center;">${getPredikatBadgeStyle(kat.predikat)}</td>
+                </tr>
+            `;
+        });
+
+        tbody.innerHTML = rowsHtml;
+
+        // Footer Summary Row
+        const avgAtasanTotal = atasanScores.length > 0 ? (atasanScores.reduce((a,b)=>a+b,0)/atasanScores.length) : null;
+        const avgRekanTotal = rekanScores.length > 0 ? (rekanScores.reduce((a,b)=>a+b,0)/rekanScores.length) : null;
+        const avgBawahanTotal = (hasBawahan && bawahanScores.length > 0) ? (bawahanScores.reduce((a,b)=>a+b,0)/bawahanScores.length) : null;
+        const avgDiriTotal = diriScores.length > 0 ? (diriScores.reduce((a,b)=>a+b,0)/diriScores.length) : null;
+
+        const avgOverall = countRataKriteria > 0 ? (sumRataKriteria / countRataKriteria) : null;
+        const persenOverall = h.nilai_akhir !== null && h.nilai_akhir !== undefined ? `${Number(h.nilai_akhir).toFixed(2)}%` : (avgOverall !== null ? `${((avgOverall / 5) * 100).toFixed(1)}%` : '-');
+        const nilaiSkala5Text = h.nilai_akhir !== null && h.nilai_akhir !== undefined ? (Number(h.nilai_akhir) / 20).toFixed(2) : (avgOverall !== null ? avgOverall.toFixed(2) : '-');
+
+        tfoot.innerHTML = `
+            <tr style="background:#F9FAFB; font-weight:800; border-top:2px solid #374151;">
+                <td colspan="2" style="text-align:center; padding:7px 8px; font-size:11px; letter-spacing:0.3px;">
+                    RATA-RATA CAPAIAN KESELURUHAN
+                </td>
+                <td style="text-align:center; font-weight:700; color:#1B4F8C;">${totalButir} Butir</td>
+                <td style="text-align:center;">${formatScore(avgAtasanTotal)}</td>
+                <td style="text-align:center;">${formatScore(avgRekanTotal)}</td>
+                <td style="text-align:center;">${hasBawahan ? formatScore(avgBawahanTotal) : '<span style="color:#9CA3AF; font-size:10px;">N/A</span>'}</td>
+                <td style="text-align:center;">${formatScore(avgDiriTotal)}</td>
+                <td style="text-align:center; font-weight:800; color:#1B4F8C; font-size:11.5px;">${nilaiSkala5Text}</td>
+                <td style="text-align:center; font-weight:800; color:#1B4F8C; font-size:11.5px;">${persenOverall}</td>
+                <td style="text-align:center;">${getPredikatBadgeStyle(h.predikat || (avgOverall !== null ? (avgOverall >= 4.55 ? 'Sangat Baik' : (avgOverall >= 3.8 ? 'Baik' : (avgOverall >= 3.05 ? 'Cukup' : 'Kurang'))) : null))}</td>
+            </tr>
+        `;
+    }
+
+    // 5. Komentar Masukan
+    const allComments = [];
+    (d.detail_penilai || []).forEach(dp => {
+        if (dp.komentar_masukan && dp.komentar_masukan.trim() !== '') {
+            allComments.push(dp.komentar_masukan.trim());
+        }
+        (dp.jawaban || []).forEach(j => {
+            if (j.komentar && j.komentar.trim() !== '') {
+                allComments.push(j.komentar.trim());
+            }
+        });
+    });
+
+    const commentBox = document.getElementById("komentar-box");
+    if (allComments.length === 0) {
+        commentBox.innerHTML = `<span style="color:#6B7280; font-style:italic;">Tidak ada catatan atau masukan dari penilai pada periode ini.</span>`;
+    } else {
+        commentBox.innerHTML = allComments.map((c, i) => `
+            <div style="padding:4px 0; border-bottom:1px dashed #E5E7EB; font-style:italic;">
+                ${i + 1}. "${c}"
+            </div>
+        `).join("");
+    }
+})();
+</script>
+</body>
+</html>

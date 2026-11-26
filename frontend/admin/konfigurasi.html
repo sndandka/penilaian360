@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Konfigurasi Sistem - Sistem Penilaian 360</title>
+    <script>
+    (function(){
+        var t = localStorage.getItem('app_theme');
+        if (t === 'dark' || (!t && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+        var isNav = sessionStorage.getItem('sidebar_nav_open') === '1' || sessionStorage.getItem('sidebar_hovered') === '1';
+        if (isNav && localStorage.getItem('sidebar_pinned') !== '1') {
+            document.documentElement.classList.add('sidebar-nav-open', 'sidebar-hover-persisted');
+            function onMove(e) {
+                if (e.clientX > 248) {
+                    document.documentElement.classList.remove('sidebar-nav-open', 'sidebar-hover-persisted');
+                    sessionStorage.removeItem('sidebar_nav_open');
+                    sessionStorage.removeItem('sidebar_hovered');
+                    window.removeEventListener('mousemove', onMove);
+                }
+            }
+            window.addEventListener('mousemove', onMove, { passive: true });
+        }
+    })();
+    </script>
+    <link rel="stylesheet" href="../assets/css/style.css?v=20261126_darkfix">
+    <style>
+        .sidebar-footer, .sidebar-toggle-bottom, button.sidebar-toggle-bottom, aside#sidebar .sidebar-footer, aside#sidebar .sidebar-toggle-bottom { display: none !important; }
+
+        .config-section-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .config-section-stack > .card {
+            margin-bottom: 0;
+        }
+        .config-card-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+        .config-card-head h2 {
+            font-size: 16px;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text);
+        }
+        .config-card-head p {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin: 4px 0 0 0;
+        }
+        .config-info-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+        }
+        .config-info-grid input {
+            margin-bottom: 0;
+        }
+        .config-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border);
+        }
+        .bobot-groups-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 14px;
+        }
+        .bobot-panel {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+        }
+        .bobot-panel-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .bobot-panel-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .bobot-panel .form-row {
+            margin-bottom: 10px;
+        }
+        .bobot-panel .form-row:last-child {
+            margin-bottom: 0;
+        }
+        .bobot-panel input {
+            margin-bottom: 0;
+        }
+        .bobot-total-badge {
+            font-size: 11.5px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 999px;
+            white-space: nowrap;
+        }
+        .bobot-total-badge.is-valid {
+            background: rgba(16, 185, 129, 0.14);
+            color: var(--success);
+        }
+        .bobot-total-badge.is-invalid {
+            background: rgba(239, 68, 68, 0.14);
+            color: var(--danger);
+        }
+        .bkn-note-box {
+            background: rgba(59, 130, 246, 0.08);
+            border: 1px solid rgba(59, 130, 246, 0.22);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        [data-theme="dark"] .bobot-panel {
+            background: #18233C;
+            border-color: #2A3A5B;
+        }
+        [data-theme="dark"] .bkn-note-box {
+            background: rgba(59, 130, 246, 0.12);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+        @media (max-width: 960px) {
+            .config-info-grid,
+            .bobot-groups-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="main-content">
+        <header class="topbar">
+            <div class="topbar-left">
+                <h1 id="page-title">Konfigurasi Sistem</h1>
+            </div>
+            <div id="topbar-user"></div>
+        </header>
+        <main class="page">
+            <div id="alert-box"></div>
+
+            <div class="config-section-stack">
+                <!-- Card: Informasi Aplikasi -->
+                <div class="card">
+                    <div class="config-card-head">
+                        <div>
+                            <h2>Informasi Aplikasi</h2>
+                            <p>Identitas umum aplikasi dan skala standar penilaian yang tersimpan pada konfigurasi sistem.</p>
+                        </div>
+                    </div>
+                    <form id="form-config">
+                        <div class="config-info-grid">
+                            <div>
+                                <label for="c-nama_aplikasi">Nama Aplikasi</label>
+                                <input type="text" id="c-nama_aplikasi" placeholder="Sistem Penilaian Kinerja 360">
+                            </div>
+                            <div>
+                                <label for="c-nama_instansi">Nama Instansi</label>
+                                <input type="text" id="c-nama_instansi" placeholder="Dinas Pekerjaan Umum Bina Marga Provinsi Jawa Timur">
+                            </div>
+                            <div>
+                                <label for="c-skala_penilaian_default">Skala Penilaian Default</label>
+                                <input type="text" id="c-skala_penilaian_default" placeholder="Contoh: 1-5">
+                            </div>
+                        </div>
+                        <div class="config-card-footer">
+                            <span class="text-muted" style="font-size:12px;">Pastikan informasi instansi sesuai sebelum menyimpan perubahan.</span>
+                            <button type="submit" class="btn btn-primary">Simpan Informasi Aplikasi</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Card: Bobot Penilaian 360 -->
+                <div class="card">
+                    <div class="config-card-head">
+                        <div>
+                            <h2>Bobot Penilaian 360&deg;</h2>
+                            <p>Konfigurasi persentase kontribusi sumber penilai untuk <strong>Pejabat Struktural</strong> (memiliki bawahan) dan <strong>Pegawai Pelaksana/Fungsional</strong>.</p>
+                        </div>
+                        <span class="badge badge-blue" style="font-size:11px;">PP No. 30/2019 &amp; Perka BKN 1/2013</span>
+                    </div>
+
+                    <div class="bobot-groups-grid">
+                        <!-- Kelompok 1: Pejabat Struktural -->
+                        <div class="bobot-panel">
+                            <div class="bobot-panel-head">
+                                <span class="bobot-panel-title">1. Pejabat Struktural / Memiliki Bawahan</span>
+                                <span id="total-bobot-struktural" class="bobot-total-badge is-valid">Total: 100%</span>
+                            </div>
+                            <div class="form-row">
+                                <div><label style="font-size:12px;">Bobot Atasan Langsung (%)</label><input type="number" id="c-bobot_atasan" min="0" max="100"></div>
+                                <div><label style="font-size:12px;">Bobot Rekan Kerja / Peer (%)</label><input type="number" id="c-bobot_rekan" min="0" max="100"></div>
+                            </div>
+                            <div class="form-row">
+                                <div><label style="font-size:12px;">Bobot Bawahan (%)</label><input type="number" id="c-bobot_bawahan" min="0" max="100"></div>
+                                <div>
+                                    <label style="font-size:12px;">
+                                        Bobot Diri Sendiri (%)
+                                        <span style="font-size:10px; color:var(--text-muted); font-weight:normal;">(Refleksi &amp; Penilaian: 10%)</span>
+                                    </label>
+                                    <input type="number" id="c-bobot_diri_sendiri" min="0" max="100">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Kelompok 2: Pegawai Pelaksana & Fungsional -->
+                        <div class="bobot-panel">
+                            <div class="bobot-panel-head">
+                                <span class="bobot-panel-title">2. Pegawai Pelaksana / Fungsional (Tanpa Bawahan)</span>
+                                <span id="total-bobot-pelaksana" class="bobot-total-badge is-valid">Total: 100%</span>
+                            </div>
+                            <div class="form-row">
+                                <div><label style="font-size:12px;">Bobot Atasan Langsung (%)</label><input type="number" id="c-bobot_pelaksana_atasan" min="0" max="100"></div>
+                                <div><label style="font-size:12px;">Bobot Rekan Kerja / Peer (%)</label><input type="number" id="c-bobot_pelaksana_rekan" min="0" max="100"></div>
+                            </div>
+                            <div class="form-row">
+                                <div>
+                                    <label style="font-size:12px;">
+                                        Bobot Diri Sendiri (%)
+                                        <span style="font-size:10px; color:var(--text-muted); font-weight:normal;">(Refleksi &amp; Penilaian Mandiri: 10%)</span>
+                                    </label>
+                                    <input type="number" id="c-bobot_pelaksana_diri_sendiri" min="0" max="100">
+                                </div>
+                                <div>
+                                    <label style="font-size:12px; color:var(--text-muted);">Bobot Bawahan (%)</label>
+                                    <input type="text" value="Tidak Berlaku (0%)" disabled style="cursor:not-allowed;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Info Re-weighting Dinamis -->
+                    <div class="bkn-note-box">
+                        <strong style="color:var(--primary);">Ketentuan Dinamis BKN:</strong> Jika ada kelompok penilai yang belum/tidak menilai pada suatu periode, sistem otomatis menyesuaikan pembobotan (re-weighting) sesuai matriks resmi Perka BKN (misal: Struktural tanpa bawahan &rarr; Atasan 80%, Rekan 20%; Pelaksana tanpa atasan &rarr; Rekan 100%).
+                    </div>
+
+                    <div class="config-card-footer">
+                        <span class="text-muted" style="font-size:12px;">Total masing-masing kelompok bobot wajib bernilai tepat 100%.</span>
+                        <button type="button" class="btn btn-primary" onclick="saveBobot()">Simpan Bobot Penilaian 360&deg;</button>
+                    </div>
+                </div>
+
+                <!-- Card: Manajemen Akun Administrator & Super Admin -->
+                <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 16px;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <h2 style="font-size: 16px; font-weight: 700; margin: 0; color: var(--text);">Manajemen Akun Administrator &amp; Super Admin</h2>
+                            <span class="badge badge-purple" style="font-size: 11px;">Khusus Super Admin</span>
+                        </div>
+                        <p class="text-muted" style="font-size: 13px; margin: 4px 0 0 0;">
+                            Kelola dan buat akun Administrator atau Super Admin baru, serta reset password akun operasional sistem.
+                        </p>
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="openAddAdminModal()" style="font-size: 13px;">
+                        <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: currentColor;"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                        Buat Akun Administrator
+                    </button>
+                </div>
+
+                <div id="admin-table-alert"></div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 50px; text-align: center;">No</th>
+                                <th>Username</th>
+                                <th>Peran (Role)</th>
+                                <th>Status Akun</th>
+                                <th>Terakhir Login</th>
+                                <th>Dibuat Pada</th>
+                                <th style="width: 230px; text-align: center;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-table-body">
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 32px; color: var(--text-muted);">
+                                    Memuat daftar akun administrator...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Modal Tambah Akun Administrator / Super Admin -->
+<div class="modal-overlay hidden" id="modal-add-admin">
+    <div class="modal-box" style="max-width: 480px;">
+        <div class="modal-header">
+            <h3>Buat Akun Administrator Baru</h3>
+            <button type="button" class="modal-close" onclick="closeAddAdminModal()">&times;</button>
+        </div>
+        <div id="modal-add-admin-alert"></div>
+        <form id="form-add-admin" onsubmit="submitAddAdmin(event)">
+            <label for="adm-role">Peran Akun (Role) <span style="color:var(--danger)">*</span></label>
+            <select id="adm-role" onchange="onRoleChange(this.value)" style="margin-bottom: 10px; font-weight: 500;">
+                <option value="admin">Administrator (Operasional Pegawai, Periode, Mapping, Laporan)</option>
+                <option value="super_admin">Super Admin (Akses Penuh Seluruh Sistem &amp; Konfigurasi)</option>
+            </select>
+
+            <div id="role-info-box" style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.22); border-radius: 8px; padding: 10px 12px; margin-bottom: 16px;">
+                <p id="role-info-text" style="font-size: 12px; color: var(--text); margin: 0; line-height: 1.5;">
+                    <strong>Administrator:</strong> Berwenang mengelola data pegawai, kriteria, periode penilaian, mapping 360°, dan laporan. Tidak memiliki akses mengubah konfigurasi sistem &amp; bobot.
+                </p>
+            </div>
+
+            <label for="adm-username">Username <span style="color:var(--danger)">*</span></label>
+            <input type="text" id="adm-username" placeholder="Contoh: admin_kepegawaian, superadmin_upt" required autocomplete="off" style="margin-bottom: 4px;">
+            <small class="text-muted" style="display:block; margin-bottom: 14px;">
+                Minimal 3 karakter, berupa kombinasi huruf, angka, titik (.), strip (-), atau garis bawah (_).
+            </small>
+
+            <label for="adm-password">Password Baru <span style="color:var(--danger)">*</span></label>
+            <div style="position: relative; margin-bottom: 14px;">
+                <input type="password" id="adm-password" placeholder="Minimal 6 karakter" required style="padding-right: 42px; margin-bottom: 0;">
+                <button type="button" onclick="togglePasswordVisibility('adm-password', this)" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-secondary); padding: 4px; display: flex; align-items: center;" title="Lihat/Sembunyikan Password">
+                    <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor;"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                </button>
+            </div>
+
+            <label for="adm-confirm-password">Konfirmasi Password <span style="color:var(--danger)">*</span></label>
+            <div style="position: relative; margin-bottom: 20px;">
+                <input type="password" id="adm-confirm-password" placeholder="Ulangi password baru" required style="padding-right: 42px; margin-bottom: 0;">
+                <button type="button" onclick="togglePasswordVisibility('adm-confirm-password', this)" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-secondary); padding: 4px; display: flex; align-items: center;" title="Lihat/Sembunyikan Password">
+                    <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor;"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                </button>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn btn-secondary" onclick="closeAddAdminModal()">Batal</button>
+                <button type="submit" class="btn btn-primary" id="btn-submit-add-admin">Buat Akun Admin</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Reset Password Administrator & Super Admin -->
+<div class="modal-overlay hidden" id="modal-reset-pwd">
+    <div class="modal-box" style="max-width: 440px;">
+        <div class="modal-header">
+            <h3>Reset Password Pengguna</h3>
+            <button type="button" class="modal-close" onclick="closeResetPwdModal()">&times;</button>
+        </div>
+        <div id="modal-reset-pwd-alert"></div>
+        <form id="form-reset-pwd" onsubmit="submitResetPassword(event)">
+            <input type="hidden" id="reset-user-id">
+
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                <label style="margin-bottom: 0;">Username</label>
+                <div id="reset-role-badge"></div>
+            </div>
+            <input type="text" id="reset-username" readonly style="background: var(--bg); cursor: not-allowed; margin-bottom: 14px; font-weight: 600;">
+
+            <label for="reset-new-password">Password Baru <span style="color:var(--danger)">*</span></label>
+            <div style="position: relative; margin-bottom: 14px;">
+                <input type="password" id="reset-new-password" placeholder="Minimal 6 karakter" required style="padding-right: 42px; margin-bottom: 0;">
+                <button type="button" onclick="togglePasswordVisibility('reset-new-password', this)" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-secondary); padding: 4px; display: flex; align-items: center;" title="Lihat/Sembunyikan Password">
+                    <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor;"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                </button>
+            </div>
+
+            <label for="reset-confirm-password">Konfirmasi Password Baru <span style="color:var(--danger)">*</span></label>
+            <div style="position: relative; margin-bottom: 20px;">
+                <input type="password" id="reset-confirm-password" placeholder="Ulangi password baru" required style="padding-right: 42px; margin-bottom: 0;">
+                <button type="button" onclick="togglePasswordVisibility('reset-confirm-password', this)" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-secondary); padding: 4px; display: flex; align-items: center;" title="Lihat/Sembunyikan Password">
+                    <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor;"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                </button>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn btn-secondary" onclick="closeResetPwdModal()">Batal</button>
+                <button type="submit" class="btn btn-primary" id="btn-submit-reset">Simpan Password Baru</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="../assets/js/config.js?v=20261126"></script>
+<script src="../assets/js/api.js?v=20261126"></script>
+<script src="../assets/js/searchable-select.js?v=20261116_search"></script>
+<script src="../assets/js/auth.js?v=20261117_notif"></script>
+<script>
+let currentUserId = null;
+
+function escapeHtml(text) {
+    if (!text) return '';
+    return String(text).replace(/[&<>"']/g, function(m) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+    });
+}
+
+function togglePasswordVisibility(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    if (input.type === 'password') {
+        input.type = 'text';
+        btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor;"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.44-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/></svg>`;
+    } else {
+        input.type = 'password';
+        btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor;"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>`;
+    }
+}
+
+function onRoleChange(role) {
+    const textEl = document.getElementById("role-info-text");
+    const boxEl = document.getElementById("role-info-box");
+    const btnEl = document.getElementById("btn-submit-add-admin");
+    if (role === 'super_admin') {
+        if (textEl) textEl.innerHTML = "<strong>Super Admin:</strong> Memiliki hak akses tertinggi ke seluruh modul sistem, pengaturan konfigurasi instansi, pembobotan 360°, manajemen akun admin, dan audit log.";
+        if (boxEl) {
+            boxEl.style.background = "rgba(139, 92, 246, 0.08)";
+            boxEl.style.borderColor = "rgba(139, 92, 246, 0.25)";
+        }
+        if (btnEl) btnEl.textContent = "Buat Akun Super Admin";
+    } else {
+        if (textEl) textEl.innerHTML = "<strong>Administrator:</strong> Berwenang mengelola data pegawai, kriteria, periode penilaian, mapping penilai 360°, dan laporan. Tidak memiliki akses mengubah konfigurasi sistem &amp; bobot.";
+        if (boxEl) {
+            boxEl.style.background = "rgba(59, 130, 246, 0.08)";
+            boxEl.style.borderColor = "rgba(59, 130, 246, 0.22)";
+        }
+        if (btnEl) btnEl.textContent = "Buat Akun Admin";
+    }
+}
+
+async function loadConfig() {
+    const res = await apiCall("config.php");
+    if (!res.success) return;
+    const c = res.data;
+    document.getElementById("c-nama_aplikasi").value = c.nama_aplikasi || "";
+    document.getElementById("c-nama_instansi").value = c.nama_instansi || "";
+    document.getElementById("c-skala_penilaian_default").value = c.skala_penilaian_default || "";
+    document.getElementById("c-bobot_atasan").value = c.bobot_atasan !== undefined ? c.bobot_atasan : 50;
+    document.getElementById("c-bobot_rekan").value = c.bobot_rekan !== undefined ? c.bobot_rekan : 15;
+    document.getElementById("c-bobot_bawahan").value = c.bobot_bawahan !== undefined ? c.bobot_bawahan : 25;
+    document.getElementById("c-bobot_diri_sendiri").value = c.bobot_diri_sendiri !== undefined ? c.bobot_diri_sendiri : 10;
+    document.getElementById("c-bobot_pelaksana_atasan").value = c.bobot_pelaksana_atasan !== undefined ? c.bobot_pelaksana_atasan : 50;
+    document.getElementById("c-bobot_pelaksana_rekan").value = c.bobot_pelaksana_rekan !== undefined ? c.bobot_pelaksana_rekan : 40;
+    document.getElementById("c-bobot_pelaksana_diri_sendiri").value = c.bobot_pelaksana_diri_sendiri !== undefined ? c.bobot_pelaksana_diri_sendiri : (c.bobot_diri_sendiri !== undefined ? c.bobot_diri_sendiri : 10);
+    updateTotalBobot();
+}
+
+function setTotalBobotState(el, totalVal) {
+    if (!el) return;
+    const isValid = Math.abs(totalVal - 100) < 0.01;
+    el.textContent = `Total: ${totalVal}%`;
+    el.classList.toggle("is-valid", isValid);
+    el.classList.toggle("is-invalid", !isValid);
+}
+
+function updateTotalBobot() {
+    const totalStruktural = ["c-bobot_atasan", "c-bobot_rekan", "c-bobot_bawahan", "c-bobot_diri_sendiri"]
+        .reduce((sum, id) => sum + (parseFloat(document.getElementById(id)?.value) || 0), 0);
+    setTotalBobotState(document.getElementById("total-bobot-struktural"), totalStruktural);
+
+    const totalPelaksana = (parseFloat(document.getElementById("c-bobot_pelaksana_atasan")?.value) || 0)
+        + (parseFloat(document.getElementById("c-bobot_pelaksana_rekan")?.value) || 0)
+        + (parseFloat(document.getElementById("c-bobot_pelaksana_diri_sendiri")?.value) || 0);
+    setTotalBobotState(document.getElementById("total-bobot-pelaksana"), totalPelaksana);
+}
+
+["c-bobot_atasan", "c-bobot_rekan", "c-bobot_bawahan", "c-bobot_diri_sendiri", "c-bobot_pelaksana_atasan", "c-bobot_pelaksana_rekan", "c-bobot_pelaksana_diri_sendiri"].forEach(id => {
+    document.getElementById(id)?.addEventListener("input", updateTotalBobot);
+});
+
+document.getElementById("form-config").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const ok = await showConfirmModal({
+        title: "Konfirmasi Simpan Konfigurasi",
+        message: "Apakah Anda yakin ingin menyimpan konfigurasi umum sistem ini?",
+        confirmText: "Ya, Simpan",
+        cancelText: "Batal",
+        type: "primary",
+        icon: "edit"
+    });
+    if (!ok) return;
+
+    const payload = {
+        nama_aplikasi: document.getElementById("c-nama_aplikasi").value,
+        nama_instansi: document.getElementById("c-nama_instansi").value,
+        skala_penilaian_default: document.getElementById("c-skala_penilaian_default").value
+    };
+    const res = await apiCall("config.php", "PUT", payload);
+    if (res.success) {
+        showCenterFeedback(res.message || "Konfigurasi sistem berhasil disimpan.", "success");
+    } else {
+        showAlert(document.getElementById("alert-box"), res.message, "error");
+    }
+});
+
+async function saveBobot() {
+    const totalStruktural = ["c-bobot_atasan", "c-bobot_rekan", "c-bobot_bawahan", "c-bobot_diri_sendiri"]
+        .reduce((sum, id) => sum + (parseFloat(document.getElementById(id)?.value) || 0), 0);
+    if (Math.abs(totalStruktural - 100) > 0.01) {
+        showAlert(document.getElementById("alert-box"), `Total bobot Pejabat Struktural harus = 100% (saat ini ${totalStruktural}%).`, "error");
+        return;
+    }
+
+    const totalPelaksana = (parseFloat(document.getElementById("c-bobot_pelaksana_atasan")?.value) || 0)
+        + (parseFloat(document.getElementById("c-bobot_pelaksana_rekan")?.value) || 0)
+        + (parseFloat(document.getElementById("c-bobot_pelaksana_diri_sendiri")?.value) || 0);
+    if (Math.abs(totalPelaksana - 100) > 0.01) {
+        showAlert(document.getElementById("alert-box"), `Total bobot Pegawai Pelaksana (Atasan+Rekan+Diri Sendiri) harus = 100% (saat ini ${totalPelaksana}%).`, "error");
+        return;
+    }
+
+    const ok = await showConfirmModal({
+        title: "Konfirmasi Simpan Bobot",
+        message: "Apakah Anda yakin ingin memperbarui komposisi bobot penilaian 360 ini?",
+        confirmText: "Ya, Simpan Bobot",
+        cancelText: "Batal",
+        type: "primary",
+        icon: "edit"
+    });
+    if (!ok) return;
+
+    const payload = {
+        bobot_atasan: document.getElementById("c-bobot_atasan").value,
+        bobot_rekan: document.getElementById("c-bobot_rekan").value,
+        bobot_bawahan: document.getElementById("c-bobot_bawahan").value,
+        bobot_diri_sendiri: document.getElementById("c-bobot_diri_sendiri").value,
+        bobot_pelaksana_atasan: document.getElementById("c-bobot_pelaksana_atasan").value,
+        bobot_pelaksana_rekan: document.getElementById("c-bobot_pelaksana_rekan").value,
+        bobot_pelaksana_diri_sendiri: document.getElementById("c-bobot_pelaksana_diri_sendiri").value
+    };
+    const res = await apiCall("config.php", "PUT", payload);
+    if (res.success) {
+        showCenterFeedback(res.message || "Bobot penilaian berhasil diperbarui.", "success");
+    } else {
+        showAlert(document.getElementById("alert-box"), res.message, "error");
+    }
+}
+
+// =========================================================
+// MANAJEMEN AKUN ADMINISTRATOR & SUPER ADMIN
+// =========================================================
+
+async function loadAdminList() {
+    const tbody = document.getElementById("admin-table-body");
+    try {
+        const res = await apiCall("users.php");
+        if (!res.success) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 20px; color: var(--danger);">${escapeHtml(res.message) || "Gagal memuat data administrator."}</td></tr>`;
+            return;
+        }
+
+        const list = res.data || [];
+        if (list.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--text-muted);">Belum ada akun administrator.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = list.map((adm, idx) => {
+            const isSelf = parseInt(adm.id, 10) === parseInt(currentUserId, 10);
+            const isSuper = adm.role === 'super_admin';
+
+            let roleBadge = isSuper 
+                ? `<span class="badge badge-purple">Super Admin</span>` 
+                : `<span class="badge badge-blue">Admin</span>`;
+
+            let statusBadge = adm.status === 'aktif'
+                ? `<span class="badge badge-green">Aktif</span>`
+                : `<span class="badge badge-red">Nonaktif</span>`;
+
+            let lastLoginText = adm.last_login ? formatDateTime(adm.last_login) : `<span class="text-muted">Belum pernah</span>`;
+            let createdAtText = adm.created_at ? formatDateTime(adm.created_at) : `<span class="text-muted">-</span>`;
+
+            // Reset Password selalu tersedia untuk semua akun (termasuk Super Admin dan akun sendiri)
+            const resetBtn = `<button type="button" class="btn btn-secondary btn-sm" onclick="openResetPwdModal(${adm.id}, '${escapeHtml(adm.username)}', '${adm.role}')" title="Reset Password" style="padding: 4px 8px; font-size: 11.5px;">
+                <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:currentColor;"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
+                Reset Password
+               </button>`;
+
+            let toggleBtn = "";
+            let deleteBtn = "";
+
+            if (isSelf) {
+                // Untuk akun yang sedang login, kunci opsi toggle dan delete demi keamanan
+                toggleBtn = `<span class="badge badge-gray" style="font-size:11px;">Akun Sesi Ini</span>`;
+            } else {
+                const isAktif = adm.status === 'aktif';
+                toggleBtn = isAktif
+                    ? `<button type="button" class="btn btn-secondary btn-sm" onclick="toggleAdminStatus(${adm.id}, '${escapeHtml(adm.username)}', 'aktif', '${adm.role}')" title="Nonaktifkan Akun" style="padding: 4px 8px; font-size: 11.5px;">
+                        <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:currentColor;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8 0-1.85.63-3.55 1.69-4.9L16.9 18.31C15.55 19.37 13.85 20 12 20zm6.31-3.1L7.1 5.69C8.45 4.63 10.15 4 12 4c4.42 0 8 3.58 8 8 0 1.85-.63 3.55-1.69 4.9z"/></svg>
+                        Nonaktifkan
+                       </button>`
+                    : `<button type="button" class="btn btn-success btn-sm" onclick="toggleAdminStatus(${adm.id}, '${escapeHtml(adm.username)}', 'nonaktif', '${adm.role}')" title="Aktifkan Kembali" style="padding: 4px 8px; font-size: 11.5px;">
+                        <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:currentColor;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        Aktifkan
+                       </button>`;
+
+                deleteBtn = `<button type="button" class="btn-icon btn-icon-danger" onclick="deleteAdmin(${adm.id}, '${escapeHtml(adm.username)}', '${adm.role}')" title="Hapus Akun" style="width: 28px; height: 28px;">
+                    <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:currentColor;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                   </button>`;
+            }
+
+            const actionsHtml = `<div style="display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                ${resetBtn}
+                ${toggleBtn}
+                ${deleteBtn}
+            </div>`;
+
+            return `
+                <tr>
+                    <td style="text-align: center; color: var(--text-muted);">${idx + 1}</td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="width: 28px; height: 28px; border-radius: 50%; background: ${isSuper ? 'rgba(139, 92, 246, 0.15)' : 'rgba(59, 130, 246, 0.15)'}; color: ${isSuper ? '#8B5CF6' : 'var(--primary)'}; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px;">
+                                ${escapeHtml(adm.username.charAt(0).toUpperCase())}
+                            </div>
+                            <div>
+                                <span style="font-weight: 600;">${escapeHtml(adm.username)}</span>
+                                ${isSelf ? ' <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">(Anda)</span>' : ''}
+                            </div>
+                        </div>
+                    </td>
+                    <td>${roleBadge}</td>
+                    <td>${statusBadge}</td>
+                    <td style="white-space: nowrap;">${lastLoginText}</td>
+                    <td style="white-space: nowrap;">${createdAtText}</td>
+                    <td style="text-align: center;">${actionsHtml}</td>
+                </tr>
+            `;
+        }).join('');
+
+    } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 20px; color: var(--danger);">Gagal memuat data administrator: ${escapeHtml(err.message)}</td></tr>`;
+    }
+}
+
+function openAddAdminModal() {
+    document.getElementById("form-add-admin").reset();
+    document.getElementById("modal-add-admin-alert").innerHTML = "";
+    document.getElementById("adm-role").value = "admin";
+    onRoleChange("admin");
+    document.getElementById("modal-add-admin").classList.remove("hidden");
+    setTimeout(() => {
+        document.getElementById("adm-username")?.focus();
+    }, 50);
+}
+
+function closeAddAdminModal() {
+    document.getElementById("modal-add-admin").classList.add("hidden");
+}
+
+async function submitAddAdmin(e) {
+    e.preventDefault();
+    const role = document.getElementById("adm-role").value;
+    const username = document.getElementById("adm-username").value.trim();
+    const password = document.getElementById("adm-password").value;
+    const confirmPassword = document.getElementById("adm-confirm-password").value;
+    const alertEl = document.getElementById("modal-add-admin-alert");
+
+    if (!username) {
+        showAlert(alertEl, "Username wajib diisi.", "error");
+        return;
+    }
+    if (password.length < 6) {
+        showAlert(alertEl, "Password minimal 6 karakter.", "error");
+        return;
+    }
+    if (password !== confirmPassword) {
+        showAlert(alertEl, "Konfirmasi password tidak cocok dengan password baru.", "error");
+        return;
+    }
+
+    const roleName = (role === 'super_admin') ? 'Super Admin' : 'Admin';
+    const ok = await showConfirmModal({
+        title: `Konfirmasi Pembuatan Akun ${roleName}`,
+        message: `Apakah Anda yakin ingin membuat akun ${roleName} baru dengan username "${username}"?`,
+        confirmText: "Ya, Buat Akun",
+        cancelText: "Batal",
+        type: role === 'super_admin' ? "warning" : "primary",
+        icon: "add"
+    });
+    if (!ok) return;
+
+    const btn = document.getElementById("btn-submit-add-admin");
+    btn.disabled = true;
+    btn.textContent = "Menyimpan...";
+
+    try {
+        const res = await apiCall("users.php", "POST", { username, password, role });
+        if (res.success) {
+            closeAddAdminModal();
+            showCenterFeedback(res.message || `Akun ${roleName} berhasil dibuat!`, "success");
+            loadAdminList();
+        } else {
+            showAlert(alertEl, res.message || `Gagal membuat akun ${roleName}.`, "error");
+        }
+    } catch (err) {
+        showAlert(alertEl, "Terjadi kesalahan: " + err.message, "error");
+    } finally {
+        btn.disabled = false;
+        onRoleChange(role);
+    }
+}
+
+async function toggleAdminStatus(id, username, currentStatus, role) {
+    const isActivating = currentStatus !== 'aktif';
+    const newStatus = isActivating ? 'aktif' : 'nonaktif';
+    const roleLabel = (role === 'super_admin') ? 'Super Admin' : 'Admin';
+
+    const ok = await showConfirmModal({
+        title: isActivating ? `Konfirmasi Aktifkan Akun ${roleLabel}` : `Konfirmasi Nonaktifkan Akun ${roleLabel}`,
+        message: isActivating 
+            ? `Apakah Anda yakin ingin MENGAKTIFKAN kembali akun ${roleLabel} "${username}"? Akun ini akan dapat login kembali.`
+            : `Apakah Anda yakin ingin MENONAKTIFKAN akun ${roleLabel} "${username}"? Akun ini tidak akan dapat login sampai diaktifkan kembali.`,
+        confirmText: isActivating ? "Ya, Aktifkan" : "Ya, Nonaktifkan",
+        cancelText: "Batal",
+        type: isActivating ? "primary" : "warning",
+        icon: "edit"
+    });
+    if (!ok) return;
+
+    try {
+        const res = await apiCall(`users.php?id=${id}`, "PUT", { status: newStatus });
+        if (res.success) {
+            showCenterFeedback(res.message || `Status akun "${username}" berhasil diubah.`, "success");
+            loadAdminList();
+        } else {
+            showCenterFeedback(res.message || "Gagal mengubah status akun.", "error");
+        }
+    } catch (err) {
+        showCenterFeedback("Terjadi kesalahan: " + err.message, "error");
+    }
+}
+
+function openResetPwdModal(id, username, role) {
+    document.getElementById("form-reset-pwd").reset();
+    document.getElementById("modal-reset-pwd-alert").innerHTML = "";
+    document.getElementById("reset-user-id").value = id;
+    document.getElementById("reset-username").value = username;
+
+    const roleBadgeEl = document.getElementById("reset-role-badge");
+    if (roleBadgeEl) {
+        if (role === 'super_admin') {
+            roleBadgeEl.innerHTML = `<span class="badge badge-purple">Super Admin</span>`;
+        } else {
+            roleBadgeEl.innerHTML = `<span class="badge badge-blue">Admin</span>`;
+        }
+    }
+
+    document.getElementById("modal-reset-pwd").classList.remove("hidden");
+    setTimeout(() => {
+        document.getElementById("reset-new-password")?.focus();
+    }, 50);
+}
+
+function closeResetPwdModal() {
+    document.getElementById("modal-reset-pwd").classList.add("hidden");
+}
+
+async function submitResetPassword(e) {
+    e.preventDefault();
+    const id = document.getElementById("reset-user-id").value;
+    const username = document.getElementById("reset-username").value;
+    const password = document.getElementById("reset-new-password").value;
+    const confirmPassword = document.getElementById("reset-confirm-password").value;
+    const alertEl = document.getElementById("modal-reset-pwd-alert");
+
+    if (password.length < 6) {
+        showAlert(alertEl, "Password baru minimal 6 karakter.", "error");
+        return;
+    }
+    if (password !== confirmPassword) {
+        showAlert(alertEl, "Konfirmasi password tidak cocok dengan password baru.", "error");
+        return;
+    }
+
+    const ok = await showConfirmModal({
+        title: "Konfirmasi Reset Password",
+        message: `Apakah Anda yakin ingin mengatur ulang password untuk akun "${username}"?`,
+        confirmText: "Ya, Simpan Password",
+        cancelText: "Batal",
+        type: "primary",
+        icon: "edit"
+    });
+    if (!ok) return;
+
+    const btn = document.getElementById("btn-submit-reset");
+    btn.disabled = true;
+    btn.textContent = "Menyimpan...";
+
+    try {
+        const res = await apiCall(`users.php?id=${id}`, "PUT", { password });
+        if (res.success) {
+            closeResetPwdModal();
+            showCenterFeedback(res.message || `Password akun "${username}" berhasil diperbarui!`, "success");
+            loadAdminList();
+        } else {
+            showAlert(alertEl, res.message || "Gagal mereset password.", "error");
+        }
+    } catch (err) {
+        showAlert(alertEl, "Terjadi kesalahan: " + err.message, "error");
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "Simpan Password Baru";
+    }
+}
+
+async function deleteAdmin(id, username, role) {
+    const isSuper = role === 'super_admin';
+    const roleLabel = isSuper ? 'Super Admin' : 'Admin';
+    const warningText = isSuper
+        ? `\n\nPERINGATAN: Akun "${username}" memiliki hak akses SUPER ADMIN. Menghapus akun ini akan mencabut seluruh akses pengelola sistem.`
+        : '';
+
+    const ok = await showConfirmModal({
+        title: `Hapus Akun ${roleLabel}`,
+        message: `Apakah Anda yakin ingin MENGHAPUS akun ${roleLabel} "${username}" secara permanen?${warningText}\n\nTindakan ini tidak dapat dibatalkan.`,
+        confirmText: "Ya, Hapus Akun",
+        cancelText: "Batal",
+        type: "danger",
+        icon: "delete"
+    });
+    if (!ok) return;
+
+    try {
+        const res = await apiCall(`users.php?id=${id}`, "DELETE");
+        if (res.success) {
+            showCenterFeedback(res.message || `Akun ${roleLabel} "${username}" berhasil dihapus.`, "success");
+            loadAdminList();
+        } else {
+            showCenterFeedback(res.message || "Gagal menghapus akun.", "error");
+        }
+    } catch (err) {
+        showCenterFeedback("Terjadi kesalahan: " + err.message, "error");
+    }
+}
+
+// Event Listeners untuk Tutup Modal via Escape & Klik Backdrop
+window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+        closeAddAdminModal();
+        closeResetPwdModal();
+    }
+});
+document.getElementById("modal-add-admin")?.addEventListener("click", (e) => {
+    if (e.target.id === "modal-add-admin") closeAddAdminModal();
+});
+document.getElementById("modal-reset-pwd")?.addEventListener("click", (e) => {
+    if (e.target.id === "modal-reset-pwd") closeResetPwdModal();
+});
+
+(async () => {
+    const user = await initLayout("konfigurasi", ["super_admin"]);
+    if (!user) return;
+    currentUserId = user.id;
+    loadConfig();
+    loadAdminList();
+})();
+</script>
+</body>
+</html>

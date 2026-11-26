@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit Kerja &amp; Jabatan - Sistem Penilaian 360</title>
+    <meta name="description"
+        content="Kelola master data unit kerja (hierarki organisasi 3 tingkat) dan jabatan pada Dinas PU Bina Marga Provinsi Jawa Timur.">
+    <script>
+    (function(){
+                var t = localStorage.getItem('app_theme');
+        if (t === 'dark' || (!t && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+        var isNav = sessionStorage.getItem('sidebar_nav_open') === '1' || sessionStorage.getItem('sidebar_hovered') === '1';
+        if (isNav && localStorage.getItem('sidebar_pinned') !== '1') {
+            document.documentElement.classList.add('sidebar-nav-open', 'sidebar-hover-persisted');
+            function onMove(e) {
+                if (e.clientX > 248) {
+                    document.documentElement.classList.remove('sidebar-nav-open', 'sidebar-hover-persisted');
+                    sessionStorage.removeItem('sidebar_nav_open');
+                    sessionStorage.removeItem('sidebar_hovered');
+                    window.removeEventListener('mousemove', onMove);
+                }
+            }
+            window.addEventListener('mousemove', onMove, { passive: true });
+        }
+    })();
+    </script>
+    <link rel="stylesheet" href="../assets/css/style.css?v=20261117_notif">
+    <style>
+        /* -- Tab Navigation -- */
+        .tab-nav {
+            display: flex;
+            gap: 0;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            padding: 10px 22px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all .2s;
+            margin-bottom: -2px;
+            border-radius: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tab-btn:hover {
+            color: var(--primary);
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        /* ------------------------------------------
+           UNIT KERJA - Card Tree View
+        ------------------------------------------ */
+
+        /* -- Org Tree Container -- */
+        .org-tree {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        /* -- Single tree node -- */
+        .org-node {
+            border-radius: 10px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            transition: box-shadow 0.25s ease, border-color 0.25s ease;
+            flex-shrink: 0;
+        }
+
+        .org-node:hover {
+            box-shadow: 0 4px 20px rgba(27, 79, 140, 0.08);
+            border-color: rgba(27, 79, 140, 0.18);
+        }
+
+        /* -- Node header (clickable) -- */
+        .org-node-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 20px;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s;
+            position: relative;
+        }
+
+        .org-node-header:hover {
+            background: var(--bg);
+        }
+
+        /* Left color bar */
+        .org-node-header::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            border-radius: 4px 0 0 4px;
+        }
+
+        .org-node[data-level="1"] .org-node-header::before {
+            background: linear-gradient(180deg, #1B4F8C, #2563EB);
+        }
+        .org-node[data-level="2"] .org-node-header::before {
+            background: linear-gradient(180deg, #7C3AED, #A855F7);
+        }
+        .org-node[data-level="3"] .org-node-header::before {
+            background: linear-gradient(180deg, #D97706, #F59E0B);
+        }
+
+        /* Icon circle */
+        .org-node-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 18px;
+        }
+
+        .org-node[data-level="1"] .org-node-icon {
+            background: linear-gradient(135deg, #EEF2FF, #DBEAFE);
+            color: #1B4F8C;
+        }
+        .org-node[data-level="2"] .org-node-icon {
+            background: linear-gradient(135deg, #F3E8FF, #EDE9FE);
+            color: #7C3AED;
+        }
+        .org-node[data-level="3"] .org-node-icon {
+            background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+            color: #92400E;
+        }
+
+        /* Main info */
+        .org-node-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .org-node-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 3px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .org-node-name .node-kode {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 1px 7px;
+            border-radius: 4px;
+            background: #EEF2FF;
+            color: var(--primary);
+            letter-spacing: 0.3px;
+        }
+
+        .org-node-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 2px;
+        }
+
+        .org-node-meta-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .org-node-meta-item svg {
+            width: 13px;
+            height: 13px;
+            fill: currentColor;
+            opacity: 0.65;
+        }
+
+        /* Right side stats */
+        .org-node-stats {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-shrink: 0;
+        }
+
+        .org-stat-chip {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .org-stat-chip .stat-val {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1;
+        }
+
+        .org-stat-chip .stat-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Action buttons */
+        .org-node-actions {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .org-node-actions .btn-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--card-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+        }
+
+        .org-node-actions .btn-icon:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .org-node-actions .btn-icon.btn-icon-danger:hover {
+            border-color: var(--danger);
+            color: var(--danger);
+            background: #FEF2F2;
+        }
+
+        .org-node-actions .btn-icon svg {
+            width: 15px;
+            height: 15px;
+            fill: currentColor;
+        }
+
+        /* Toggle chevron */
+        .org-node-toggle {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s ease;
+            flex-shrink: 0;
+            color: var(--text-muted);
+        }
+
+        .org-node-toggle svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .org-node.expanded > .org-node-header .org-node-toggle svg {
+            transform: rotate(90deg);
+        }
+
+        .org-node-toggle.no-children {
+            visibility: hidden;
+        }
+
+        /* -- Children container -- */
+        .org-node-children {
+            padding: 4px 12px 12px 28px;
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+        }
+
+        /* Tree connector line */
+        .org-node-children::before {
+            content: '';
+            position: absolute;
+            left: 40px;
+            top: 0;
+            bottom: 12px;
+            width: 2px;
+            background: linear-gradient(180deg, var(--border) 0%, transparent 100%);
+            border-radius: 2px;
+        }
+
+        .org-node.expanded > .org-node-children {
+            display: flex;
+            animation: nodeSlideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes nodeSlideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* -- Eselon / Tingkat badges -- */
+        .badge-es2 {
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+
+        .badge-es3 {
+            background: #ede9fe;
+            color: #6d28d9;
+        }
+
+        .badge-es4 {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-struktural {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .badge-fungsional {
+            background: #ede9fe;
+            color: #6d28d9;
+        }
+
+        .badge-pelaksana {
+            background: #f0fdf4;
+            color: #15803d;
+        }
+
+        /* -- Filter bar -- */
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .filter-bar input,
+        .filter-bar select {
+            padding: 7px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 13px;
+            background: var(--card-bg);
+            color: var(--text);
+            min-width: 160px;
+        }
+
+        .filter-bar input:focus,
+        .filter-bar select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(27, 79, 140, 0.08);
+        }
+
+        .filter-count {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-left: auto;
+        }
+
+        /* -- Jabatan level pill -- */
+        .level-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .level-1 {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .level-2 {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .level-3 {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .level-4 {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        /* -- Eselon hint -- */
+        .eselon-section {
+            display: none;
+        }
+
+        .eselon-visible {
+            display: block;
+        }
+
+        /* -- Info box -- */
+        .info-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .info-box svg {
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .info-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .info-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+        }
+
+        /* -- Nama jabatan long text -- */
+        #tbody-jab td:first-child {
+            max-width: 340px;
+            word-break: break-word;
+            line-height: 1.4;
+        }
+
+        /* -- Expand/Collapse all button -- */
+        .btn-expand-all {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-expand-all:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .btn-expand-all svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+
+        /* -- Empty state -- */
+        .org-tree-empty {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--text-muted);
+        }
+
+        .org-tree-empty svg {
+            width: 48px;
+            height: 48px;
+            fill: var(--border);
+            margin-bottom: 12px;
+        }
+
+        .org-tree-empty p {
+            font-size: 14px;
+            margin: 0;
+        }
+
+        /* -- Responsive tweaks -- */
+        @media (max-width: 768px) {
+            .org-node-header {
+                flex-wrap: wrap;
+                gap: 10px;
+                padding: 12px 14px;
+            }
+            .org-node-stats {
+                order: 10;
+                width: 100%;
+                justify-content: flex-start;
+                gap: 20px;
+            }
+            .org-node-actions {
+                order: 11;
+            }
+            .org-node-children {
+                padding-left: 16px;
+            }
+            .org-node-children::before {
+                left: 28px;
+            }
+        }
+    </style>
+    <style>.sidebar-footer, .sidebar-toggle-bottom, button.sidebar-toggle-bottom, aside#sidebar .sidebar-footer, aside#sidebar .sidebar-toggle-bottom { display: none !important; }</style>
+</head>
+
+<body>
+    <div class="app-shell">
+        <aside class="sidebar" id="sidebar"></aside>
+        <div class="main-content">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <h1 id="page-title">Unit Kerja &amp; Jabatan</h1>
+                </div>
+                <div id="topbar-user"></div>
+            </header>
+            <main class="page">
+
+                <!-- Tab Navigation -->
+                <div class="tab-nav">
+                    <button class="tab-btn active" id="tab-unit-btn" onclick="switchTab('unit')">
+                        <svg style="width:16px;height:16px;fill:currentColor;" viewBox="0 0 24 24">
+                            <path
+                                d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
+                        </svg>
+                        Struktur Unit Kerja
+                    </button>
+                    <button class="tab-btn" id="tab-jab-btn" onclick="switchTab('jab')">
+                        <svg style="width:16px;height:16px;fill:currentColor;" viewBox="0 0 24 24">
+                            <path
+                                d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v2h20v-2c0-3.3-6.7-5-10-5z" />
+                        </svg>
+                        Daftar Jabatan
+                    </button>
+                </div>
+
+                <!-- --------------- PANEL UNIT KERJA --------------- -->
+                <div id="panel-unit">
+                    <div class="card">
+                        <div class="flex-between mb-16">
+                            <div>
+                                <div class="card-title" style="margin-bottom:4px;">Struktur Unit Kerja</div>
+                                <p class="text-muted" style="font-size:13px;margin:0;">
+                                    Hierarki organisasi 3 tingkat yang menampilkan seluruh struktur
+                                    <strong>Dinas PU Bina Marga Provinsi Jawa Timur</strong>.
+                                </p>
+                            </div>
+                            <div style="display:flex;gap:8px;align-items:center;">
+                                <button class="btn-expand-all" id="btn-toggle-all" onclick="toggleAllNodes()">
+                                    <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+                                    <span id="toggle-all-label">Buka Semua</span>
+                                </button>
+                                <button class="btn btn-primary" onclick="openUnitModal()">
+                                    <svg style="width:14px;height:14px;fill:currentColor;" viewBox="0 0 24 24">
+                                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                                    </svg>
+                                    Tambah Unit Kerja
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Legenda warna tingkat -->
+                        <div class="info-box">
+                            <svg style="width:16px;height:16px;fill:#1B4F8C;" viewBox="0 0 24 24">
+                                <path
+                                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+                            </svg>
+                            <div>
+                                <div style="font-weight:600;margin-bottom:6px;">Keterangan Tingkat Organisasi</div>
+                                <div class="info-legend">
+                                    <div class="info-legend-item">
+                                        <span style="width:12px;height:12px;border-radius:3px;background:linear-gradient(135deg,#1B4F8C,#2563EB);display:inline-block;"></span>
+                                        <strong>Dinas</strong> (ES II - Tingkat I)
+                                    </div>
+                                    <div class="info-legend-item">
+                                        <span style="width:12px;height:12px;border-radius:3px;background:linear-gradient(135deg,#7C3AED,#A855F7);display:inline-block;"></span>
+                                        <strong>Bidang / Sekretariat / UPT</strong> (ES III - Tingkat II)
+                                    </div>
+                                    <div class="info-legend-item">
+                                        <span style="width:12px;height:12px;border-radius:3px;background:linear-gradient(135deg,#D97706,#F59E0B);display:inline-block;"></span>
+                                        <strong>Seksi / Sub Bagian</strong> (ES IV - Tingkat III)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Filter -->
+                        <div class="filter-bar">
+                            <input type="text" id="filter-unit-nama" placeholder="Cari nama unit kerja..."
+                                oninput="filterUnits()">
+                            <select id="filter-unit-jenis" onchange="filterUnits()">
+                                <option value="">Semua Jenis</option>
+                                <option value="dinas">Dinas</option>
+                                <option value="sekretariat">Sekretariat</option>
+                                <option value="bidang">Bidang</option>
+                                <option value="upt">UPT</option>
+                                <option value="upt_lab">UPT Laboratorium</option>
+                                <option value="seksi">Seksi</option>
+                                <option value="sub_bagian_tata_usaha">Sub Bagian Tata Usaha</option>
+                                <option value="subbagian">Subbagian</option>
+                                <option value="kelompok_fungsional">Kelompok Jabatan Fungsional</option>
+                            </select>
+                            <span class="filter-count" id="unit-count"></span>
+                        </div>
+
+                        <div id="alert-unit"></div>
+
+                        <!-- Card Tree View -->
+                        <div class="org-tree" id="org-tree-container">
+                            <div class="org-tree-empty">
+                                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                                <p>Memuat data...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- --------------- PANEL JABATAN --------------- -->
+                <div id="panel-jab" class="hidden">
+                    <div class="card">
+                        <div class="flex-between mb-16">
+                            <div>
+                                <div class="card-title" style="margin-bottom:4px;">Daftar Jabatan</div>
+                                <p class="text-muted" style="font-size:13px;margin:0;">
+                                    Jabatan <strong>Struktural</strong> (dengan eselon &amp; level hierarki),
+                                    <strong>Fungsional</strong>, dan <strong>Pelaksana</strong> sesuai ketentuan ASN.
+                                </p>
+                            </div>
+                            <button class="btn btn-primary" onclick="openJabModal()">
+                                <svg style="width:14px;height:14px;fill:currentColor;" viewBox="0 0 24 24">
+                                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                                </svg>
+                                Tambah Jabatan
+                            </button>
+                        </div>
+
+                        <!-- Filter -->
+                        <div class="filter-bar">
+                            <input type="text" id="filter-jab-nama" placeholder="Cari nama jabatan..."
+                                oninput="filterJabatan()">
+                            <select id="filter-jab-jenis" onchange="filterJabatan()">
+                                <option value="">Semua Jenis</option>
+                                <option value="struktural">Struktural</option>
+                                <option value="fungsional">Fungsional</option>
+                                <option value="pelaksana">Pelaksana</option>
+                            </select>
+                            <span class="filter-count" id="jab-count"></span>
+                        </div>
+
+                        <!-- Legenda level -->
+                        <div class="info-box">
+                            <svg style="width:16px;height:16px;fill:#6366f1;" viewBox="0 0 24 24">
+                                <path
+                                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+                            </svg>
+                            <div>
+                                <div style="font-weight:600;margin-bottom:6px;">Keterangan Level Jabatan</div>
+                                <div class="info-legend">
+                                    <div class="info-legend-item"><span class="level-pill level-1">Level 1</span> Kepala
+                                        Dinas</div>
+                                    <div class="info-legend-item"><span class="level-pill level-2">Level 2</span> Kabid
+                                        / Sekretaris / Ka-UPT</div>
+                                    <div class="info-legend-item"><span class="level-pill level-3">Level 3</span> Kasi /
+                                        Kasubbag</div>
+                                    <div class="info-legend-item"><span class="level-pill level-4">Level 4</span>
+                                        Fungsional / Pelaksana</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="alert-jab"></div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Nama Jabatan</th>
+                                        <th>Kode</th>
+                                        <th>Jenis</th>
+                                        <th>Eselon</th>
+                                        <th>Level</th>
+                                        <th style="text-align:center;">Pegawai</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-jab">
+                                    <tr>
+                                        <td colspan="7" class="text-muted">Memuat data...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="pagination-jab"></div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- -------------- Modal Unit Kerja -------------- -->
+    <div class="modal-overlay hidden" id="modal-unit">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modal-unit-title">Tambah Unit Kerja</h3>
+                <button class="modal-close" onclick="closeUnitModal()">&times;</button>
+            </div>
+            <div id="modal-unit-alert"></div>
+            <form id="form-unit">
+                <input type="hidden" id="fu-id">
+
+                <label>Kode Unit <span style="color:var(--danger)">*</span></label>
+                <input type="text" id="fu-kode" placeholder="Contoh: BID-BT, UPT-SBY-PP" required
+                    style="text-transform:uppercase;">
+                <small class="text-muted" style="display:block;margin-top:-8px;margin-bottom:10px;">Singkatan unik,
+                    otomatis diubah ke HURUF BESAR.</small>
+
+                <label>Nama Unit Kerja <span style="color:var(--danger)">*</span></label>
+                <input type="text" id="fu-nama" placeholder="Contoh: Bidang Bina Teknik" required>
+
+                <label>Jenis Unit <span style="color:var(--danger)">*</span></label>
+                <select id="fu-jenis" onchange="onJenisUnitChange()">
+                    <optgroup label="Tingkat I - Dinas (ES II)">
+                        <option value="dinas">Dinas</option>
+                    </optgroup>
+                    <optgroup label="Tingkat II - Langsung di bawah Dinas (ES III)">
+                        <option value="sekretariat">Sekretariat</option>
+                        <option value="bidang">Bidang</option>
+                        <option value="upt">UPT (Pengelolaan Jalan &amp; Jembatan)</option>
+                        <option value="upt_lab">UPT Laboratorium</option>
+                    </optgroup>
+                    <optgroup label="Tingkat III - Di bawah Bidang/UPT (ES IV)">
+                        <option value="seksi">Seksi</option>
+                        <option value="sub_bagian_tata_usaha">Sub Bagian Tata Usaha</option>
+                        <option value="subbagian">Subbagian</option>
+                        <option value="kelompok_fungsional">Kelompok Jabatan Fungsional</option>
+                    </optgroup>
+                </select>
+
+                <label>Induk Unit Kerja</label>
+                <select id="fu-parent">
+                    <option value="">----- Tidak ada --(unit tingkat tertinggi) ---</option>
+                </select>
+                <small class="text-muted" style="display:block;margin-top:-8px;margin-bottom:10px;">Pilih unit di
+                    atasnya. Dinas tidak perlu memilih induk.</small>
+
+                <label>Alamat Kantor</label>
+                <input type="text" id="fu-alamat" placeholder="Alamat kantor unit (opsional)">
+
+                <label>Status</label>
+                <select id="fu-status">
+                    <option value="aktif">Aktif</option>
+                    <option value="nonaktif">Nonaktif</option>
+                </select>
+
+                <div class="flex-between" style="margin-top:16px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeUnitModal()">Batal</button>
+                    <button type="submit" class="btn btn-primary" id="btn-simpan-unit">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- -------------- Modal Jabatan -------------- -->
+    <div class="modal-overlay hidden" id="modal-jab">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modal-jab-title">Tambah Jabatan</h3>
+                <button class="modal-close" onclick="closeJabModal()">&times;</button>
+            </div>
+            <div id="modal-jab-alert"></div>
+            <form id="form-jab">
+                <input type="hidden" id="fj-id">
+
+                <label>Kode Jabatan <span style="color:var(--danger)">*</span></label>
+                <input type="text" id="fj-kode" placeholder="Contoh: KABID, FUN-PKJ-AHM" required
+                    style="text-transform:uppercase;">
+
+                <label>Nama Jabatan <span style="color:var(--danger)">*</span></label>
+                <input type="text" id="fj-nama" placeholder="Contoh: Kepala Bidang / Penata Kelola Jalan Ahli Muda"
+                    required>
+
+                <label>Jenis Jabatan <span style="color:var(--danger)">*</span></label>
+                <select id="fj-jenis" onchange="onJenisJabatanChange()">
+                    <option value="struktural">Struktural (memiliki eselon &amp; level hierarki)</option>
+                    <option value="fungsional">Fungsional (jabatan fungsional tertentu/umum)</option>
+                    <option value="pelaksana">Pelaksana (staf administrasi &amp; operasional)</option>
+                </select>
+
+                <!-- Eselon - hanya tampil untuk Struktural -->
+                <div id="eselon-section" class="eselon-section">
+                    <label>Eselon</label>
+                    <select id="fj-eselon">
+                        <option value="">--- Tidak ada ---</option>
+                        <option value="II.a">II.a - Pimpinan Tinggi Pratama (Kepala Dinas)</option>
+                        <option value="III.a">III.a - Administrator (Kabid / Sekretaris)</option>
+                        <option value="III.b">III.b - Administrator (Kepala UPT)</option>
+                        <option value="IV.a">IV.a - Pengawas (Kasi / Kasubbag)</option>
+                    </select>
+                    <small class="text-muted" style="display:block;margin-top:-8px;margin-bottom:10px;">
+                        Hanya untuk jabatan struktural. Eselon yang tersedia di Dinas PU Bina Marga: II.a, III.a, III.b,
+                        IV.a.
+                    </small>
+                </div>
+
+                <!-- Level - hanya tampil untuk Struktural -->
+                <div id="level-section" class="eselon-section">
+                    <label>Level Jabatan</label>
+                    <select id="fj-level">
+                        <option value="1">Level 1 - Pimpinan Tertinggi (Kepala Dinas)</option>
+                        <option value="2">Level 2 - Pimpinan Unit (Sekretaris / Kabid / Ka-UPT)</option>
+                        <option value="3">Level 3 - Pimpinan Sub Unit (Kasi / Kasubbag)</option>
+                        <option value="4">Level 4 - Fungsional / Pelaksana</option>
+                    </select>
+                </div>
+
+                <label>Keterangan <span class="text-muted">(opsional)</span></label>
+                <input type="text" id="fj-keterangan" placeholder="Deskripsi singkat jabatan">
+
+                <div class="flex-between" style="margin-top:16px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeJabModal()">Batal</button>
+                    <button type="submit" class="btn btn-primary" id="btn-simpan-jab">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../assets/js/config.js?v=20261126"></script>
+    <script src="../assets/js/api.js?v=20261126"></script>
+    <script src="../assets/js/searchable-select.js?v=20261116_search"></script>
+    <script src="../assets/js/auth.js?v=20261117_notif"></script>
+    <script>
+
+        /* -----------------------------------------
+           KONSTANTA LABEL & BADGE
+        ----------------------------------------- */
+        const JENIS_UNIT = {
+            dinas: { label: 'Dinas', badge: 'badge-es2', es: 'ES&nbsp;II' },
+            sekretariat: { label: 'Sekretariat', badge: 'badge-es3', es: 'ES&nbsp;III' },
+            bidang: { label: 'Bidang', badge: 'badge-es3', es: 'ES&nbsp;III' },
+            upt: { label: 'UPT', badge: 'badge-es3', es: 'ES&nbsp;III' },
+            upt_lab: { label: 'UPT Lab', badge: 'badge-es3', es: 'ES&nbsp;III' },
+            seksi: { label: 'Seksi', badge: 'badge-es4', es: 'ES&nbsp;IV' },
+            sub_bagian_tata_usaha: { label: 'Sub Bagian TU', badge: 'badge-es4', es: 'ES&nbsp;IV' },
+            subbagian: { label: 'Subbagian', badge: 'badge-es4', es: 'ES&nbsp;IV' },
+            kelompok_fungsional: { label: 'Kelompok Fungsional', badge: 'badge-es4', es: 'ES&nbsp;IV' },
+        };
+
+        const JENIS_JABATAN = {
+            struktural: { label: 'Struktural', badge: 'badge-struktural' },
+            fungsional: { label: 'Fungsional', badge: 'badge-fungsional' },
+            pelaksana: { label: 'Pelaksana', badge: 'badge-pelaksana' },
+        };
+
+        const LEVEL_LABEL = {
+            1: { label: 'Level 1', cls: 'level-1' },
+            2: { label: 'Level 2', cls: 'level-2' },
+            3: { label: 'Level 3', cls: 'level-3' },
+            4: { label: 'Level 4', cls: 'level-4' },
+        };
+
+        /* -----------------------------------------
+           TAB SWITCH
+        ----------------------------------------- */
+        function switchTab(tab) {
+            const isUnit = tab === 'unit';
+            document.getElementById('panel-unit').classList.toggle('hidden', !isUnit);
+            document.getElementById('panel-jab').classList.toggle('hidden', isUnit);
+            document.getElementById('tab-unit-btn').classList.toggle('active', isUnit);
+            document.getElementById('tab-jab-btn').classList.toggle('active', !isUnit);
+        }
+
+        /* -----------------------------------------
+           UNIT KERJA
+        ----------------------------------------- */
+        let allUnitsRaw = [];  // semua data dari server
+        let allExpanded = false;
+
+        /* -- Icon per jenis unit -- */
+        const UNIT_ICONS = {
+            dinas: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>`,
+            sekretariat: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg>`,
+            bidang: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9h-4v4h-2v-4H9V9h4V5h2v4h4v2z"/></svg>`,
+            upt: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>`,
+            upt_lab: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 2v2h1v14c0 2.21 1.79 4 4 4s4-1.79 4-4V4h1V2H7zm5 16c-1.1 0-2-.9-2-2v-2h4v2c0 1.1-.9 2-2 2z"/></svg>`,
+            seksi: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>`,
+            sub_bagian_tata_usaha: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>`,
+            subbagian: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>`,
+            kelompok_fungsional: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>`,
+        };
+
+        /** Buat hierarki tree dari flat array */
+        function buildTree(rows) {
+            const byId = {};
+            rows.forEach(r => { byId[r.id] = { ...r, children: [] }; });
+            const roots = [];
+            rows.forEach(r => {
+                if (r.parent_id && byId[r.parent_id]) {
+                    byId[r.parent_id].children.push(byId[r.id]);
+                } else {
+                    roots.push(byId[r.id]);
+                }
+            });
+            // Sort children
+            function sortChildren(node) {
+                node.children.sort((a, b) => a.nama_unit.localeCompare(b.nama_unit, 'id'));
+                node.children.forEach(sortChildren);
+            }
+            roots.sort((a, b) => a.nama_unit.localeCompare(b.nama_unit, 'id'));
+            roots.forEach(sortChildren);
+            return roots;
+        }
+
+        /** Hitung depth dari node di tree */
+        function getNodeDepth(node, byId) {
+            if (!node.parent_id) return 1;
+            const parent = byId[node.parent_id];
+            if (!parent) return 1;
+            return getNodeDepth(parent, byId) + 1;
+        }
+
+        async function loadUnits() {
+            const container = document.getElementById('org-tree-container');
+            const res = await apiCall('unit_kerja.php');
+            if (!res.success) {
+                container.innerHTML = `<div class="org-tree-empty">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                    <p>${res.message}</p>
+                </div>`;
+                return;
+            }
+            allUnitsRaw = res.data || [];
+
+            // Isi dropdown parent di modal
+            const parentSelect = document.getElementById('fu-parent');
+            parentSelect.innerHTML = '<option value="">----- Tidak ada --(unit tingkat tertinggi) ---</option>' +
+                allUnitsRaw.map(u => {
+                    const meta = JENIS_UNIT[u.jenis_unit] || {};
+                    return `<option value="${u.id}">[${meta.label || u.jenis_unit}] ${u.nama_unit}</option>`;
+                }).join('');
+
+            renderUnitTree(allUnitsRaw);
+        }
+
+        /** Render satu node + anak-anaknya secara rekursif */
+        function renderNodeHTML(node, depth) {
+            const meta = JENIS_UNIT[node.jenis_unit] || { label: node.jenis_unit, badge: 'badge-gray', es: '-' };
+            const hasChildren = node.children && node.children.length > 0;
+            const icon = UNIT_ICONS[node.jenis_unit] || UNIT_ICONS.seksi;
+            const pegCount = parseInt(node.jumlah_pegawai) || 0;
+            const childCount = node.children ? node.children.length : 0;
+
+            const toggleSvg = `<svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>`;
+
+            let childrenHTML = '';
+            if (hasChildren) {
+                childrenHTML = `<div class="org-node-children">
+                    ${node.children.map(c => renderNodeHTML(c, depth + 1)).join('')}
+                </div>`;
+            }
+
+            const escapedName = node.nama_unit.replace(/'/g, "\\'");
+
+            return `
+            <div class="org-node" data-level="${Math.min(depth, 3)}" data-id="${node.id}">
+                <div class="org-node-header" onclick="toggleNode(this)">
+                    <div class="org-node-toggle ${hasChildren ? '' : 'no-children'}">
+                        ${toggleSvg}
+                    </div>
+                    <div class="org-node-icon">
+                        ${icon}
+                    </div>
+                    <div class="org-node-info">
+                        <div class="org-node-name">
+                            ${node.nama_unit}
+                            <span class="node-kode">${node.kode_unit}</span>
+                        </div>
+                        <div class="org-node-meta">
+                            <span class="org-node-meta-item">
+                                <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+                                ${meta.label}
+                            </span>
+                            <span class="org-node-meta-item">
+                                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                                ${meta.es.replace('&nbsp;', ' ')}
+                            </span>
+                            ${hasChildren ? `<span class="org-node-meta-item">
+                                <svg viewBox="0 0 24 24"><path d="M22 11V3h-7v3H9V3H2v8h7V8h2v10h4v3h7v-8h-7v3h-2V8h2v3h7zM7 9H4V5h3v4zm10 6h3v4h-3v-4zm0-10v4h3V5h-3z"/></svg>
+                                ${childCount} sub-unit
+                            </span>` : ''}
+                        </div>
+                    </div>
+                    <div class="org-node-stats">
+                        <div class="org-stat-chip">
+                            <span class="stat-val" style="${pegCount > 0 ? 'color:var(--primary)' : 'color:var(--text-muted)'}">${pegCount}</span>
+                            <span class="stat-label">Pegawai</span>
+                        </div>
+                    </div>
+                    <div class="org-node-actions" onclick="event.stopPropagation()">
+                        <button class="btn-icon" title="Edit" onclick="editUnit(${node.id})">
+                            <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                        </button>
+                        <button class="btn-icon btn-icon-danger" title="Hapus" onclick="deleteUnit(${node.id}, '${escapedName}', ${pegCount})">
+                            <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                        </button>
+                    </div>
+                </div>
+                ${childrenHTML}
+            </div>`;
+        }
+
+        function renderUnitTree(rows) {
+            const container = document.getElementById('org-tree-container');
+            const filterNama = (document.getElementById('filter-unit-nama').value || '').toLowerCase();
+            const filterJenis = document.getElementById('filter-unit-jenis').value;
+
+            let filtered = rows;
+            if (filterNama) filtered = filtered.filter(u => u.nama_unit.toLowerCase().includes(filterNama));
+            if (filterJenis) filtered = filtered.filter(u => u.jenis_unit === filterJenis);
+
+            document.getElementById('unit-count').textContent =
+                `Menampilkan ${filtered.length} dari ${rows.length} unit kerja`;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="org-tree-empty">
+                    <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                    <p>-- Tidak ada --unit kerja yang sesuai filter.</p>
+                </div>`;
+                return;
+            }
+
+            // Reset status expand saat render baru
+            allExpanded = false;
+            const toggleLabel = document.getElementById('toggle-all-label');
+            if (toggleLabel) toggleLabel.textContent = 'Buka Semua';
+
+            // Jika ada filter, tampilkan flat sebagai cards
+            if (filterNama || filterJenis) {
+                container.innerHTML = filtered.map((u) => {
+                    const node = { ...u, children: [] };
+                    const byId = {};
+                    rows.forEach(r => byId[r.id] = r);
+                    const depth = getNodeDepth(node, byId);
+                    return renderNodeHTML(node, depth);
+                }).join('');
+            } else {
+                // Build & render full tree
+                const tree = buildTree(rows);
+                container.innerHTML = tree.map((root) => renderNodeHTML(root, 1)).join('');
+            }
+        }
+
+        /** Toggle expand/collapse satu node */
+        function toggleNode(headerEl) {
+            const node = headerEl.closest('.org-node');
+            const hasChildren = node.querySelector(':scope > .org-node-children');
+            if (!hasChildren) return;
+            node.classList.toggle('expanded');
+        }
+
+        /** Toggle semua nodes */
+        function toggleAllNodes() {
+            const nodes = document.querySelectorAll('.org-node');
+            allExpanded = !allExpanded;
+            nodes.forEach(n => {
+                const hasChildren = n.querySelector(':scope > .org-node-children');
+                if (hasChildren) {
+                    if (allExpanded) {
+                        n.classList.add('expanded');
+                    } else {
+                        n.classList.remove('expanded');
+                    }
+                }
+            });
+            const labelEl = document.getElementById('toggle-all-label');
+            if (labelEl) labelEl.textContent = allExpanded ? 'Tutup Semua' : 'Buka Semua';
+        }
+
+        function filterUnits() { renderUnitTree(allUnitsRaw); }
+
+        function openUnitModal() {
+            document.getElementById('modal-unit-title').textContent = 'Tambah Unit Kerja';
+            document.getElementById('form-unit').reset();
+            document.getElementById('fu-id').value = '';
+            document.getElementById('modal-unit-alert').innerHTML = '';
+            document.getElementById('modal-unit').classList.remove('hidden');
+        }
+        function closeUnitModal() { document.getElementById('modal-unit').classList.add('hidden'); }
+
+        function editUnit(id) {
+            const u = allUnitsRaw.find(x => x.id == id);
+            if (!u) return;
+            document.getElementById('modal-unit-title').textContent = 'Edit Unit Kerja';
+            document.getElementById('fu-id').value = u.id;
+            document.getElementById('fu-kode').value = u.kode_unit;
+            document.getElementById('fu-nama').value = u.nama_unit;
+            document.getElementById('fu-jenis').value = u.jenis_unit;
+            document.getElementById('fu-parent').value = u.parent_id || '';
+            document.getElementById('fu-alamat').value = u.alamat || '';
+            document.getElementById('fu-status').value = u.status;
+            document.getElementById('modal-unit-alert').innerHTML = '';
+            document.getElementById('modal-unit').classList.remove('hidden');
+        }
+
+        async function deleteUnit(id, nama, jumlah) {
+            if (jumlah > 0) {
+                showCenterFeedback(`Tidak dapat menghapus "${nama}" karena masih memiliki ${jumlah} pegawai. Pindahkan pegawai tersebut terlebih dahulu.`, 'warning', 4000);
+                return;
+            }
+            const ok = await showConfirmModal({
+                title: "Konfirmasi Hapus Unit Kerja",
+                message: `Apakah Anda yakin ingin menghapus unit kerja "${nama}"?\nAksi ini tidak dapat dibatalkan.`,
+                confirmText: "Ya, Hapus Unit",
+                cancelText: "Batal",
+                type: "danger",
+                icon: "delete"
+            });
+            if (!ok) return;
+
+            const res = await apiCall(`unit_kerja.php?id=${id}`, 'DELETE');
+            showAlert(document.getElementById('alert-unit'), res.message, res.success ? 'success' : 'error');
+            if (res.success) loadUnits();
+        }
+
+        function onJenisUnitChange() {
+            const jenis = document.getElementById('fu-jenis').value;
+            const parentSelect = document.getElementById('fu-parent');
+            // Jika dinas, kosongkan & disable parent
+            if (jenis === 'dinas') {
+                parentSelect.value = '';
+                parentSelect.disabled = true;
+            } else {
+                parentSelect.disabled = false;
+            }
+        }
+
+        document.getElementById('form-unit').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('fu-id').value;
+            const parentId = document.getElementById('fu-parent').value;
+            if (id && parentId == id) {
+                showAlert(document.getElementById('modal-unit-alert'), 'Unit kerja tidak boleh menjadi induk dari dirinya sendiri.');
+                return;
+            }
+
+            const isEdit = Boolean(id);
+            const namaUnit = document.getElementById('fu-nama').value.trim();
+            const ok = await showConfirmModal({
+                title: isEdit ? "Konfirmasi Simpan Perubahan" : "Konfirmasi Tambah Unit Kerja",
+                message: isEdit 
+                    ? `Apakah Anda yakin ingin menyimpan perubahan data untuk unit kerja "${namaUnit}"?` 
+                    : `Apakah Anda yakin ingin menambahkan unit kerja baru "${namaUnit}"?`,
+                confirmText: isEdit ? "Ya, Simpan Perubahan" : "Ya, Tambahkan",
+                cancelText: "Batal",
+                type: "primary",
+                icon: isEdit ? "edit" : "add"
+            });
+            if (!ok) return;
+
+            const payload = {
+                kode_unit: document.getElementById('fu-kode').value.toUpperCase(),
+                nama_unit: document.getElementById('fu-nama').value,
+                jenis_unit: document.getElementById('fu-jenis').value,
+                parent_id: parentId || null,
+                alamat: document.getElementById('fu-alamat').value || null,
+                status: document.getElementById('fu-status').value,
+            };
+            const btn = document.getElementById('btn-simpan-unit');
+            btn.disabled = true; btn.textContent = 'Menyimpan...';
+            const res = id
+                ? await apiCall(`unit_kerja.php?id=${id}`, 'PUT', payload)
+                : await apiCall('unit_kerja.php', 'POST', payload);
+            btn.disabled = false; btn.textContent = 'Simpan';
+            if (!res.success) { showAlert(document.getElementById('modal-unit-alert'), res.message); return; }
+            closeUnitModal();
+            showAlert(document.getElementById('alert-unit'), res.message, 'success');
+            loadUnits();
+        });
+
+        /* -----------------------------------------
+           JABATAN
+        ----------------------------------------- */
+        let allJabatanRaw = [];
+
+        async function loadJabatan() {
+            const res = await apiCall('jabatan.php');
+            const tbody = document.getElementById('tbody-jab');
+            if (!res.success) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-muted">${res.message}</td></tr>`;
+                return;
+            }
+            allJabatanRaw = res.data || [];
+            renderJabatanTable(allJabatanRaw);
+        }
+
+        function renderJabatanTable(rows) {
+            const tbody = document.getElementById('tbody-jab');
+            const filterNama = (document.getElementById('filter-jab-nama').value || '').toLowerCase();
+            const filterJenis = document.getElementById('filter-jab-jenis').value;
+
+            let filtered = rows;
+            if (filterNama) filtered = filtered.filter(j => j.nama_jabatan.toLowerCase().includes(filterNama));
+            if (filterJenis) filtered = filtered.filter(j => j.jenis_jabatan === filterJenis);
+
+            document.getElementById('jab-count').textContent =
+                `Menampilkan ${filtered.length} dari ${rows.length} jabatan`;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-muted" style="text-align:center;padding:24px;">-- Tidak ada --jabatan yang sesuai filter.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(j => {
+                const meta = JENIS_JABATAN[j.jenis_jabatan] || { label: j.jenis_jabatan, badge: 'badge-gray' };
+                const lvl = LEVEL_LABEL[j.level_jabatan] || { label: `Level ${j.level_jabatan}`, cls: 'level-4' };
+                const eselon = j.eselon
+                    ? `<span class="badge badge-blue" style="font-size:11px;">${j.eselon}</span>`
+                    : `<span class="text-muted">-</span>`;
+                const pegBadge = `<span class="badge ${j.jumlah_pegawai > 0 ? 'badge-green' : 'badge-gray'}">${j.jumlah_pegawai}</span>`;
+                return `
+        <tr>
+            <td><span style="font-weight:500;">${j.nama_jabatan}</span>
+                ${j.keterangan ? `<br><small class="text-muted">${j.keterangan}</small>` : ''}</td>
+            <td><span class="badge badge-blue" style="font-size:11px;">${j.kode_jabatan}</span></td>
+            <td><span class="badge ${meta.badge}">${meta.label}</span></td>
+            <td>${eselon}</td>
+            <td><span class="level-pill ${lvl.cls}">${lvl.label}</span></td>
+            <td style="text-align:center;">${pegBadge}</td>
+            <td>
+                <button class="btn btn-secondary btn-sm" onclick="editJab(${j.id})">Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteJab(${j.id}, '${j.nama_jabatan.replace(/'/g, "\\'")}', ${j.jumlah_pegawai})">Hapus</button>
+            </td>
+        </tr>`;
+            }).join('');
+        }
+
+        function filterJabatan() { renderJabatanTable(allJabatanRaw); }
+
+        /** Tampilkan/sembunyikan field eselon & level berdasarkan jenis jabatan */
+        function onJenisJabatanChange() {
+            const jenis = document.getElementById('fj-jenis').value;
+            const isStruktural = jenis === 'struktural';
+            document.getElementById('eselon-section').classList.toggle('eselon-visible', isStruktural);
+            document.getElementById('level-section').classList.toggle('eselon-visible', isStruktural);
+            if (!isStruktural) {
+                document.getElementById('fj-eselon').value = '';
+                document.getElementById('fj-level').value = '4';
+            }
+        }
+
+        function openJabModal() {
+            document.getElementById('modal-jab-title').textContent = 'Tambah Jabatan';
+            document.getElementById('form-jab').reset();
+            document.getElementById('fj-id').value = '';
+            document.getElementById('modal-jab-alert').innerHTML = '';
+            document.getElementById('fj-jenis').value = 'struktural';
+            onJenisJabatanChange();
+            document.getElementById('modal-jab').classList.remove('hidden');
+        }
+        function closeJabModal() { document.getElementById('modal-jab').classList.add('hidden'); }
+
+        function editJab(id) {
+            const j = allJabatanRaw.find(x => x.id == id);
+            if (!j) return;
+            document.getElementById('modal-jab-title').textContent = 'Edit Jabatan';
+            document.getElementById('fj-id').value = j.id;
+            document.getElementById('fj-kode').value = j.kode_jabatan;
+            document.getElementById('fj-nama').value = j.nama_jabatan;
+            document.getElementById('fj-jenis').value = j.jenis_jabatan;
+            document.getElementById('fj-eselon').value = j.eselon || '';
+            document.getElementById('fj-level').value = j.level_jabatan || 4;
+            document.getElementById('fj-keterangan').value = j.keterangan || '';
+            document.getElementById('modal-jab-alert').innerHTML = '';
+            onJenisJabatanChange();
+            document.getElementById('modal-jab').classList.remove('hidden');
+        }
+
+        async function deleteJab(id, nama, jumlah) {
+            if (jumlah > 0) {
+                showCenterFeedback(`Tidak dapat menghapus "${nama}" karena masih digunakan oleh ${jumlah} pegawai.`, 'warning', 4000);
+                return;
+            }
+            const ok = await showConfirmModal({
+                title: "Konfirmasi Hapus Jabatan",
+                message: `Apakah Anda yakin ingin menghapus jabatan "${nama}"?\nAksi ini tidak dapat dibatalkan.`,
+                confirmText: "Ya, Hapus Jabatan",
+                cancelText: "Batal",
+                type: "danger",
+                icon: "delete"
+            });
+            if (!ok) return;
+
+            const res = await apiCall(`jabatan.php?id=${id}`, 'DELETE');
+            showAlert(document.getElementById('alert-jab'), res.message, res.success ? 'success' : 'error');
+            if (res.success) loadJabatan();
+        }
+
+        document.getElementById('form-jab').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('fj-id').value;
+            const isEdit = Boolean(id);
+            const namaJab = document.getElementById('fj-nama').value.trim();
+            const ok = await showConfirmModal({
+                title: isEdit ? "Konfirmasi Simpan Perubahan" : "Konfirmasi Tambah Jabatan",
+                message: isEdit 
+                    ? `Apakah Anda yakin ingin menyimpan perubahan data untuk jabatan "${namaJab}"?` 
+                    : `Apakah Anda yakin ingin menambahkan jabatan baru "${namaJab}"?`,
+                confirmText: isEdit ? "Ya, Simpan Perubahan" : "Ya, Tambahkan",
+                cancelText: "Batal",
+                type: "primary",
+                icon: isEdit ? "edit" : "add"
+            });
+            if (!ok) return;
+
+            const jenis = document.getElementById('fj-jenis').value;
+            // Untuk non-struktural, paksa level = 4
+            const level = jenis === 'struktural'
+                ? parseInt(document.getElementById('fj-level').value)
+                : 4;
+            const payload = {
+                kode_jabatan: document.getElementById('fj-kode').value.toUpperCase(),
+                nama_jabatan: document.getElementById('fj-nama').value,
+                jenis_jabatan: jenis,
+                eselon: jenis === 'struktural' ? (document.getElementById('fj-eselon').value || null) : null,
+                level_jabatan: level,
+                keterangan: document.getElementById('fj-keterangan').value || null,
+            };
+            const btn = document.getElementById('btn-simpan-jab');
+            btn.disabled = true; btn.textContent = 'Menyimpan...';
+            const res = id
+                ? await apiCall(`jabatan.php?id=${id}`, 'PUT', payload)
+                : await apiCall('jabatan.php', 'POST', payload);
+            btn.disabled = false; btn.textContent = 'Simpan';
+            if (!res.success) { showAlert(document.getElementById('modal-jab-alert'), res.message); return; }
+            closeJabModal();
+            showAlert(document.getElementById('alert-jab'), res.message, 'success');
+            loadJabatan();
+        });
+
+        /* -----------------------------------------
+           INIT
+        ----------------------------------------- */
+        (async () => {
+            const user = await initLayout('master', ['super_admin', 'admin']);
+            if (!user) return;
+            loadUnits();
+            loadJabatan();
+        })();
+    </script>
+</body>
+
+</html>

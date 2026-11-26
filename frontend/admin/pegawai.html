@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Data Pegawai - Sistem Penilaian 360</title>
+    <script>
+    (function(){
+                var t = localStorage.getItem('app_theme');
+        if (t === 'dark' || (!t && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+        var isNav = sessionStorage.getItem('sidebar_nav_open') === '1' || sessionStorage.getItem('sidebar_hovered') === '1';
+        if (isNav && localStorage.getItem('sidebar_pinned') !== '1') {
+            document.documentElement.classList.add('sidebar-nav-open', 'sidebar-hover-persisted');
+            function onMove(e) {
+                if (e.clientX > 248) {
+                    document.documentElement.classList.remove('sidebar-nav-open', 'sidebar-hover-persisted');
+                    sessionStorage.removeItem('sidebar_nav_open');
+                    sessionStorage.removeItem('sidebar_hovered');
+                    window.removeEventListener('mousemove', onMove);
+                }
+            }
+            window.addEventListener('mousemove', onMove, { passive: true });
+        }
+    })();
+    </script>
+    <link rel="stylesheet" href="../assets/css/style.css?v=20261126_modal">
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+    <style>.sidebar-footer, .sidebar-toggle-bottom, button.sidebar-toggle-bottom, aside#sidebar .sidebar-footer, aside#sidebar .sidebar-toggle-bottom { display: none !important; }</style>
+</head>
+
+<body>
+    <div class="app-shell">
+        <aside class="sidebar" id="sidebar"></aside>
+        <div class="main-content">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <h1 id="page-title">Manajemen Data Pegawai</h1>
+                </div>
+                <div id="topbar-user"></div>
+            </header>
+            <main class="page">
+                <div class="card">
+                    <div class="flex-between mb-16">
+                        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                            <input type="text" id="search-input" placeholder="Cari NIP, nama, username..."
+                                style="max-width:210px; margin-bottom:0;">
+                            <select id="filter-unit-induk" style="max-width:210px; margin-bottom:0;">
+                                <option value="">--- Semua Unit Induk ---</option>
+                            </select>
+                            <select id="filter-unit" style="max-width:210px; margin-bottom:0;" disabled>
+                                <option value="">--- Semua Sub Unit / Seksi ---</option>
+                            </select>
+                            <select id="filter-golongan" style="max-width:210px; margin-bottom:0;">
+                                <option value="">--- Semua Golongan/Ruang ---</option>
+                                <optgroup label="Golongan IV">
+                                    <option value="IV">Semua Golongan IV</option>
+                                    <option value="IV/e">IV/e (Pembina Utama)</option>
+                                    <option value="IV/d">IV/d (Pembina Utama Madya)</option>
+                                    <option value="IV/c">IV/c (Pembina Utama Muda)</option>
+                                    <option value="IV/b">IV/b (Pembina Tingkat I)</option>
+                                    <option value="IV/a">IV/a (Pembina)</option>
+                                </optgroup>
+                                <optgroup label="Golongan III">
+                                    <option value="III">Semua Golongan III</option>
+                                    <option value="III/d">III/d (Penata Tingkat I)</option>
+                                    <option value="III/c">III/c (Penata)</option>
+                                    <option value="III/b">III/b (Penata Muda Tingkat I)</option>
+                                    <option value="III/a">III/a (Penata Muda)</option>
+                                </optgroup>
+                                <optgroup label="Golongan II">
+                                    <option value="II">Semua Golongan II</option>
+                                    <option value="II/d">II/d (Pengatur Tingkat I)</option>
+                                    <option value="II/c">II/c (Pengatur)</option>
+                                    <option value="II/b">II/b (Pengatur Muda Tingkat I)</option>
+                                    <option value="II/a">II/a (Pengatur Muda)</option>
+                                </optgroup>
+                                <optgroup label="Golongan I">
+                                    <option value="I">Semua Golongan I</option>
+                                    <option value="I/d">I/d (Juru Tingkat I)</option>
+                                    <option value="I/c">I/c (Juru)</option>
+                                    <option value="I/b">I/b (Juru Muda Tingkat I)</option>
+                                    <option value="I/a">I/a (Juru Muda)</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <button class="btn btn-secondary" onclick="downloadTemplate()">
+                                <svg style="width:14px;height:14px;fill:currentColor;" viewBox="0 0 24 24">
+                                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                                </svg>
+                                Template
+                            </button>
+                            <button class="btn btn-secondary" onclick="openImportModal()">
+                                <svg style="width:14px;height:14px;fill:currentColor;" viewBox="0 0 24 24">
+                                    <path
+                                        d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L11 14.17V8h2v6.17l2.59-2.58L17 13l-5 5z" />
+                                </svg>
+                                Import Excel
+                            </button>
+                            <button class="btn btn-primary" onclick="openModal()">
+                                <svg style="width:14px;height:14px;fill:currentColor;" viewBox="0 0 24 24">
+                                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                                </svg>
+                                Tambah Pegawai
+                            </button>
+                        </div>
+                    </div>
+                    <div id="alert-box"></div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>NIP</th>
+                                    <th>Nama</th>
+                                    <th>Gol. Ruang</th>
+                                    <th>Jabatan</th>
+                                    <th>Unit Kerja</th>
+                                    <th>Atasan</th>
+                                    <th>Status</th>
+                                    <th style="width:90px; text-align:center;">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body">
+                                <tr>
+                                    <td colspan="8" class="text-muted">Memuat data...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="pagination-pegawai"></div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal Form Pegawai -->
+    <div class="modal-overlay hidden" id="modal">
+        <div class="modal-box wide">
+            <div class="modal-header">
+                <h3 id="modal-title">Tambah Pegawai</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modal-alert"></div>
+            <form id="form-pegawai">
+                <input type="hidden" id="f-id">
+                <div class="form-row">
+                    <div><label>NIP <span style="color:var(--danger)">*</span></label><input type="text" id="f-nip"
+                            required placeholder="18 digit sesuai BKN"></div>
+                    <div><label>Nama Lengkap <span style="color:var(--danger)">*</span></label><input type="text"
+                            id="f-nama" required></div>
+                </div>
+                <div class="form-row">
+                    <div><label>Jenis Kelamin</label><select id="f-jk">
+                            <option value="L">Laki-laki</option>
+                            <option value="P">Perempuan</option>
+                        </select></div>
+                    <div><label>Status Kepegawaian</label>
+                        <select id="f-status-kepeg">
+                            <option value="PNS">PNS</option>
+                            <option value="CPNS">CPNS</option>
+                            <option value="PPPK">PPPK</option>
+                            <option value="PPPK_Paruh_Waktu">PPPK Paruh Waktu</option>
+                            <option value="Honorer">Honorer</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div>
+                        <label>Golongan/Ruang</label>
+                        <select id="f-golongan">
+                            <option value="">--- Pilih Golongan ---</option>
+                            <option value="I/a">I/a (Juru Muda)</option>
+                            <option value="I/b">I/b (Juru Muda Tingkat I)</option>
+                            <option value="I/c">I/c (Juru)</option>
+                            <option value="I/d">I/d (Juru Tingkat I)</option>
+                            <option value="II/a">II/a (Pengatur Muda)</option>
+                            <option value="II/b">II/b (Pengatur Muda Tingkat I)</option>
+                            <option value="II/c">II/c (Pengatur)</option>
+                            <option value="II/d">II/d (Pengatur Tingkat I)</option>
+                            <option value="III/a">III/a (Penata Muda)</option>
+                            <option value="III/b">III/b (Penata Muda Tingkat I)</option>
+                            <option value="III/c">III/c (Penata)</option>
+                            <option value="III/d">III/d (Penata Tingkat I)</option>
+                            <option value="IV/a">IV/a (Pembina)</option>
+                            <option value="IV/b">IV/b (Pembina Tingkat I)</option>
+                            <option value="IV/c">IV/c (Pembina Utama Muda)</option>
+                            <option value="IV/d">IV/d (Pembina Utama Madya)</option>
+                            <option value="IV/e">IV/e (Pembina Utama)</option>
+                        </select>
+                    </div>
+                    <div><label>Email</label><input type="email" id="f-email"></div>
+                </div>
+                <div class="form-row">
+                    <div><label>No. HP</label><input type="text" id="f-hp"></div>
+                    <div><label>Status Aktif</label>
+                        <select id="f-status-aktif">
+                            <option value="aktif">Aktif</option>
+                            <option value="nonaktif">Nonaktif</option>
+                            <option value="pensiun">Pensiun</option>
+                            <option value="mutasi">Mutasi</option>
+                            <option value="meninggal">Meninggal</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div>
+                        <label>Jabatan</label>
+                        <select id="f-jabatan-id">
+                            <option value="">--- Pilih Jabatan ---</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Unit Kerja Induk (Dinas / Bidang / UPT)</label>
+                        <select id="f-unit-induk">
+                            <option value="">--- Pilih Unit Induk ---</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row" id="row-sub-unit">
+                    <div style="width:100%;">
+                        <label>Sub Bidang / Subbag / Seksi</label>
+                        <select id="f-unit-id" disabled>
+                            <option value="">--- Pilih Unit Induk terlebih dahulu ---</option>
+                        </select>
+                    </div>
+                </div>
+                <label>Atasan Langsung</label>
+                <select id="f-atasan">
+                    <option value="">- Tidak ada -</option>
+                </select>
+
+                <hr style="margin:14px 0; border:none; border-top:1px solid var(--border);">
+                <p class="text-muted" style="font-size:12px; margin:0 0 8px;">Akun login (opsional saat tambah baru).
+                    Kosongkan jika pegawai akan registrasi mandiri via NIP.</p>
+                <div class="form-row">
+                    <input type="hidden" id="f-username">
+                    <div><label>Password Awal</label><input type="password" id="f-password" placeholder="Opsional">
+                    </div>
+                </div>
+                <label>Role Akun</label>
+                <select id="f-role">
+                    <option value="pegawai">Pegawai</option>
+                </select>
+
+                <div class="flex-between" style="margin-top:10px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Kelola Akun -->
+    <div class="modal-overlay hidden" id="modal-akun">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Kelola Akun Login</h3>
+                <button class="modal-close" onclick="closeAkunModal()">&times;</button>
+            </div>
+            <div id="modal-akun-alert"></div>
+            <form id="form-akun">
+                <input type="hidden" id="fa-pegawai-id">
+                <p style="font-size:13px; color:var(--text-secondary);" id="fa-nama-info"></p>
+                <input type="hidden" id="fa-username">
+                <label>Password Baru <span class="text-muted" style="font-weight:400;">(kosongkan jika tidak
+                        diubah)</span></label>
+                <input type="password" id="fa-password">
+                <label>Role</label>
+                <select id="fa-role">
+                    <option value="pegawai">Pegawai</option>
+                </select>
+                <label>Status Akun</label>
+                <select id="fa-status">
+                    <option value="aktif">Aktif</option>
+                    <option value="nonaktif">Nonaktif</option>
+                    <option value="terkunci">Terkunci</option>
+                </select>
+                <div class="flex-between" style="margin-top:10px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeAkunModal()">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan Akun</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Import Excel -->
+    <div class="modal-overlay hidden" id="modal-import">
+        <div class="modal-box" style="max-width:760px;">
+            <div class="modal-header">
+                <h3>Import Pegawai dari Excel</h3>
+                <button class="modal-close" onclick="closeImportModal()">&times;</button>
+            </div>
+            <div id="import-alert"></div>
+
+            <div
+                style="margin-bottom:16px; background:var(--bg, #f8fafc); padding:14px; border-radius:8px; border:1px solid var(--border-color, #e2e8f0);">
+                <div
+                    style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
+                    <div>
+                        <strong style="font-size:13px; color:var(--text-primary, #1e293b);">Gunakan Template
+                            Resmi</strong>
+                        <div style="font-size:12px; color:var(--text-secondary, #64748b);">Template Excel kosong siap
+                            isi sesuai format kolom sistem.</div>
+                    </div>
+                    <button type="button" class="btn btn-secondary" onclick="downloadTemplate()"
+                        style="padding:6px 12px; font-size:12px; display:inline-flex; align-items:center; gap:6px;">
+                        <svg style="width:14px;height:14px;fill:currentColor;" viewBox="0 0 24 24">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                        </svg>
+                        Download Template Excel (.xlsx)
+                    </button>
+                </div>
+                <div style="margin-top:6px; font-size:11px; color:var(--text-muted, #94a3b8); line-height:1.6;">
+                    Format kolom sheet yang didukung: <code
+                        style="background:rgba(0,0,0,0.05);padding:2px 4px;border-radius:3px;">nip</code>, <code
+                        style="background:rgba(0,0,0,0.05);padding:2px 4px;border-radius:3px;">nama_lengkap</code>,
+                    <code style="background:rgba(0,0,0,0.05);padding:2px 4px;border-radius:3px;">jenis_kelamin</code>,
+                    <code style="background:rgba(0,0,0,0.05);padding:2px 4px;border-radius:3px;font-weight:600;color:var(--primary, #1e40af);">golongan_ruang</code>,
+                    <code style="background:rgba(0,0,0,0.05);padding:2px 4px;border-radius:3px;">jabatan</code>, <code
+                        style="background:rgba(0,0,0,0.05);padding:2px 4px;border-radius:3px;">unit_kerja</code>, <code
+                        style="background:rgba(0,0,0,0.05);padding:2px 4px;border-radius:3px;">status_kepegawaian</code>,
+                    <code style="background:rgba(0,0,0,0.05);padding:2px 4px;border-radius:3px;">nip_atasan</code>,
+                    <code style="background:rgba(0,0,0,0.05);padding:2px 4px;border-radius:3px;">atasan_langsung</code>,
+                    <code style="background:rgba(0,0,0,0.05);padding:2px 4px;border-radius:3px;">email</code>, <code
+                        style="background:rgba(0,0,0,0.05);padding:2px 4px;border-radius:3px;">no_hp</code>, <code
+                        style="background:rgba(0,0,0,0.05);padding:2px 4px;border-radius:3px;">username</code>, <code
+                        style="background:rgba(0,0,0,0.05);padding:2px 4px;border-radius:3px;">password</code>, <code
+                        style="background:rgba(0,0,0,0.05);padding:2px 4px;border-radius:3px;">role</code>.
+                </div>
+            </div>
+
+            <div style="margin-bottom:16px;">
+                <label style="font-weight:600; font-size:13px; display:block; margin-bottom:6px;">Pilih File Excel
+                    (.xlsx / .xls)</label>
+                <input type="file" id="import-file" accept=".xlsx,.xls" style="margin-bottom:0;">
+            </div>
+
+            <div id="import-sheet-container" style="margin-bottom:16px; display:none;">
+                <label style="font-weight:600; font-size:13px; display:block; margin-bottom:6px;">Pilih Sheet untuk Diimpor</label>
+                <select id="import-sheet-select" style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border-color, #cbd5e1); font-size:13px;"></select>
+            </div>
+
+            <div id="import-preview" style="display:none;">
+                <div style="font-size:13px;font-weight:600;margin-bottom:8px;" id="import-preview-info"></div>
+                <div class="table-wrap" style="max-height:240px;overflow:auto;">
+                    <table id="import-preview-table" style="font-size:12px;">
+                        <thead id="import-preview-thead"></thead>
+                        <tbody id="import-preview-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="flex-between" style="margin-top:16px;">
+                <button class="btn btn-secondary" onclick="closeImportModal()">Batal</button>
+                <button class="btn btn-primary" id="btn-do-import" onclick="doImport()" disabled>Proses Import</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../assets/js/config.js?v=20261126"></script>
+    <script src="../assets/js/api.js?v=20261126"></script>
+    <script src="../assets/js/searchable-select.js?v=20261116_search"></script>
+    <script src="../assets/js/auth.js?v=20261117_notif"></script>
+    <script>
+        const PAGE_LIMIT = 20;
+        let allEmployees = [];
+        let allUnits = [];
+        let allPositions = [];
+        let allAtasanOptions = [];
+        let currentPage = 1;
+
+        function buildUnitIndukHtml(units, placeholder = "--- Semua Unit Induk ---") {
+            const indukList = units.filter(u => u.parent_id === null || u.parent_id == 1 || ['dinas','sekretariat','bidang','upt','upt_lab'].includes(u.jenis_unit));
+            const dinas = indukList.filter(u => ['dinas', 'sekretariat'].includes(u.jenis_unit));
+            const bidang = indukList.filter(u => u.jenis_unit === 'bidang');
+            const upt = indukList.filter(u => ['upt', 'upt_lab'].includes(u.jenis_unit));
+
+            let html = `<option value="">${placeholder}</option>`;
+            if (dinas.length) {
+                html += `<optgroup label="Dinas & Sekretariat">` +
+                    dinas.map(u => `<option value="${u.id}">${u.nama_unit}</option>`).join('') +
+                    `</optgroup>`;
+            }
+            if (bidang.length) {
+                html += `<optgroup label="Bidang">` +
+                    bidang.map(u => `<option value="${u.id}">${u.nama_unit}</option>`).join('') +
+                    `</optgroup>`;
+            }
+            if (upt.length) {
+                html += `<optgroup label="Unit Pelaksana Teknis (UPT)">` +
+                    upt.map(u => `<option value="${u.id}">${u.nama_unit}</option>`).join('') +
+                    `</optgroup>`;
+            }
+            return html;
+        }
+
+        function onFormUnitIndukChange(preselectedSubUnitId = null, refreshAtasan = true) {
+            const indukId = document.getElementById('f-unit-induk').value;
+            const selSub = document.getElementById('f-unit-id');
+            if (!indukId) {
+                selSub.innerHTML = '<option value="">--- Pilih Unit Induk terlebih dahulu ---</option>';
+                selSub.disabled = true;
+                if (refreshAtasan) refreshAtasanFromForm();
+                return;
+            }
+            const parentUnit = allUnits.find(u => u.id == indukId);
+            const children = allUnits.filter(u => u.parent_id == indukId);
+
+            let html = '<option value="">--- Pilih Sub Bidang / Subbag / Seksi ---</option>';
+            if (parentUnit) {
+                html += `<option value="${parentUnit.id}">-- Kantor Induk (${parentUnit.nama_unit}) --</option>`;
+            }
+            children.forEach(c => {
+                html += `<option value="${c.id}">${c.nama_unit}</option>`;
+            });
+
+            selSub.innerHTML = html;
+            selSub.disabled = false;
+            if (preselectedSubUnitId) {
+                selSub.value = preselectedSubUnitId;
+            }
+            if (refreshAtasan) refreshAtasanFromForm();
+        }
+
+        function onFilterUnitIndukChange() {
+            const indukId = document.getElementById('filter-unit-induk').value;
+            const filterSub = document.getElementById('filter-unit');
+            if (!indukId) {
+                filterSub.innerHTML = '<option value="">--- Semua Sub Unit / Seksi ---</option>';
+                filterSub.disabled = true;
+                filterSub.value = '';
+            } else {
+                const parentUnit = allUnits.find(u => u.id == indukId);
+                const children = allUnits.filter(u => u.parent_id == indukId);
+
+                let html = `<option value="${indukId}">Semua di ${parentUnit ? parentUnit.nama_unit : ''}</option>`;
+                html += `<option value="${indukId}">-- Hanya Kantor Induk --</option>`;
+                children.forEach(c => {
+                    html += `<option value="${c.id}">${c.nama_unit}</option>`;
+                });
+                filterSub.innerHTML = html;
+                filterSub.disabled = false;
+                filterSub.value = indukId;
+            }
+            currentPage = 1;
+            reloadCurrent(); apiCall('pegawai.php').then(r => { if (r.success && r.data) allAtasanOptions = r.data; });
+        }
+
+        async function loadMasterOptions() {
+            const [uRes, pRes, atasanRes] = await Promise.all([
+                apiCall('unit_kerja.php'),
+                apiCall('jabatan.php'),
+                apiCall('pegawai.php')
+            ]);
+
+            if (atasanRes.success && atasanRes.data) {
+                allAtasanOptions = atasanRes.data;
+            }
+
+            if (uRes.success) {
+                allUnits = uRes.data;
+
+                // Setup Filter Bar Cascading Unit
+                const filterInduk = document.getElementById('filter-unit-induk');
+                const filterSub = document.getElementById('filter-unit');
+                filterInduk.innerHTML = buildUnitIndukHtml(allUnits, "--- Semua Unit Induk ---");
+                filterInduk.onchange = onFilterUnitIndukChange;
+                filterSub.onchange = () => { currentPage = 1; reloadCurrent(); };
+
+                // Setup Modal Form Cascading Unit & Atasan Langsung
+                const formInduk = document.getElementById('f-unit-induk');
+                formInduk.innerHTML = buildUnitIndukHtml(allUnits, "--- Pilih Unit Induk ---");
+                formInduk.onchange = () => onFormUnitIndukChange(null, true);
+                document.getElementById('f-unit-id').onchange = () => refreshAtasanFromForm();
+                document.getElementById('f-jabatan-id').onchange = () => refreshAtasanFromForm();
+            }
+
+            // -- Jabatan: grouped by jenis --
+            const selJabatan = document.getElementById('f-jabatan-id');
+            if (pRes.success) {
+                allPositions = pRes.data;
+                const jabGroups = { struktural: [], fungsional: [], pelaksana: [] };
+                pRes.data.forEach(j => { (jabGroups[j.jenis_jabatan] || jabGroups.pelaksana).push(j); });
+                const jabLabel = { struktural: 'Struktural', fungsional: 'Fungsional', pelaksana: 'Pelaksana' };
+                selJabatan.innerHTML = '<option value="">--- Pilih Jabatan ---</option>' +
+                    Object.entries(jabGroups).filter(([, v]) => v.length).map(([k, list]) =>
+                        `<optgroup label="${jabLabel[k]}">${list.map(j => `<option value="${j.id}">${j.nama_jabatan}${j.eselon ? ' [' + j.eselon + ']' : ''}</option>`).join('')}</optgroup>`
+                    ).join('');
+            }
+        }
+
+        async function loadEmployees(search = "", unitId = "", page = 1, golongan = "") {
+            currentPage = page;
+            const activeGol = golongan !== "" ? golongan : (document.getElementById("filter-golongan") ? document.getElementById("filter-golongan").value : "");
+            let url = `pegawai.php?search=${encodeURIComponent(search)}&limit=${PAGE_LIMIT}&page=${page}`;
+            if (unitId) url += `&unit_kerja_id=${unitId}`;
+            if (activeGol) url += `&golongan_ruang=${encodeURIComponent(activeGol)}`;
+            const res = await apiCall(url);
+            const tbody = document.getElementById("table-body");
+            if (!res.success) { tbody.innerHTML = `<tr><td colspan="8" class="text-muted">${res.message}</td></tr>`; return; }
+            allEmployees = res.data;
+            if (res.data.length === 0) { tbody.innerHTML = `<tr><td colspan="8" class="text-muted">Tidak ada data.</td></tr>`; renderPagination(null, 'pagination-pegawai', () => { }); return; }
+            tbody.innerHTML = res.data.map(p => `<tr>
+        <td><code>${p.nip}</code></td>
+        <td>${p.nama_lengkap}</td>
+        <td>${p.golongan_ruang || '<span class="text-muted">-</span>'}</td>
+        <td>${p.nama_jabatan || '<span class="text-muted">-</span>'}</td>
+        <td>${p.nama_unit || '<span class="text-muted">-</span>'}</td>
+        <td>${p.nama_atasan ? `${p.nama_atasan}${p.golongan_atasan ? ` <span class="badge" style="font-size:10px;padding:1px 5px;background:var(--primary-light);color:var(--primary);border-radius:8px;">${p.golongan_atasan}</span>` : ''}` : '-'}</td>
+        <td>${statusBadge(p.status_aktif)}</td>
+        <td style="text-align:center;">
+            <div style="display:inline-flex; gap:6px; align-items:center; justify-content:center;">
+                <button class="btn-icon" title="Edit Pegawai" onclick="editEmployee(${p.id})">
+                    <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                </button>
+                <button class="btn-icon" title="Kelola Akun Login" onclick="openAkunModal(${p.id})">
+                    <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                </button>
+                <button class="btn-icon btn-icon-danger" title="Hapus Pegawai" onclick="deleteEmployee(${p.id}, '${p.nama_lengkap.replace(/'/g, "\\'")}')">
+                    <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                </button>
+            </div>
+        </td>
+    </tr>`).join('');
+            renderPagination(res.meta, 'pagination-pegawai', (p) => {
+                const activeUnitId = document.getElementById('filter-unit').value || document.getElementById('filter-unit-induk').value;
+                const activeGol = document.getElementById('filter-golongan') ? document.getElementById('filter-golongan').value : '';
+                loadEmployees(
+                    document.getElementById('search-input').value,
+                    activeUnitId,
+                    p,
+                    activeGol
+                );
+            });
+        }
+
+        function refreshAtasanFromForm() {
+            const excludeId = document.getElementById("f-id").value || null;
+            const currentVal = document.getElementById("f-atasan").value || null;
+            populateAtasanOptions(excludeId, currentVal, null, true);
+        }
+
+        async function populateAtasanOptions(excludeId = null, selectedAtasanId = null, fallbackAtasanName = null, onlyKeepIfMatching = false) {
+            const select = document.getElementById("f-atasan");
+            if (!select) return;
+
+            // Jika daftar atasan belum termuat dari master, ambil seluruh pegawai
+            if (!allAtasanOptions || allAtasanOptions.length === 0) {
+                const res = await apiCall("pegawai.php");
+                if (res.success && res.data) {
+                    allAtasanOptions = res.data;
+                }
+            }
+
+            const indukId = document.getElementById("f-unit-induk")?.value || "";
+            const subUnitId = document.getElementById("f-unit-id")?.value || "";
+            const selectedJabId = document.getElementById("f-jabatan-id")?.value || "";
+            const selectedJab = allPositions.find(j => String(j.id) === String(selectedJabId));
+            const selectedJabLevel = selectedJab && selectedJab.level_jabatan ? parseInt(selectedJab.level_jabatan, 10) : 4;
+            const indukUnit = allUnits.find(u => String(u.id) === String(indukId));
+            const hasSubUnitSpecific = Boolean(subUnitId && String(subUnitId) !== String(indukId));
+
+            const candidates = (allAtasanOptions || []).filter(p => {
+                if (excludeId && String(p.id) === String(excludeId)) return false;
+                if (p.status_aktif && p.status_aktif !== 'aktif') return false;
+
+                // Hanya tampilkan pejabat struktural (Kepala Bidang / Kepala UPT / Sekretaris / Kepala Seksi / Kasubbag)
+                const jabInfo = allPositions.find(j => String(j.id) === String(p.jabatan_id));
+                const jenisJab = p.jenis_jabatan || jabInfo?.jenis_jabatan || '';
+                const levelJab = parseInt(p.level_jabatan || jabInfo?.level_jabatan || 4, 10);
+                if (jenisJab !== 'struktural') return false;
+
+                // Wajib memilih Unit Induk (Bidang / UPT) terlebih dahulu
+                if (!indukId && !subUnitId) return false;
+
+                // Jika jabatan yang diinput adalah Kepala Bidang / Kepala UPT / Sekretaris (level 2),
+                // izinkan Kepala Dinas (level 1) sebagai atasan langsung
+                if (selectedJabLevel === 2 && levelJab === 1) return true;
+
+                // Jika jabatan yang diinput juga struktural (level <= 3), atasan harus lebih tinggi levelnya
+                if (selectedJabLevel <= 3 && levelJab >= selectedJabLevel) return false;
+
+                const pUnitId = String(p.unit_kerja_id || '');
+                const pUnitObj = allUnits.find(u => String(u.id) === pUnitId);
+                const pParentId = String(p.unit_parent_id ?? pUnitObj?.parent_id ?? '');
+
+                if (indukUnit && indukUnit.jenis_unit === 'dinas') {
+                    return pUnitId === String(indukId) || (hasSubUnitSpecific && pUnitId === String(subUnitId));
+                }
+
+                if (hasSubUnitSpecific) {
+                    // Tampilkan Kepala Seksi / Kasubbag pada seksi terpilih DAN Kepala Bidang / Kepala UPT induknya
+                    return pUnitId === String(subUnitId) || pUnitId === String(indukId);
+                }
+
+                // Tampilkan Kepala Bidang / Kepala UPT induk beserta seluruh Kepala Seksi / Kasubbag di bawahnya
+                return pUnitId === String(indukId) || pParentId === String(indukId);
+            });
+
+            candidates.sort((a, b) => {
+                const lvlA = parseInt(a.level_jabatan || allPositions.find(j => String(j.id) === String(a.jabatan_id))?.level_jabatan || 9, 10);
+                const lvlB = parseInt(b.level_jabatan || allPositions.find(j => String(j.id) === String(b.jabatan_id))?.level_jabatan || 9, 10);
+                if (lvlA !== lvlB) return lvlA - lvlB;
+                return (a.nama_lengkap || '').localeCompare(b.nama_lengkap || '', 'id');
+            });
+
+            const emptyLabel = (!indukId && !subUnitId)
+                ? '- Pilih Bidang / UPT terlebih dahulu -'
+                : (candidates.length === 0 ? '- Tidak ada Kepala Bidang / Seksi pada unit ini -' : '- Pilih Atasan Langsung (Opsional) -');
+
+            let html = `<option value="">${emptyLabel}</option>`;
+            let foundSelected = false;
+
+            candidates.forEach(p => {
+                const isSel = selectedAtasanId && (String(p.id) === String(selectedAtasanId));
+                if (isSel) foundSelected = true;
+                const gol = p.golongan_ruang ? ` [${p.golongan_ruang}]` : '';
+                const jab = p.nama_jabatan ? ` (${p.nama_jabatan})` : '';
+                const unit = p.nama_unit ? ` - ${p.nama_unit}` : '';
+                html += `<option value="${p.id}" ${isSel ? 'selected' : ''}>${p.nama_lengkap}${gol}${jab}${unit}</option>`;
+            });
+
+            // Saat mode edit, pertahankan atasan tersimpan jika berada di luar filter unit/struktural
+            if (selectedAtasanId && !foundSelected && !onlyKeepIfMatching) {
+                html += `<option value="${selectedAtasanId}" selected>${fallbackAtasanName || 'Atasan Langsung (ID: ' + selectedAtasanId + ')'}</option>`;
+                foundSelected = true;
+            }
+
+            select.innerHTML = html;
+            if (selectedAtasanId && foundSelected) {
+                select.value = String(selectedAtasanId);
+            } else {
+                select.value = "";
+            }
+        }
+
+        function openModal() {
+            document.getElementById("modal-title").textContent = "Tambah Pegawai";
+            document.getElementById("form-pegawai").reset();
+            document.getElementById("f-id").value = "";
+            document.getElementById("f-unit-induk").value = "";
+            onFormUnitIndukChange(null, false);
+            document.getElementById("modal-alert").innerHTML = "";
+            populateAtasanOptions(null, null);
+            document.getElementById("modal").classList.remove("hidden");
+        }
+
+        async function editEmployee(id) {
+            let p = allEmployees.find(e => e.id == id);
+            if (!p || p.atasan_langsung_id === undefined) {
+                const res = await apiCall(`pegawai.php?id=${id}`);
+                if (res.success && res.data) p = res.data;
+            }
+            if (!p) return;
+
+            document.getElementById("modal-title").textContent = "Edit Pegawai";
+            document.getElementById("f-id").value = p.id;
+            document.getElementById("f-nip").value = p.nip;
+            document.getElementById("f-nama").value = p.nama_lengkap;
+            document.getElementById("f-jk").value = p.jenis_kelamin;
+            document.getElementById("f-status-kepeg").value = p.status_kepegawaian;
+            document.getElementById("f-golongan").value = p.golongan_ruang || "";
+            document.getElementById("f-email").value = p.email || "";
+            document.getElementById("f-hp").value = p.no_hp || "";
+            document.getElementById("f-status-aktif").value = p.status_aktif;
+            document.getElementById("f-jabatan-id").value = p.jabatan_id || "";
+
+            // Atur dropdown berjenjang Unit Induk & Sub Unit
+            const unitId = p.unit_kerja_id;
+            if (unitId && allUnits.length > 0) {
+                const targetUnit = allUnits.find(u => u.id == unitId);
+                if (targetUnit) {
+                    const isInduk = (targetUnit.parent_id === null || targetUnit.parent_id == 1 || ['dinas','sekretariat','bidang','upt','upt_lab'].includes(targetUnit.jenis_unit));
+                    if (isInduk) {
+                        document.getElementById('f-unit-induk').value = targetUnit.id;
+                        onFormUnitIndukChange(targetUnit.id, false);
+                    } else {
+                        document.getElementById('f-unit-induk').value = targetUnit.parent_id;
+                        onFormUnitIndukChange(targetUnit.id, false);
+                    }
+                } else {
+                    document.getElementById('f-unit-induk').value = '';
+                    onFormUnitIndukChange(null, false);
+                }
+            } else {
+                document.getElementById('f-unit-induk').value = '';
+                onFormUnitIndukChange(null, false);
+            }
+
+            document.getElementById("f-username").value = "";
+            document.getElementById("f-password").value = "";
+            document.getElementById("modal-alert").innerHTML = "";
+
+            // Baca dan tampilkan atasan langsung yang terdata
+            await populateAtasanOptions(p.id, p.atasan_langsung_id, p.nama_atasan);
+
+            document.getElementById("modal").classList.remove("hidden");
+        }
+
+        function closeModal() { document.getElementById("modal").classList.add("hidden"); }
+
+        async function deleteEmployee(id, nama) {
+            const ok = await showConfirmModal({
+                title: "Konfirmasi Hapus Pegawai",
+                message: `Apakah Anda yakin ingin menghapus data pegawai "${nama}"?\nData akun login terkait juga akan terhapus. Tindakan ini tidak dapat dibatalkan.`,
+                confirmText: "Ya, Hapus Pegawai",
+                cancelText: "Batal",
+                type: "danger",
+                icon: "delete"
+            });
+            if (!ok) return;
+
+            const res = await apiCall(`pegawai.php?id=${id}`, "DELETE");
+            showAlert(document.getElementById("alert-box"), res.message, res.success ? "success" : "error");
+            if (res.success) {
+                reloadCurrent();
+                apiCall('pegawai.php').then(r => { if (r.success && r.data) allAtasanOptions = r.data; });
+            }
+        }
+
+        function reloadCurrent() {
+            const unitId = document.getElementById("filter-unit").value || document.getElementById("filter-unit-induk").value;
+            const gol = document.getElementById("filter-golongan") ? document.getElementById("filter-golongan").value : "";
+            loadEmployees(document.getElementById("search-input").value, unitId, currentPage, gol);
+        }
+
+        document.getElementById("form-pegawai").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const id = document.getElementById("f-id").value;
+            const nama = document.getElementById("f-nama").value.trim();
+            const isEdit = Boolean(id);
+
+            const ok = await showConfirmModal({
+                title: isEdit ? "Konfirmasi Simpan Perubahan" : "Konfirmasi Tambah Pegawai",
+                message: isEdit 
+                    ? `Apakah Anda yakin ingin menyimpan perubahan data untuk pegawai "${nama}"?` 
+                    : `Apakah Anda yakin ingin menambahkan pegawai baru "${nama}" ke dalam sistem?`,
+                confirmText: isEdit ? "Ya, Simpan Perubahan" : "Ya, Tambahkan",
+                cancelText: "Batal",
+                type: "primary",
+                icon: isEdit ? "edit" : "add"
+            });
+            if (!ok) return;
+
+            const payload = {
+                nip: document.getElementById("f-nip").value.trim(),
+                nama_lengkap: document.getElementById("f-nama").value,
+                jenis_kelamin: document.getElementById("f-jk").value,
+                status_kepegawaian: document.getElementById("f-status-kepeg").value,
+                golongan_ruang: document.getElementById("f-golongan").value || null,
+                email: document.getElementById("f-email").value || null,
+                no_hp: document.getElementById("f-hp").value || null,
+                status_aktif: document.getElementById("f-status-aktif").value,
+                jabatan_id: document.getElementById("f-jabatan-id").value || null,
+                unit_kerja_id: document.getElementById("f-unit-id").value || document.getElementById("f-unit-induk").value || null,
+                atasan_langsung_id: document.getElementById("f-atasan").value || null
+            };
+            if (!id) {
+                const username = document.getElementById("f-nip").value.trim(); // Gunakan NIP sebagai username default
+                if (document.getElementById("f-password").value.trim() !== '') {
+                    payload.username = username;
+                    payload.password = document.getElementById("f-password").value;
+                    payload.role = document.getElementById("f-role").value;
+                }
+            }
+            const res = id ? await apiCall(`pegawai.php?id=${id}`, "PUT", payload) : await apiCall(`pegawai.php`, "POST", payload);
+            if (!res.success) { showAlert(document.getElementById("modal-alert"), res.message); return; }
+            closeModal();
+            showAlert(document.getElementById("alert-box"), res.message, "success");
+            reloadCurrent();
+            apiCall('pegawai.php').then(r => { if (r.success && r.data) allAtasanOptions = r.data; });
+        });
+
+        /* -- Kelola Akun --------------------------- */
+        function openAkunModal(pegawaiId) {
+            const p = allEmployees.find(e => e.id == pegawaiId);
+            if (!p) return;
+            document.getElementById("fa-pegawai-id").value = pegawaiId;
+            const pGol = p.golongan_ruang ? ` [${p.golongan_ruang}]` : '';
+            document.getElementById("fa-nama-info").textContent = `Pegawai: ${p.nama_lengkap}${pGol} (NIP ${p.nip})`;
+            document.getElementById("fa-username").value = p.username || p.nip;
+            document.getElementById("fa-password").value = "";
+            document.getElementById("fa-role").value = p.user_role || "pegawai";
+            document.getElementById("fa-status").value = p.status_akun || "aktif";
+            document.getElementById("modal-akun-alert").innerHTML = "";
+            document.getElementById("modal-akun").classList.remove("hidden");
+        }
+        function closeAkunModal() { document.getElementById("modal-akun").classList.add("hidden"); }
+
+        document.getElementById("form-akun").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const pegawaiId = document.getElementById("fa-pegawai-id").value;
+
+            const ok = await showConfirmModal({
+                title: "Konfirmasi Perbarui Akun",
+                message: "Apakah Anda yakin ingin memperbarui konfigurasi akun login untuk pegawai ini?",
+                confirmText: "Ya, Perbarui Akun",
+                cancelText: "Batal",
+                type: "primary",
+                icon: "edit"
+            });
+            if (!ok) return;
+
+            const payload = {
+                username: document.getElementById("fa-username").value.trim(),
+                role: document.getElementById("fa-role").value,
+                status: document.getElementById("fa-status").value
+            };
+            const pw = document.getElementById("fa-password").value;
+            if (pw) payload.password = pw;
+            const res = await apiCall(`pegawai.php?id=${pegawaiId}&action=akun`, "PUT", payload);
+            if (!res.success) { showAlert(document.getElementById("modal-akun-alert"), res.message); return; }
+            closeAkunModal();
+            showAlert(document.getElementById("alert-box"), res.message, "success");
+            reloadCurrent();
+        });
+
+        document.getElementById("search-input").addEventListener("input", () => { currentPage = 1; reloadCurrent(); });
+        document.getElementById("filter-golongan").addEventListener("change", () => { currentPage = 1; reloadCurrent(); });
+
+        (async () => {
+            const user = await initLayout("pegawai", ["super_admin", "admin"]);
+            if (!user) return;
+            await loadMasterOptions();
+            await loadEmployees();
+        })();
+
+        /* -- IMPORT EXCEL -- */
+        let importRows = [];
+        let currentWorkbook = null;
+
+        function openImportModal() {
+            importRows = [];
+            currentWorkbook = null;
+            document.getElementById('import-file').value = '';
+            const sheetContainer = document.getElementById('import-sheet-container');
+            if (sheetContainer) sheetContainer.style.display = 'none';
+            const sheetSelect = document.getElementById('import-sheet-select');
+            if (sheetSelect) sheetSelect.innerHTML = '';
+            document.getElementById('import-preview').style.display = 'none';
+            document.getElementById('import-alert').innerHTML = '';
+            document.getElementById('btn-do-import').disabled = true;
+            document.getElementById('modal-import').classList.remove('hidden');
+        }
+        function closeImportModal() { document.getElementById('modal-import').classList.add('hidden'); }
+
+        function processSheet(workbook, sheetName) {
+            try {
+                const sheet = workbook.Sheets[sheetName];
+                const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+                if (json.length === 0) {
+                    showAlert(document.getElementById('import-alert'), 'Sheet "' + sheetName + '" pada file kosong.', 'error');
+                    document.getElementById('import-preview').style.display = 'none';
+                    document.getElementById('btn-do-import').disabled = true;
+                    importRows = [];
+                    return;
+                }
+
+                importRows = json.map(r => {
+                    const norm = {};
+                    Object.keys(r).forEach(k => {
+                        const key = k.toLowerCase().trim().replace(/[\s\/\.\-]+/g, '_');
+                        norm[key] = typeof r[k] === 'string' ? r[k].trim() : r[k];
+                    });
+
+                    // Mapping alias untuk Golongan/Ruang
+                    if (!norm['golongan_ruang']) {
+                        norm['golongan_ruang'] = norm['gol_ruang'] || norm['golongan'] || norm['pangkat_golongan'] || norm['gol'] || '';
+                    }
+                    // Mapping nama lengkap
+                    if (!norm['nama_lengkap']) {
+                        norm['nama_lengkap'] = norm['nama_&_gelar'] || norm['nama'] || '';
+                    }
+                    // Mapping jenis kelamin
+                    if (!norm['jenis_kelamin'] && norm['l_p']) {
+                        norm['jenis_kelamin'] = norm['l_p'];
+                    }
+                    // Mapping jabatan
+                    if (!norm['jabatan'] && norm['nama_jabatan']) {
+                        norm['jabatan'] = norm['nama_jabatan'];
+                    }
+                    // Mapping unit kerja
+                    if (!norm['unit_kerja'] && norm['nama_unit_kerja']) {
+                        norm['unit_kerja'] = norm['nama_unit_kerja'];
+                    }
+                    // Mapping atasan
+                    if (!norm['nip_atasan']) {
+                        norm['nip_atasan'] = norm['atasan_nip'] || norm['nip_atasan_langsung'] || '';
+                    }
+                    if (!norm['atasan_langsung']) {
+                        norm['atasan_langsung'] = norm['nama_atasan'] || norm['nama_atasan_langsung'] || '';
+                    }
+                    // Mapping kontak & info tambahan
+                    if (!norm['email'] && norm['email_resmi']) {
+                        norm['email'] = norm['email_resmi'];
+                    }
+                    if (!norm['no_hp']) {
+                        norm['no_hp'] = norm['no_handphone'] || norm['no_telepon'] || norm['telepon'] || norm['hp'] || '';
+                    }
+                    if (!norm['pendidikan_terakhir'] && norm['pendidikan']) {
+                        norm['pendidikan_terakhir'] = norm['pendidikan'];
+                    }
+                    if (!norm['prodi'] && norm['program_studi']) {
+                        norm['prodi'] = norm['program_studi'];
+                    }
+                    if (!norm['status_pernikahan'] && norm['status_nikah']) {
+                        norm['status_pernikahan'] = norm['status_nikah'];
+                    }
+                    if (!norm['alamat'] && norm['alamat_domisili']) {
+                        norm['alamat'] = norm['alamat_domisili'];
+                    }
+
+                    return norm;
+                });
+
+                renderImportPreview(importRows);
+                document.getElementById('btn-do-import').disabled = false;
+                document.getElementById('import-alert').innerHTML = '';
+            } catch (err) {
+                showAlert(document.getElementById('import-alert'), 'Gagal memproses data sheet: ' + err.message, 'error');
+            }
+        }
+
+        document.getElementById('import-file').addEventListener('change', function () {
+            const file = this.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    if (typeof XLSX === 'undefined') {
+                        showAlert(document.getElementById('import-alert'), 'Library pembaca Excel (SheetJS) gagal dimuat. Pastikan koneksi internet tersedia lalu muat ulang halaman.', 'error');
+                        return;
+                    }
+                    currentWorkbook = XLSX.read(e.target.result, { type: 'binary' });
+                    const sheetNames = currentWorkbook.SheetNames;
+                    if (!sheetNames || sheetNames.length === 0) {
+                        showAlert(document.getElementById('import-alert'), 'File Excel tidak memiliki sheet yang valid.', 'error');
+                        return;
+                    }
+
+                    const sheetSelect = document.getElementById('import-sheet-select');
+                    const sheetContainer = document.getElementById('import-sheet-container');
+                    if (sheetSelect) {
+                        sheetSelect.innerHTML = sheetNames.map(s => `<option value="${s}">${s}</option>`).join('');
+                    }
+
+                    // Prioritaskan sheet dengan nama yang mengandung "import", atau "lengkap", atau gunakan sheet pertama
+                    let targetSheetName = sheetNames.find(s => s.toLowerCase().includes('import'));
+                    if (!targetSheetName) {
+                        targetSheetName = sheetNames.find(s => s.toLowerCase().includes('lengkap') || s.toLowerCase().includes('pegawai')) || sheetNames[0];
+                    }
+                    if (sheetSelect) sheetSelect.value = targetSheetName;
+
+                    if (sheetContainer) {
+                        sheetContainer.style.display = sheetNames.length > 1 ? 'block' : 'none';
+                    }
+
+                    processSheet(currentWorkbook, targetSheetName);
+                } catch (err) {
+                    showAlert(document.getElementById('import-alert'), 'Gagal membaca file Excel: ' + err.message, 'error');
+                }
+            };
+            reader.readAsBinaryString(file);
+        });
+
+        const sheetSelectElem = document.getElementById('import-sheet-select');
+        if (sheetSelectElem) {
+            sheetSelectElem.addEventListener('change', function () {
+                if (currentWorkbook) {
+                    processSheet(currentWorkbook, this.value);
+                }
+            });
+        }
+
+        function renderImportPreview(rows) {
+            const COLS = ['nip', 'nama_lengkap', 'jenis_kelamin', 'golongan_ruang', 'jabatan', 'unit_kerja', 'status_kepegawaian', 'nip_atasan', 'atasan_langsung', 'email', 'no_hp'];
+            document.getElementById('import-preview-info').textContent = `Ditemukan ${rows.length} baris data. Pratinjau 5 baris pertama:`;
+            document.getElementById('import-preview-thead').innerHTML = '<tr>' + COLS.map(c => `<th style="font-size:11px; white-space:nowrap; padding:6px 10px;">${c}</th>`).join('') + '</tr>';
+            document.getElementById('import-preview-tbody').innerHTML = rows.slice(0, 5).map(r =>
+                '<tr>' + COLS.map(c => `<td style="font-size:11px; white-space:nowrap; padding:6px 10px;">${r[c] !== undefined && r[c] !== '' ? r[c] : '<span class="text-muted">-</span>'}</td>`).join('') + '</tr>'
+            ).join('');
+            document.getElementById('import-preview').style.display = 'block';
+        }
+
+        async function doImport() {
+            const btn = document.getElementById('btn-do-import');
+            btn.disabled = true; btn.textContent = 'Memproses...';
+            const res = await apiCall('pegawai_import.php', 'POST', { rows: importRows });
+            btn.textContent = 'Proses Import';
+            if (res.success) {
+                let msg = `✓ ${res.message}`;
+                if (res.data && res.data.errors && res.data.errors.length > 0) {
+                    msg += `<br><details style="margin-top:8px;"><summary style="cursor:pointer;font-size:12px;">Lihat detail catatan (${res.data.errors.length})</summary><ul style="font-size:11px;margin:6px 0;">` + res.data.errors.map(e => `<li>${e}</li>`).join('') + '</ul></details>';
+                }
+                showAlert(document.getElementById('import-alert'), msg, 'success');
+                reloadCurrent();
+                document.getElementById('import-preview').style.display = 'none';
+                importRows = [];
+                currentWorkbook = null;
+                document.getElementById('import-file').value = '';
+                const sheetContainer = document.getElementById('import-sheet-container');
+                if (sheetContainer) sheetContainer.style.display = 'none';
+            } else {
+                showAlert(document.getElementById('import-alert'), res.message, 'error');
+                btn.disabled = false;
+            }
+        }
+
+        async function downloadTemplate() {
+            try {
+                const res = await fetch('../assets/template_import_pegawai.xlsx?v=20261126_clean');
+                if (res.ok) {
+                    const blob = await res.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'template_import_pegawai.xlsx';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+                    return;
+                }
+            } catch (err) {
+                console.warn('Fetch template from assets failed:', err);
+            }
+
+            // Fallback direct link
+            window.location.href = '../assets/template_import_pegawai.xlsx?v=20261126_clean';
+        }
+    </script>
+</body>
+
+</html>

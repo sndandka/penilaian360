@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Sistem Penilaian 360</title>
+    <script>
+        (function () {
+            var t = localStorage.getItem('app_theme');
+            if (t === 'dark' || (!t && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+            var isNav = sessionStorage.getItem('sidebar_nav_open') === '1' || sessionStorage.getItem('sidebar_hovered') === '1';
+            if (isNav && localStorage.getItem('sidebar_pinned') !== '1' && window.innerWidth > 768) {
+                document.documentElement.classList.add('sidebar-nav-open', 'sidebar-hover-persisted');
+                function onMove(e) {
+                    if (e.clientX > 248) {
+                        document.documentElement.classList.remove('sidebar-nav-open', 'sidebar-hover-persisted');
+                        sessionStorage.removeItem('sidebar_nav_open');
+                        sessionStorage.removeItem('sidebar_hovered');
+                        window.removeEventListener('mousemove', onMove);
+                    }
+                }
+                window.addEventListener('mousemove', onMove, { passive: true });
+            }
+        })();
+    </script>
+    <link rel="stylesheet" href="../assets/css/style.css?v=20261125_dash">
+    <style>
+        .sidebar-footer,
+        .sidebar-toggle-bottom,
+        button.sidebar-toggle-bottom,
+        aside#sidebar .sidebar-footer,
+        aside#sidebar .sidebar-toggle-bottom {
+            display: none !important;
+        }
+
+        .pegawai-main-grid {
+            align-items: stretch;
+        }
+
+        .pegawai-left-col {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-width: 0;
+            height: 100%;
+        }
+
+        .pegawai-skor-card,
+        .pegawai-tugas-card {
+            margin-bottom: 0;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pegawai-skor-card {
+            flex: 1;
+        }
+
+        .pegawai-tips-card {
+            margin-bottom: 0;
+        }
+
+        .pegawai-tugas-card {
+            height: 100%;
+        }
+
+        .pegawai-skor-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .pegawai-skor-body.empty-state {
+            align-items: center;
+            padding: 32px 20px;
+            background: var(--bg);
+            border: 1px dashed var(--border);
+            border-radius: 10px;
+        }
+
+        .pegawai-skor-body.empty-state svg,
+        .pegawai-tugas-body.empty-state svg {
+            margin: 0 auto 12px;
+        }
+
+        .pegawai-tugas-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .pegawai-tugas-body.empty-state {
+            justify-content: center;
+            align-items: center;
+        }
+
+        .kompetensi-chart-wrap {
+            position: relative;
+            width: 100%;
+            height: 250px;
+        }
+
+        @media (max-width: 768px) {
+            .pegawai-left-col,
+            .pegawai-tugas-card {
+                height: auto;
+            }
+            .pegawai-skor-card {
+                flex: initial;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .kompetensi-chart-wrap {
+                height: 220px;
+            }
+            .tips-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .tips-card-badge {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--success);
+            background: rgba(16, 185, 129, 0.12);
+            padding: 3px 9px;
+            border-radius: 20px;
+            white-space: nowrap;
+        }
+
+        .tips-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .tip-tile {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 11px 12px;
+            border-radius: 10px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .tip-tile:hover {
+            transform: translateY(-1px);
+            border-color: rgba(59, 130, 246, 0.35);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+        }
+
+        .tip-tile-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .tip-tile-icon svg {
+            width: 17px;
+            height: 17px;
+            fill: currentColor;
+        }
+
+        .tip-tile-icon.blue { background: rgba(59, 130, 246, 0.12); color: #2563EB; }
+        .tip-tile-icon.purple { background: rgba(139, 92, 246, 0.12); color: #7C3AED; }
+        .tip-tile-icon.orange { background: rgba(245, 158, 11, 0.14); color: #D97706; }
+        .tip-tile-icon.green { background: rgba(16, 185, 129, 0.12); color: #059669; }
+
+        [data-theme="dark"] .tip-tile-icon.blue { color: #60A5FA; }
+        [data-theme="dark"] .tip-tile-icon.purple { color: #A78BFA; }
+        [data-theme="dark"] .tip-tile-icon.orange { color: #FBBF24; }
+        [data-theme="dark"] .tip-tile-icon.green { color: #34D399; }
+
+        .tip-tile-title {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 2px;
+            line-height: 1.3;
+        }
+
+        .tip-tile-desc {
+            font-size: 11.5px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-shell">
+        <aside class="sidebar" id="sidebar"></aside>
+        <div class="main-content">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <h1 id="page-title">Dashboard</h1>
+                </div>
+                <div id="topbar-user"></div>
+            </header>
+            <main class="page">
+
+                <!-- Stat Cards Row -->
+                <div class="grid grid-3 mb-20">
+                    <div class="stat-card-wrap" id="card-progress">
+                        <div class="stat-icon-box blue">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                            </svg>
+                        </div>
+                        <div class="stat-text">
+                            <div class="s-label">Menilai Orang Lain</div>
+                            <div class="s-value" id="stat-progress">0%</div>
+                            <div class="s-sub" id="stat-progress-sub">Progress 0 dari 0 penilaian</div>
+                        </div>
+                    </div>
+                    <div class="stat-card-wrap">
+                        <div class="stat-icon-box orange">
+                            <svg viewBox="0 0 24 24">
+                                <path
+                                    d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                            </svg>
+                        </div>
+                        <div class="stat-text">
+                            <div class="s-label">Rata-rata Skor Saya</div>
+                            <div class="s-value" id="stat-skor">- / 100</div>
+                            <div class="s-sub">Data dari seluruh penilai (anonim)</div>
+                        </div>
+                    </div>
+                    <div class="stat-card-wrap">
+                        <div class="stat-icon-box green">
+                            <svg viewBox="0 0 24 24">
+                                <path
+                                    d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7v-5z" />
+                            </svg>
+                        </div>
+                        <div class="stat-text">
+                            <div class="s-label">Status Periode</div>
+                            <div class="s-value" id="stat-periode" style="font-size:16px;">Memuat...</div>
+                            <div class="s-sub" id="stat-periode-date">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Content Row -->
+                <div class="grid grid-2 pegawai-main-grid">
+                    <!-- Left Column: Skor Kompetensi + Tips Penilaian -->
+                    <div class="pegawai-left-col">
+                        <!-- Skor Kompetensi -->
+                        <div class="card pegawai-skor-card">
+                            <div class="flex-between mb-16">
+                                <div class="card-title" style="margin-bottom:0;">
+                                    <svg style="width:18px;height:18px;fill:var(--primary);" viewBox="0 0 24 24">
+                                        <path
+                                            d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" />
+                                    </svg>
+                                    Skor Kompetensi Saya
+                                </div>
+                                <a href="hasil.html" class="btn btn-secondary btn-sm">Lihat Laporan</a>
+                            </div>
+                            <div id="skor-container" class="empty-state pegawai-skor-body">
+                                <svg viewBox="0 0 24 24">
+                                    <path
+                                        d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" />
+                                </svg>
+                                <p style="font-weight:600; color:var(--text); margin-bottom:4px;">Belum Ada Skor Kompetensi</p>
+                                <p>Skor kompetensi akan muncul setelah minimal 2 rekan selesai menilai Anda.</p>
+                            </div>
+                        </div>
+
+                        <!-- Tips Penilaian -->
+                        <div class="card pegawai-tips-card">
+                            <div class="flex-between mb-16" style="gap:8px; flex-wrap:wrap;">
+                                <div class="card-title" style="margin-bottom:0;">
+                                    <svg style="width:18px;height:18px;fill:var(--success);" viewBox="0 0 24 24">
+                                        <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/>
+                                    </svg>
+                                    Tips Penilaian
+                                </div>
+                                <span class="tips-card-badge">Anonim &amp; Terjaga</span>
+                            </div>
+                            <div class="tips-grid">
+                                <div class="tip-tile">
+                                    <div class="tip-tile-icon blue">
+                                        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+                                    </div>
+                                    <div>
+                                        <div class="tip-tile-title">Jujur &amp; Objektif</div>
+                                        <div class="tip-tile-desc">Nilai berdasarkan fakta kinerja tanpa bias pribadi.</div>
+                                    </div>
+                                </div>
+                                <div class="tip-tile">
+                                    <div class="tip-tile-icon purple">
+                                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/></svg>
+                                    </div>
+                                    <div>
+                                        <div class="tip-tile-title">Fokus Perilaku Kerja</div>
+                                        <div class="tip-tile-desc">Amati sikap profesional dan capaian tugas nyata.</div>
+                                    </div>
+                                </div>
+                                <div class="tip-tile">
+                                    <div class="tip-tile-icon orange">
+                                        <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+                                    </div>
+                                    <div>
+                                        <div class="tip-tile-title">Masukan Konkret</div>
+                                        <div class="tip-tile-desc">Sertakan contoh atau saran perbaikan di komentar.</div>
+                                    </div>
+                                </div>
+                                <div class="tip-tile">
+                                    <div class="tip-tile-icon green">
+                                        <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                                    </div>
+                                    <div>
+                                        <div class="tip-tile-title">Tepat Waktu</div>
+                                        <div class="tip-tile-desc">Selesaikan penilaian sebelum batas akhir periode.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Daftar Penilaian -->
+                    <div class="card pegawai-tugas-card">
+                        <div class="flex-between mb-16">
+                            <div class="card-title" style="margin-bottom:0;">
+                                <svg style="width:18px;height:18px;fill:var(--purple);" viewBox="0 0 24 24">
+                                    <path
+                                        d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+                                </svg>
+                                Tugas Penilaian
+                            </div>
+                            <a href="penilaian.html" class="btn btn-primary btn-sm">Kerjakan</a>
+                        </div>
+                        <div id="tugas-list" class="empty-state pegawai-tugas-body">
+                            <svg viewBox="0 0 24 24">
+                                <path
+                                    d="M6 2v6h.01L6 8.01 10 12l-4 4 .01.01H6V22h12v-5.99h-.01L18 16l-4-4 4-3.99-.01-.01H18V2H6zm10 14.5V20H8v-3.5l4-4 4 4zm-4-5l-4-4V4h8v3.5l-4 4z" />
+                            </svg>
+                            <p>Memuat daftar penilaian...</p>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="../assets/js/config.js?v=20261126"></script>
+    <script src="../assets/js/api.js?v=20261126"></script>
+    <script src="../assets/js/searchable-select.js?v=20261116_search"></script>
+    <script src="../assets/js/auth.js?v=20261125_mobile"></script>
+    <script>
+        (async () => {
+            const user = await initLayout("dashboard", ["pegawai"]);
+            if (!user) return;
+
+            // Load Periode Aktif
+            const resPeriods = await apiCall("periode.php");
+            let activePeriod = null;
+            if (resPeriods.success && resPeriods.data) {
+                // Filter periode berjalan dan ambil yang terbaru
+                const berjalan = resPeriods.data.filter(p => p.status === 'aktif');
+                if (berjalan.length > 0) {
+                    berjalan.sort((a, b) => new Date(b.tanggal_mulai) - new Date(a.tanggal_mulai));
+                    activePeriod = berjalan[0];
+                }
+            }
+
+            if (activePeriod) {
+                document.getElementById("stat-periode").textContent = activePeriod.nama_periode;
+                const start = new Date(activePeriod.tanggal_mulai).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" });
+                const end = new Date(activePeriod.tanggal_selesai).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" });
+                document.getElementById("stat-periode-date").textContent = start + " - " + end;
+            } else {
+                document.getElementById("stat-periode").textContent = "Tidak Ada";
+                document.getElementById("stat-periode").style.fontSize = "14px";
+            }
+
+            // Load Hasil Skor
+            if (activePeriod) {
+                const resSkor = await apiCall(`results.php?periode_id=${activePeriod.id}`);
+                if (resSkor.success && resSkor.data && resSkor.data.detail_penilai && resSkor.data.detail_penilai.length >= 2) {
+                    const d = resSkor.data;
+                    const nilaiAkhir = d.hasil && d.hasil.nilai_akhir !== null && d.hasil.nilai_akhir !== undefined ? Number(d.hasil.nilai_akhir).toFixed(2) : "-";
+                    document.getElementById("stat-skor").textContent = `${nilaiAkhir} / 100`;
+
+                    // Agregasi skor per kategori
+                    const kategoriMap = {};
+                    d.detail_penilai.forEach(p => {
+                        if (p.jawaban && p.jawaban.length > 0) {
+                            p.jawaban.forEach(j => {
+                                const kat = j.nama_kategori;
+                                if (!kategoriMap[kat]) {
+                                    kategoriMap[kat] = { totalSkor: 0, count: 0 };
+                                }
+                                kategoriMap[kat].totalSkor += parseFloat(j.skor);
+                                kategoriMap[kat].count += 1;
+                            });
+                        }
+                    });
+
+                    const labels = [];
+                    const fullLabels = [];
+                    const values = [];
+                    const pcts = [];
+                    for (const [kat, data] of Object.entries(kategoriMap)) {
+                        const rata = data.count > 0 ? (data.totalSkor / data.count) : 0;
+                        const pct = (rata / 5) * 100;
+                        fullLabels.push(kat);
+                        labels.push(kat.length > 14 && kat.includes(' ') ? kat.split(' ') : kat);
+                        values.push(parseFloat(rata.toFixed(2)));
+                        pcts.push(Math.round(pct));
+                    }
+
+                    const skorContainer = document.getElementById("skor-container");
+                    skorContainer.classList.remove("empty-state");
+                    skorContainer.innerHTML = `<div class="kompetensi-chart-wrap"><canvas id="kompetensiBarChart"></canvas></div>`;
+
+                    let kompetensiChartInstance = null;
+                    const renderKompetensiBarChart = () => {
+                        const ctx = document.getElementById("kompetensiBarChart");
+                        if (!ctx || typeof Chart === "undefined" || values.length === 0) return;
+
+                        const style = getComputedStyle(document.body);
+                        const primary = style.getPropertyValue('--primary').trim() || '#1B4F8C';
+                        const textColor = style.getPropertyValue('--text').trim() || '#1F2937';
+                        const textMuted = style.getPropertyValue('--text-muted').trim() || '#9CA3AF';
+                        const border = style.getPropertyValue('--border').trim() || '#E3E7ED';
+                        const isMob = window.innerWidth <= 640;
+
+                        const valueLabelPlugin = {
+                            id: 'kompetensiBarLabels',
+                            afterDatasetsDraw(chart) {
+                                const { ctx: c } = chart;
+                                const meta = chart.getDatasetMeta(0);
+                                if (!meta || !meta.data) return;
+                                c.save();
+                                c.textAlign = 'center';
+                                c.textBaseline = 'bottom';
+                                c.fillStyle = textColor;
+                                c.font = `600 ${isMob ? 10 : 11.5}px Inter, system-ui, sans-serif`;
+                                meta.data.forEach((bar, idx) => {
+                                    const val = values[idx];
+                                    if (val !== undefined && val !== null) {
+                                        c.fillText(`${val.toFixed(2)}`, bar.x, bar.y - 5);
+                                    }
+                                });
+                                c.restore();
+                            }
+                        };
+
+                        if (kompetensiChartInstance) kompetensiChartInstance.destroy();
+                        kompetensiChartInstance = new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: labels,
+                                datasets: [{
+                                    label: 'Rata-rata Skor',
+                                    data: values,
+                                    backgroundColor: primary,
+                                    hoverBackgroundColor: primary,
+                                    borderRadius: 6,
+                                    borderSkipped: false,
+                                    maxBarThickness: isMob ? 34 : 46
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                layout: {
+                                    padding: { top: 22 }
+                                },
+                                scales: {
+                                    y: {
+                                        min: 0,
+                                        max: 5,
+                                        ticks: {
+                                            stepSize: 1,
+                                            color: textMuted,
+                                            font: { family: 'Inter, system-ui, sans-serif', size: isMob ? 10 : 11 }
+                                        },
+                                        grid: { color: border }
+                                    },
+                                    x: {
+                                        grid: { display: false },
+                                        ticks: {
+                                            color: textColor,
+                                            maxRotation: 0,
+                                            autoSkip: false,
+                                            font: { family: 'Inter, system-ui, sans-serif', weight: '500', size: isMob ? 10 : 11.5 }
+                                        }
+                                    }
+                                },
+                                plugins: {
+                                    legend: { display: false },
+                                    tooltip: {
+                                        callbacks: {
+                                            title: (items) => {
+                                                const idx = items && items[0] ? items[0].dataIndex : 0;
+                                                return fullLabels[idx] || '';
+                                            },
+                                            label: (item) => {
+                                                const idx = item.dataIndex;
+                                                return ` Skor: ${values[idx].toFixed(2)} / 5.00 (${pcts[idx]}%)`;
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            plugins: [valueLabelPlugin]
+                        });
+                    };
+
+                    renderKompetensiBarChart();
+                    new MutationObserver(() => renderKompetensiBarChart()).observe(document.documentElement, {
+                        attributes: true,
+                        attributeFilter: ['data-theme']
+                    });
+                }
+            }
+
+            // Load Tugas Penilaian
+            const res = await apiCall("evaluations.php?action=tugas");
+            const container = document.getElementById("tugas-list");
+
+            if (!res.success) {
+                container.innerHTML = `<div class="empty-state" style="padding:20px;"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg><p>${res.message}</p></div>`;
+                return;
+            }
+
+            const total = res.data.length;
+            const selesai = res.data.filter(t => t.status === 'selesai').length;
+            const progressVal = total > 0 ? Math.round((selesai / total) * 100) : 0;
+
+            // Update stat cards
+            document.getElementById("stat-progress").textContent = progressVal + "%";
+            document.getElementById("stat-progress-sub").textContent = `Progress ${selesai} dari ${total} penilaian`;
+
+            if (total === 0) {
+                container.innerHTML = `<div class="empty-state" style="padding:20px;"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg><p>Tidak ada tugas penilaian saat ini. Semua tugas telah selesai.</p></div>`;
+                return;
+            }
+
+            if (typeof sortTugasPenilaian === 'function') {
+                sortTugasPenilaian(res.data);
+            }
+
+            let html = `
+        <div class="table-wrap">
+            <table class="mobile-cards">
+                <thead>
+                    <tr>
+                        <th>Yang Dinilai</th>
+                        <th>Unit Kerja</th>
+                        <th>Relasi</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+            const previewLimit = 5;
+            res.data.slice(0, previewLimit).forEach(t => {
+                html += `
+            <tr>
+                <td style="font-weight:500;">
+                    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                        <span>${t.nama_dinilai}</span>
+                        ${t.golongan_dinilai && t.golongan_dinilai !== '-' ? `<span class="badge" style="font-size:10px;padding:1px 5px;background:var(--primary-light);color:var(--primary);border-radius:8px;font-weight:600;">${t.golongan_dinilai}</span>` : ''}
+                        ${t.jenis_relasi === 'diri' ? '<span class="badge badge-gray" style="font-size:10px;">Anda</span>' : ''}
+                    </div>
+                    ${t.jabatan ? `<div style="font-size:11.5px;color:var(--text-muted);margin-top:2px;">${t.jabatan}</div>` : ''}
+                </td>
+                <td data-label="Unit Kerja" style="font-size:13px;font-weight:500;">${t.unit_kerja || '-'}</td>
+                <td data-label="Relasi" style="white-space:nowrap;"><span class="badge badge-blue">${relasiTargetLabel(t.jenis_relasi)}</span></td>
+                <td data-label="Status" style="white-space:nowrap;">${statusBadge(t.status)}</td>
+            </tr>
+        `;
+            });
+            html += `</tbody></table></div>`;
+
+            if (total > previewLimit) {
+                html += `<div style="text-align:center; padding-top:12px; border-top:1px solid var(--border); margin-top:12px;">
+            <a href="penilaian.html" style="color:var(--primary); font-size:13px; font-weight:600;">Lihat ${total - previewLimit} tugas lainnya &rarr;</a>
+        </div>`;
+            }
+
+            container.innerHTML = html;
+            container.classList.remove("empty-state");
+        })();
+    </script>
+</body>
+
+</html>

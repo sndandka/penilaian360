@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitoring Penilaian - Sistem Penilaian 360</title>
+    <script>
+    (function(){
+        var t = localStorage.getItem('app_theme');
+        if (t === 'dark' || (!t && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+        var isNav = sessionStorage.getItem('sidebar_nav_open') === '1' || sessionStorage.getItem('sidebar_hovered') === '1';
+        if (isNav && localStorage.getItem('sidebar_pinned') !== '1') {
+            document.documentElement.classList.add('sidebar-nav-open', 'sidebar-hover-persisted');
+            function onMove(e) {
+                if (e.clientX > 248) {
+                    document.documentElement.classList.remove('sidebar-nav-open', 'sidebar-hover-persisted');
+                    sessionStorage.removeItem('sidebar_nav_open');
+                    sessionStorage.removeItem('sidebar_hovered');
+                    window.removeEventListener('mousemove', onMove);
+                }
+            }
+            window.addEventListener('mousemove', onMove, { passive: true });
+        }
+    })();
+    </script>
+    <link rel="stylesheet" href="../assets/css/style.css?v=20261117_notif">
+    <style>
+        /* -- Styling Khusus Detail Monitoring & Audit Penilaian -- */
+        .modal-box.extra-wide {
+            max-width: 1100px;
+            width: 95%;
+        }
+        .modal-box.wide {
+            max-width: 860px;
+            width: 95%;
+        }
+
+        .audit-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .audit-kpi-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.15s ease;
+        }
+        .audit-kpi-title {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 4px;
+        }
+        .audit-kpi-val {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text);
+            line-height: 1.2;
+        }
+        .audit-kpi-sub {
+            font-size: 11.5px;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        /* Badge Relasi */
+        .relasi-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: capitalize;
+            white-space: nowrap;
+        }
+        .relasi-diri { background: #EEF2FF; color: #4F46E5; }
+        .relasi-atasan { background: #FEF3C7; color: #B45309; }
+        .relasi-rekan { background: #E0F2FE; color: #0369A1; }
+        .relasi-bawahan { background: #F3E8FF; color: #7E22CE; }
+
+        [data-theme="dark"] .relasi-diri { background: rgba(79, 70, 229, 0.2); color: #A5B4FC; }
+        [data-theme="dark"] .relasi-atasan { background: rgba(180, 83, 9, 0.2); color: #FCD34D; }
+        [data-theme="dark"] .relasi-rekan { background: rgba(3, 105, 161, 0.2); color: #7DD3FC; }
+        [data-theme="dark"] .relasi-bawahan { background: rgba(126, 34, 206, 0.2); color: #D8B4FE; }
+
+        /* Badge Indikator Pola Penilaian (Kesesuaian) */
+        .badge-pattern-seragam {
+            background: #FEF2F2;
+            color: #DC2626;
+            border: 1px solid rgba(220, 38, 38, 0.35);
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 11.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+        [data-theme="dark"] .badge-pattern-seragam {
+            background: rgba(220, 38, 38, 0.18);
+            color: #FCA5A5;
+            border-color: rgba(220, 38, 38, 0.45);
+        }
+
+        .badge-pattern-wajar {
+            background: #ECFDF5;
+            color: #059669;
+            border: 1px solid rgba(5, 150, 105, 0.35);
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 11.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+        [data-theme="dark"] .badge-pattern-wajar {
+            background: rgba(5, 150, 105, 0.18);
+            color: #6EE7B7;
+            border-color: rgba(5, 150, 105, 0.45);
+        }
+
+        .badge-pattern-pending {
+            background: var(--bg);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            font-weight: 500;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 11.5px;
+            white-space: nowrap;
+        }
+
+        /* Skor Visual Pill */
+        .score-badge-circle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 12.5px;
+        }
+        .score-5 { background: #D1FAE5; color: #047857; }
+        .score-4 { background: #E0F2FE; color: #0369A1; }
+        .score-3 { background: #FEF3C7; color: #B45309; }
+        .score-2 { background: #FFEDD5; color: #C2410C; }
+        .score-1 { background: #FEE2E2; color: #B91C1C; }
+
+        [data-theme="dark"] .score-5 { background: rgba(4, 120, 87, 0.28); color: #6EE7B7; }
+        [data-theme="dark"] .score-4 { background: rgba(3, 105, 161, 0.28); color: #7DD3FC; }
+        [data-theme="dark"] .score-3 { background: rgba(180, 83, 9, 0.28); color: #FCD34D; }
+        [data-theme="dark"] .score-2 { background: rgba(194, 65, 12, 0.28); color: #FDBA74; }
+        [data-theme="dark"] .score-1 { background: rgba(185, 28, 28, 0.28); color: #FCA5A5; }
+
+        /* Search Filter Dock */
+        .search-filter-dock {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+        .search-filter-dock input {
+            flex: 1;
+            min-width: 220px;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--card-bg);
+            color: var(--text);
+            font-size: 13px;
+        }
+        .search-filter-dock select {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--card-bg);
+            color: var(--text);
+            font-size: 13px;
+        }
+
+        .table-condensed th, .table-condensed td {
+            padding: 10px 12px;
+            font-size: 13px;
+        }
+
+        .q-category-block {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+        .q-category-header {
+            background: rgba(0,0,0,0.03);
+            padding: 10px 16px;
+            font-weight: 700;
+            font-size: 13.5px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        [data-theme="dark"] .q-category-header {
+            background: rgba(255,255,255,0.03);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <style>.sidebar-footer, .sidebar-toggle-bottom, button.sidebar-toggle-bottom, aside#sidebar .sidebar-footer, aside#sidebar .sidebar-toggle-bottom { display: none !important; }</style>
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="main-content">
+        <header class="topbar">
+            <div class="topbar-left">
+                <h1 id="page-title">Monitoring Penilaian</h1>
+            </div>
+            <div id="topbar-user"></div>
+        </header>
+        <main class="page">
+            <div class="card">
+                <div class="form-row" style="align-items:flex-end;">
+                    <div>
+                        <label>Pilih Periode</label>
+                        <select id="select-periode" style="max-width:400px;"></select>
+                    </div>
+                    <div>
+                        <label>Unit Kerja / Induk</label>
+                        <select id="filter-unit-induk" style="max-width:240px;" onchange="onFilterUnitIndukChange()">
+                            <option value="">--- Semua Unit Induk ---</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Sub Unit / Seksi / Subbag</label>
+                        <select id="filter-unit" style="max-width:240px;" onchange="applyFilters()" disabled>
+                            <option value="">--- Semua Sub Unit / Seksi ---</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-4 mb-20">
+                <div class="stat-card-wrap">
+                    <div class="stat-icon-box blue"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg></div>
+                    <div class="stat-text"><div class="s-label">Total Tugas</div><div class="s-value" id="s-total">-</div></div>
+                </div>
+                <div class="stat-card-wrap">
+                    <div class="stat-icon-box green"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+                    <div class="stat-text"><div class="s-label">Selesai</div><div class="s-value" id="s-selesai">-</div></div>
+                </div>
+                <div class="stat-card-wrap">
+                    <div class="stat-icon-box orange"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg></div>
+                    <div class="stat-text"><div class="s-label">Sedang Proses</div><div class="s-value" id="s-proses">-</div></div>
+                </div>
+                <div class="stat-card-wrap">
+                    <div class="stat-icon-box red"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div>
+                    <div class="stat-text"><div class="s-label">Belum Dinilai</div><div class="s-value" id="s-belum">-</div></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="flex-between" style="flex-wrap:wrap; gap:12px; margin-bottom:14px;">
+                    <div>
+                        <div class="card-title" style="margin-bottom:4px;">
+                            <svg style="width:18px;height:18px;fill:var(--primary);" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                            Progress per Penilai &amp; Audit Kepatuhan
+                        </div>
+                        <p class="text-muted" style="font-size:13px; margin:0;">Pantau keterisian penilaian dan audit apakah penilai mengevaluasi rekan kerja secara objektif dan sesuai.</p>
+                    </div>
+                </div>
+
+                <!-- Search & Status Filter Penilai -->
+                <div class="search-filter-dock" style="margin-bottom:16px;">
+                    <input type="text" id="filter-search-penilai" placeholder="Cari nama penilai, NIP, atau jabatan..." oninput="onSearchPenilaiInput()">
+                    <select id="filter-status-penilai" onchange="onFilterStatusPenilaiChange()" style="min-width:180px;">
+                        <option value="">Semua Status Penilai</option>
+                        <option value="selesai">Selesai (100%)</option>
+                        <option value="proses">Sebagian / Sedang Proses</option>
+                        <option value="belum_mulai">Belum Mulai (0%)</option>
+                    </select>
+                </div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:44px; text-align:center;">#</th>
+                                <th>Nama Penilai</th>
+                                <th>Unit Kerja</th>
+                                <th>Progress Tugas</th>
+                                <th style="text-align:center; width:120px;">Status</th>
+                                <th style="text-align:center; width:140px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            <tr><td colspan="6" class="text-muted">Pilih periode terlebih dahulu.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="pagination-monitoring"></div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL 1: RINCIAN PROGRES & AUDIT PENILAIAN PEGAWAI TERHADAP YANG DINILAI -->
+<!-- ========================================================================= -->
+<div class="modal-overlay hidden" id="modal-detail-penilai">
+    <div class="modal-box extra-wide">
+        <div class="modal-header">
+            <div>
+                <h3 id="modal-penilai-title" style="margin:0 0 4px 0; font-size:17px; font-weight:700;">Rincian Progres &amp; Audit Penilaian Pegawai</h3>
+                <div id="modal-penilai-meta" style="font-size:12.5px; color:var(--text-muted);">Memuat informasi penilai...</div>
+            </div>
+            <button class="modal-close" onclick="tutupModalDetailPenilai()">&times;</button>
+        </div>
+
+        <div id="modal-penilai-loading" style="text-align:center; padding:44px 10px; color:var(--text-muted);">
+            <div style="display:inline-block; width:30px; height:30px; border:3px solid var(--border); border-top-color:var(--primary); border-radius:50%; animation:spin 0.8s linear infinite;"></div>
+            <div style="margin-top:12px; font-size:13px;">Mengambil data rincian progres &amp; kesesuaian penilaian...</div>
+        </div>
+
+        <div id="modal-penilai-content" style="display:none;">
+            <!-- KPI Audit Cards Grid -->
+            <div class="audit-kpi-grid" id="audit-kpi-grid"></div>
+
+            <!-- Toolbar Pencarian & Filter Pegawai yang Dinilai -->
+            <div class="search-filter-dock">
+                <input type="text" id="detail-search-dinilai" placeholder="Cari nama pegawai yang dinilai, NIP, atau jabatan..." oninput="onFilterDetailDinilai()">
+                <select id="detail-filter-relasi" onchange="onFilterDetailDinilai()">
+                    <option value="">Semua Relasi 360&deg;</option>
+                    <option value="atasan">Atasan</option>
+                    <option value="rekan">Rekan Kerja</option>
+                    <option value="bawahan">Bawahan</option>
+                    <option value="diri">Diri Sendiri</option>
+                </select>
+                <select id="detail-filter-status" onchange="onFilterDetailDinilai()">
+                    <option value="">Semua Status Penilaian</option>
+                    <option value="selesai">Selesai Dinilai</option>
+                    <option value="proses">Sedang Proses</option>
+                    <option value="belum_mulai">Belum Mulai</option>
+                </select>
+            </div>
+
+            <!-- Tabel Rincian Pegawai yang Dinilai -->
+            <div class="table-wrap" style="max-height:460px; overflow-y:auto; border:1px solid var(--border); border-radius:10px;">
+                <table class="table-condensed" style="margin:0; width:100%;">
+                    <thead>
+                        <tr style="position:sticky; top:0; background:var(--card-bg); z-index:2; box-shadow:0 1px 0 var(--border);">
+                            <th style="width:36px; text-align:center;">#</th>
+                            <th>Pegawai yang Dinilai</th>
+                            <th style="width:105px; text-align:center;">Relasi 360&deg;</th>
+                            <th style="width:130px; text-align:center;">Status &amp; Waktu</th>
+                            <th style="width:95px; text-align:center;">Rata-rata</th>
+                            <th style="width:155px; text-align:center;">Analisis Kesesuaian</th>
+                            <th>Catatan / Umpan Balik</th>
+                            <th style="width:125px; text-align:center;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="detail-dinilai-tbody"></tbody>
+                </table>
+            </div>
+
+            <!-- Info Guide Footer -->
+            <div style="margin-top:14px; padding:10px 14px; background:var(--bg); border:1px solid var(--border); border-radius:8px; font-size:12px; color:var(--text-secondary); display:flex; align-items:flex-start; gap:8px;">
+                <svg style="width:16px;height:16px;fill:var(--primary);flex-shrink:0;margin-top:2px;" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                <div>
+                    <strong>Panduan Audit Kesesuaian:</strong> Indikator <span class="badge-pattern-seragam">⚠️ Skor Seragam</span> mengidentifikasi penilai yang memberikan nilai kembar/identik di seluruh butir pertanyaan (potensi pengisian formalitas semata/tanpa membaca). Klik tombol <strong>Lihat Jawaban</strong> untuk memverifikasi butir pertanyaan dan skor detailnya.
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-between" style="margin-top:18px; padding-top:14px; border-top:1px solid var(--border);">
+            <div style="font-size:12.5px; color:var(--text-muted);" id="detail-dinilai-count"></div>
+            <button type="button" class="btn btn-secondary" onclick="tutupModalDetailPenilai()">Tutup</button>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL 2: DETAIL BUTIR PERTANYAAN, SKOR, & KOMENTAR PER ITEM EVALUASI -->
+<!-- ========================================================================= -->
+<div class="modal-overlay hidden" id="modal-detail-jawaban" style="z-index:1002;">
+    <div class="modal-box wide">
+        <div class="modal-header">
+            <div>
+                <h3 id="modal-jawaban-title" style="margin:0 0 4px 0; font-size:16px; font-weight:700;">Audit Butir Pertanyaan &amp; Skor Jawaban</h3>
+                <div id="modal-jawaban-meta" style="font-size:12px; color:var(--text-muted);">Memuat butir pertanyaan...</div>
+            </div>
+            <button class="modal-close" onclick="tutupModalDetailJawaban()">&times;</button>
+        </div>
+
+        <div id="modal-jawaban-loading" style="text-align:center; padding:36px 10px; color:var(--text-muted);">
+            <div style="display:inline-block; width:28px; height:28px; border:3px solid var(--border); border-top-color:var(--primary); border-radius:50%; animation:spin 0.8s linear infinite;"></div>
+            <div style="margin-top:10px; font-size:13px;">Mengambil data jawaban &amp; butir penilaian...</div>
+        </div>
+
+        <div id="modal-jawaban-content" style="display:none; max-height:68vh; overflow-y:auto; padding-right:4px;">
+            <!-- Alert Banner Pola Kesesuaian -->
+            <div id="jawaban-audit-banner" style="margin-bottom:14px;"></div>
+
+            <!-- Masukan / Komentar Umum -->
+            <div id="jawaban-komentar-box" style="margin-bottom:16px;"></div>
+
+            <!-- Grouped Questions by Category -->
+            <div id="jawaban-kategori-list"></div>
+        </div>
+
+        <div class="flex-between" style="margin-top:18px; padding-top:14px; border-top:1px solid var(--border);">
+            <div style="font-size:12px; color:var(--text-muted);" id="jawaban-footer-summary"></div>
+            <button type="button" class="btn btn-primary" onclick="tutupModalDetailJawaban()">Kembali ke Rincian Penilai</button>
+        </div>
+    </div>
+</div>
+
+<script src="../assets/js/config.js?v=20261126"></script>
+<script src="../assets/js/api.js?v=20261126"></script>
+<script src="../assets/js/searchable-select.js?v=20261116_search"></script>
+<script src="../assets/js/auth.js?v=20261117_notif"></script>
+<script>
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function formatTanggalJam(str) {
+    if (!str) return '-';
+    const d = new Date(str.replace(/-/g, '/'));
+    if (isNaN(d.getTime())) return str;
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const day = String(d.getDate()).padStart(2, '0');
+    const mon = months[d.getMonth()];
+    const yr = d.getFullYear();
+    const hr = String(d.getHours()).padStart(2, '0');
+    const min = String(d.getMinutes()).padStart(2, '0');
+    return `${day} ${mon} ${yr} ${hr}:${min}`;
+}
+
+async function loadPeriodOptions() {
+    const res = await apiCall("periode.php");
+    const select = document.getElementById("select-periode");
+    if (!res.success || res.data.length === 0) { select.innerHTML = `<option value="">Belum ada periode</option>`; return; }
+    select.innerHTML = res.data.map(p => `<option value="${p.id}" ${p.status === 'aktif' ? 'selected' : ''}>${p.nama_periode} (${p.status})</option>`).join("");
+    select.addEventListener("change", () => applyFilters());
+    if (window.SearchableSelect && window.SearchableSelect.sync) {
+        window.SearchableSelect.sync(select);
+    }
+    applyFilters();
+}
+
+let allUnits = [];
+
+async function loadDeptFilter() {
+    const res = await apiCall("unit_kerja.php");
+    if (!res.success) return;
+    allUnits = res.data;
+
+    const parentUnits = allUnits.filter(u => u.parent_id === null || u.parent_id == 1 || ['dinas','sekretariat','bidang','upt','upt_lab'].includes(u.jenis_unit));
+    const dinasSekr = parentUnits.filter(u => ['dinas','sekretariat'].includes(u.jenis_unit));
+    const bidangList = parentUnits.filter(u => u.jenis_unit === 'bidang');
+    const uptList = parentUnits.filter(u => ['upt','upt_lab'].includes(u.jenis_unit));
+
+    let html = '<option value="">--- Semua Unit Induk ---</option>';
+    if (dinasSekr.length) {
+        html += `<optgroup label="Dinas & Sekretariat">${dinasSekr.map(u => `<option value="${u.id}">${u.nama_unit}</option>`).join('')}</optgroup>`;
+    }
+    if (bidangList.length) {
+        html += `<optgroup label="Bidang">${bidangList.map(u => `<option value="${u.id}">${u.nama_unit}</option>`).join('')}</optgroup>`;
+    }
+    if (uptList.length) {
+        html += `<optgroup label="UPT">${uptList.map(u => `<option value="${u.id}">${u.nama_unit}</option>`).join('')}</optgroup>`;
+    }
+    const selectInduk = document.getElementById("filter-unit-induk");
+    selectInduk.innerHTML = html;
+    if (window.SearchableSelect && window.SearchableSelect.sync) {
+        window.SearchableSelect.sync(selectInduk);
+    }
+}
+
+function onFilterUnitIndukChange() {
+    const indukId = document.getElementById("filter-unit-induk").value;
+    const subSelect = document.getElementById("filter-unit");
+    if (!indukId) {
+        subSelect.innerHTML = '<option value="">--- Semua Sub Unit / Seksi ---</option>';
+        subSelect.disabled = true;
+        subSelect.value = '';
+    } else {
+        const children = allUnits.filter(u => u.parent_id == indukId);
+        if (children.length === 0) {
+            subSelect.innerHTML = '<option value="">(Tidak ada sub bidang/seksi)</option>';
+            subSelect.disabled = true;
+            subSelect.value = '';
+        } else {
+            subSelect.innerHTML = '<option value="">--- Semua Sub Unit di Unit Ini ---</option>' +
+                children.map(c => `<option value="${c.id}">${c.nama_unit}</option>`).join('');
+            subSelect.disabled = false;
+        }
+    }
+    if (window.SearchableSelect && window.SearchableSelect.sync) {
+        window.SearchableSelect.sync(subSelect);
+    }
+    applyFilters();
+}
+
+let lastRows = [];
+let filteredRows = [];
+let monitoringPage = 1;
+const PAGE_LIMIT = 20;
+
+let currentSearchPenilai = '';
+let currentStatusPenilai = '';
+
+function onSearchPenilaiInput() {
+    currentSearchPenilai = (document.getElementById("filter-search-penilai").value || '').toLowerCase().trim();
+    applyPenilaiFilter();
+}
+
+function onFilterStatusPenilaiChange() {
+    currentStatusPenilai = document.getElementById("filter-status-penilai").value || '';
+    applyPenilaiFilter();
+}
+
+function applyPenilaiFilter() {
+    let filtered = lastRows || [];
+    if (currentSearchPenilai) {
+        filtered = filtered.filter(r => {
+            const nama = (r.nama_lengkap || '').toLowerCase();
+            const nip = (r.nip || '').toLowerCase();
+            const jab = (r.nama_jabatan || '').toLowerCase();
+            const unit = (r.nama_unit || '').toLowerCase();
+            const gol = (r.golongan_ruang || '').toLowerCase();
+            return nama.includes(currentSearchPenilai) || nip.includes(currentSearchPenilai) || jab.includes(currentSearchPenilai) || unit.includes(currentSearchPenilai) || gol.includes(currentSearchPenilai);
+        });
+    }
+    if (currentStatusPenilai) {
+        filtered = filtered.filter(r => {
+            const pct = r.total_tugas > 0 ? Math.round((r.selesai / r.total_tugas) * 100) : 0;
+            if (currentStatusPenilai === 'selesai') return pct === 100;
+            if (currentStatusPenilai === 'proses') return pct > 0 && pct < 100;
+            if (currentStatusPenilai === 'belum_mulai') return pct === 0;
+            return true;
+        });
+    }
+    filteredRows = filtered;
+    monitoringPage = 1;
+    renderTable(filteredRows, 1);
+}
+
+function applyFilters() {
+    const periodeId = document.getElementById("select-periode").value;
+    const indukId   = document.getElementById("filter-unit-induk") ? document.getElementById("filter-unit-induk").value : "";
+    const unitId    = (document.getElementById("filter-unit") && document.getElementById("filter-unit").value) ? document.getElementById("filter-unit").value : indukId;
+    if (periodeId) loadMonitoring(periodeId, unitId);
+}
+
+async function loadMonitoring(periodeId, unitId = '') {
+    const tbody = document.getElementById("table-body");
+    if (!periodeId) { tbody.innerHTML = `<tr><td colspan="6" class="text-muted">Pilih periode terlebih dahulu.</td></tr>`; return; }
+    tbody.innerHTML = `<tr><td colspan="6" class="text-muted">Memuat data...</td></tr>`;
+
+    const url = `monitoring.php?periode_id=${periodeId}${unitId ? '&unit_kerja_id='+unitId : ''}`;
+    const res = await apiCall(url);
+    if (!res.success) { tbody.innerHTML = `<tr><td colspan="6" class="text-muted">${res.message}</td></tr>`; return; }
+
+    const s = res.data.statistik;
+    document.getElementById("s-total").textContent   = s.total_mapping   || 0;
+    document.getElementById("s-selesai").textContent = s.total_selesai   || 0;
+    document.getElementById("s-proses").textContent  = s.total_proses    || 0;
+    document.getElementById("s-belum").textContent   = s.total_belum     || 0;
+
+    const pct = s.persentase_selesai || 0;
+    document.querySelector('.stat-icon-box.green')?.parentElement
+        ?.querySelector('.s-value')?.setAttribute('title', pct + '% selesai');
+
+    lastRows = res.data.progress_per_penilai || [];
+    applyPenilaiFilter();
+}
+
+function renderTable(rows, page = 1) {
+    const tbody = document.getElementById("table-body");
+    if (!rows || rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-muted" style="text-align:center; padding:28px 12px;">Tidak ada data penilai yang sesuai filter.</td></tr>`;
+        renderPagination(null, 'pagination-monitoring', () => {});
+        return;
+    }
+
+    const total      = rows.length;
+    const totalPages = Math.ceil(total / PAGE_LIMIT);
+    const offset     = (page - 1) * PAGE_LIMIT;
+    const pageRows   = rows.slice(offset, offset + PAGE_LIMIT);
+
+    tbody.innerHTML = pageRows.map((r, idx) => {
+        const pct       = r.total_tugas > 0 ? Math.round((r.selesai / r.total_tugas) * 100) : 0;
+        const fillColor = pct === 100 ? '#22c55e' : (pct >= 50 ? '#f59e0b' : '#ef4444');
+        const status    = pct === 100
+            ? statusBadge('selesai')
+            : (pct === 0 ? statusBadge('belum_mulai') : statusBadge('proses'));
+        
+        const namaSafe = escapeHtml(r.nama_lengkap).replace(/'/g, "\\'");
+        
+        return `<tr>
+            <td style="text-align:center; color:var(--text-muted); font-size:12.5px;">${offset + idx + 1}</td>
+            <td>
+                <div style="font-weight:600; color:var(--text); display:flex; align-items:center; gap:6px;">
+                    <span>${escapeHtml(r.nama_lengkap)}</span>
+                    ${r.golongan_ruang ? `<span class="badge" style="font-size:10.5px;padding:1px 6px;background:var(--primary-light);color:var(--primary);border-radius:10px;font-weight:600;">${escapeHtml(r.golongan_ruang)}</span>` : ''}
+                </div>
+                <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px;">
+                    ${r.nip ? `NIP: ${escapeHtml(r.nip)} &bull; ` : ''}${escapeHtml(r.nama_jabatan || '-')}
+                </div>
+            </td>
+            <td style="color:var(--text-secondary); font-size:13px;">${escapeHtml(r.nama_unit || '-')}</td>
+            <td style="min-width:180px;">
+                <div class="progress-bar"><div class="progress-bar-fill" style="width:${pct}%; background:${fillColor};"></div></div>
+                <div class="text-muted" style="font-size:12px; margin-top:4px;">${r.selesai}/${r.total_tugas} tugas selesai (${pct}%)</div>
+            </td>
+            <td style="text-align:center;">${status}</td>
+            <td style="text-align:center;">
+                <button type="button" class="btn btn-sm btn-primary" onclick="bukaModalDetailPenilai(${r.id}, '${namaSafe}')" style="white-space:nowrap; padding:6px 12px; font-size:12px;">
+                    <svg style="width:13px;height:13px;fill:currentColor;margin-right:4px;vertical-align:-2px;" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                    Lihat Rincian
+                </button>
+            </td>
+        </tr>`;
+    }).join("");
+
+    const meta = { total, page, limit: PAGE_LIMIT, totalPages };
+    renderPagination(meta, 'pagination-monitoring', (p) => {
+        monitoringPage = p;
+        renderTable(filteredRows, p);
+    });
+}
+
+/* ========================================================================= */
+/* LOGIKA MODAL 1: RINCIAN PENILAI & AUDIT KEPATUHAN PENILAIAN */
+/* ========================================================================= */
+let currentDetailDinilaiList = [];
+let currentPenilaiInfo = null;
+
+async function bukaModalDetailPenilai(penilaiId, namaPenilai) {
+    const periodeId = document.getElementById("select-periode").value;
+    if (!periodeId) return alert("Pilih periode terlebih dahulu.");
+
+    document.getElementById("modal-penilai-title").textContent = `Audit & Progres: ${namaPenilai}`;
+    document.getElementById("modal-penilai-meta").textContent = "Memuat rincian evaluasi...";
+    document.getElementById("modal-penilai-loading").style.display = "block";
+    document.getElementById("modal-penilai-content").style.display = "none";
+    document.getElementById("modal-detail-penilai").classList.remove("hidden");
+
+    // Reset filter
+    document.getElementById("detail-search-dinilai").value = "";
+    document.getElementById("detail-filter-relasi").value = "";
+    document.getElementById("detail-filter-status").value = "";
+
+    const url = `monitoring.php?action=detail_penilai&periode_id=${periodeId}&penilai_id=${penilaiId}`;
+    const res = await apiCall(url);
+
+    document.getElementById("modal-penilai-loading").style.display = "none";
+
+    if (!res.success) {
+        alert(res.message || "Gagal memuat rincian penilai.");
+        tutupModalDetailPenilai();
+        return;
+    }
+
+    currentPenilaiInfo = res.data.penilai;
+    currentDetailDinilaiList = res.data.daftar_dinilai || [];
+    const sum = res.data.audit_summary;
+
+    // Set meta info
+    document.getElementById("modal-penilai-meta").innerHTML = `
+        <strong>NIP:</strong> ${escapeHtml(currentPenilaiInfo.nip || '-')} &bull; 
+        ${currentPenilaiInfo.golongan_ruang ? `<strong>Golongan:</strong> ${escapeHtml(currentPenilaiInfo.golongan_ruang)} &bull; ` : ''}
+        <strong>Jabatan:</strong> ${escapeHtml(currentPenilaiInfo.nama_jabatan || '-')} &bull; 
+        <strong>Unit:</strong> ${escapeHtml(currentPenilaiInfo.nama_unit || '-')} &bull;
+        <strong>Periode:</strong> ${escapeHtml(res.data.periode.nama_periode)}
+    `;
+
+    // Render KPI Cards
+    const kpiGrid = document.getElementById("audit-kpi-grid");
+    const kualitasBadge = sum.flag_skor_seragam > 0 
+        ? `<span class="badge-pattern-seragam">⚠️ Pola Seragam (${sum.flag_skor_seragam} tugas)</span>`
+        : (sum.total_selesai > 0 ? `<span class="badge-pattern-wajar">✅ Pola Wajar &amp; Objektif</span>` : `<span class="badge-pattern-pending">Belum Dinilai</span>`);
+
+    kpiGrid.innerHTML = `
+        <div class="audit-kpi-card">
+            <div class="audit-kpi-title">Progres Tugas Selesai</div>
+            <div class="audit-kpi-val">${sum.total_selesai} <span style="font-size:14px;font-weight:500;color:var(--text-muted);">/ ${sum.total_tugas} Tugas</span></div>
+            <div class="audit-kpi-sub">${sum.persentase_selesai}% terselesaikan</div>
+        </div>
+        <div class="audit-kpi-card">
+            <div class="audit-kpi-title">Rata-rata Skor Diberikan</div>
+            <div class="audit-kpi-val">${sum.rata_skor_diberikan > 0 ? sum.rata_skor_diberikan.toFixed(2) : '-'} <span style="font-size:13px;font-weight:500;color:var(--text-muted);">/ 5.00</span></div>
+            <div class="audit-kpi-sub">${sum.total_selesai > 0 ? 'Dari seluruh pertanyaan terisi' : 'Belum ada penilaian selesai'}</div>
+        </div>
+        <div class="audit-kpi-card">
+            <div class="audit-kpi-title">Feedback / Catatan</div>
+            <div class="audit-kpi-val">${sum.total_berkomentar} <span style="font-size:14px;font-weight:500;color:var(--text-muted);">/ ${sum.total_selesai} Selesai</span></div>
+            <div class="audit-kpi-sub">Penilaian disertai catatan kualitatif</div>
+        </div>
+        <div class="audit-kpi-card">
+            <div class="audit-kpi-title">Audit Kualitas &amp; Kesesuaian</div>
+            <div style="margin-top:4px;">${kualitasBadge}</div>
+            <div class="audit-kpi-sub">${sum.flag_skor_seragam > 0 ? 'Terdeteksi skor sama di semua butir' : 'Diferensiasi penilaian proporsional'}</div>
+        </div>
+    `;
+
+    document.getElementById("modal-penilai-content").style.display = "block";
+    renderDetailDinilaiTable();
+}
+
+function onFilterDetailDinilai() {
+    renderDetailDinilaiTable();
+}
+
+function renderDetailDinilaiTable() {
+    const q = (document.getElementById("detail-search-dinilai").value || '').toLowerCase().trim();
+    const relasiFilter = document.getElementById("detail-filter-relasi").value || '';
+    const statusFilter = document.getElementById("detail-filter-status").value || '';
+
+    let list = currentDetailDinilaiList;
+
+    if (q) {
+        list = list.filter(d => {
+            const nama = (d.nama_dinilai || '').toLowerCase();
+            const nip = (d.nip_dinilai || '').toLowerCase();
+            const jab = (d.jabatan_dinilai || '').toLowerCase();
+            const unit = (d.unit_dinilai || '').toLowerCase();
+            const gol = (d.golongan_dinilai || '').toLowerCase();
+            return nama.includes(q) || nip.includes(q) || jab.includes(q) || unit.includes(q) || gol.includes(q);
+        });
+    }
+
+    if (relasiFilter) {
+        list = list.filter(d => d.jenis_relasi === relasiFilter);
+    }
+
+    if (statusFilter) {
+        list = list.filter(d => d.status === statusFilter);
+    }
+
+    const tbody = document.getElementById("detail-dinilai-tbody");
+    document.getElementById("detail-dinilai-count").textContent = `Menampilkan ${list.length} dari total ${currentDetailDinilaiList.length} orang yang dinilai`;
+
+    if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:24px; color:var(--text-muted);">Tidak ada pegawai yang sesuai kriteria pencarian.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = list.map((d, idx) => {
+        // Relasi badge
+        const relasiMap = {
+            'diri': '<span class="relasi-badge relasi-diri">Diri Sendiri</span>',
+            'atasan': '<span class="relasi-badge relasi-atasan">Atasan</span>',
+            'rekan': '<span class="relasi-badge relasi-rekan">Rekan Kerja</span>',
+            'bawahan': '<span class="relasi-badge relasi-bawahan">Bawahan</span>'
+        };
+        const relasiBadge = relasiMap[d.jenis_relasi] || `<span class="relasi-badge">${escapeHtml(d.jenis_relasi)}</span>`;
+
+        // Status & Waktu
+        let statusBadgeEl = statusBadge(d.status);
+        let waktuSubmit = d.tanggal_submit ? formatTanggalJam(d.tanggal_submit) : (d.tanggal_mulai_isi ? 'Mulai: ' + formatTanggalJam(d.tanggal_mulai_isi) : '-');
+
+        // Analisis Kesesuaian Badge
+        let auditPolaBadge = '';
+        if (d.status === 'selesai') {
+            if (d.indikasi_pola === 'seragam') {
+                auditPolaBadge = `<span class="badge-pattern-seragam" title="Peringatan: Seluruh ${d.total_jawaban} butir dinilai kembar (${d.min_skor}) tanpa variasi.">⚠️ Skor Seragam (${d.min_skor})</span>`;
+            } else {
+                auditPolaBadge = `<span class="badge-pattern-wajar" title="Terdapat variasi skor (Min: ${d.min_skor}, Max: ${d.max_skor}, Deviasi: ${d.stddev_skor}).">✅ Pola Wajar (${d.min_skor}-${d.max_skor})</span>`;
+            }
+        } else if (d.status === 'proses') {
+            auditPolaBadge = `<span class="badge-pattern-pending">Sedang Diisi</span>`;
+        } else {
+            auditPolaBadge = `<span class="text-muted" style="font-size:12px;">—</span>`;
+        }
+
+        // Rata-rata skor
+        const rataTeks = d.rata_skor !== null ? `<strong>${d.rata_skor.toFixed(2)}</strong> <span style="font-size:11px;color:var(--text-muted);">/5</span>` : '<span class="text-muted">-</span>';
+
+        // Catatan
+        const komentarTeks = d.komentar_masukan 
+            ? `<div style="font-size:12px; color:var(--text); max-width:240px; white-space:normal; line-height:1.4;" title="${escapeHtml(d.komentar_masukan)}">&ldquo;${escapeHtml(d.komentar_masukan)}&rdquo;</div>`
+            : `<span class="text-muted" style="font-size:11.5px; font-style:italic;">(Tanpa catatan)</span>`;
+
+        // Tombol Aksi
+        const aksiBtn = (d.status === 'selesai' || d.total_jawaban > 0)
+            ? `<button type="button" class="btn btn-sm btn-outline-primary" onclick="bukaModalDetailJawaban(${d.mapping_id})" style="padding:4px 9px; font-size:11.5px; white-space:nowrap;">
+                 <svg style="width:12px;height:12px;fill:currentColor;margin-right:3px;vertical-align:-1px;" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                 Lihat Jawaban
+               </button>`
+            : `<button type="button" class="btn btn-sm" disabled style="opacity:0.4; padding:4px 9px; font-size:11.5px; cursor:not-allowed;">Belum Diisi</button>`;
+
+        return `<tr>
+            <td style="text-align:center; color:var(--text-muted); font-size:12px;">${idx + 1}</td>
+            <td>
+                <div style="font-weight:600; color:var(--text); display:flex; align-items:center; gap:6px;">
+                    <span>${escapeHtml(d.nama_dinilai)}</span>
+                    ${d.golongan_dinilai && d.golongan_dinilai !== '-' ? `<span class="badge" style="font-size:10.5px;padding:1px 6px;background:var(--primary-light);color:var(--primary);border-radius:10px;font-weight:600;">${escapeHtml(d.golongan_dinilai)}</span>` : ''}
+                </div>
+                <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px;">
+                    ${d.nip_dinilai ? `NIP: ${escapeHtml(d.nip_dinilai)} &bull; ` : ''}${escapeHtml(d.jabatan_dinilai || '')}
+                </div>
+                <div style="font-size:11px; color:var(--text-secondary); margin-top:1px;">${escapeHtml(d.unit_dinilai || '-')}</div>
+            </td>
+            <td style="text-align:center;">${relasiBadge}</td>
+            <td style="text-align:center;">
+                <div>${statusBadgeEl}</div>
+                <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">${waktuSubmit}</div>
+            </td>
+            <td style="text-align:center;">${rataTeks}</td>
+            <td style="text-align:center;">${auditPolaBadge}</td>
+            <td>${komentarTeks}</td>
+            <td style="text-align:center;">${aksiBtn}</td>
+        </tr>`;
+    }).join("");
+}
+
+function tutupModalDetailPenilai() {
+    document.getElementById("modal-detail-penilai").classList.add("hidden");
+}
+
+/* ========================================================================= */
+/* LOGIKA MODAL 2: RINCIAN BUTIR PERTANYAAN & SKOR JAWABAN */
+/* ========================================================================= */
+async function bukaModalDetailJawaban(mappingId) {
+    document.getElementById("modal-jawaban-title").textContent = "Audit Butir Pertanyaan & Jawaban";
+    document.getElementById("modal-jawaban-meta").textContent = "Memuat data butir pertanyaan...";
+    document.getElementById("modal-jawaban-loading").style.display = "block";
+    document.getElementById("modal-jawaban-content").style.display = "none";
+    document.getElementById("modal-detail-jawaban").classList.remove("hidden");
+
+    const url = `monitoring.php?action=detail_jawaban&mapping_id=${mappingId}`;
+    const res = await apiCall(url);
+
+    document.getElementById("modal-jawaban-loading").style.display = "none";
+
+    if (!res.success) {
+        alert(res.message || "Gagal memuat butir pertanyaan.");
+        tutupModalDetailJawaban();
+        return;
+    }
+
+    const m = res.data.mapping;
+    const sum = res.data.summary;
+    const kategoriList = res.data.kategori_jawaban || [];
+
+    const relasiLabelMap = {
+        'diri': 'Diri Sendiri (Self Assessment)',
+        'atasan': 'Atasan Langsung (Menilai Bawahan)',
+        'rekan': 'Rekan Kerja Setara',
+        'bawahan': 'Bawahan (Menilai Atasan)'
+    };
+    const relasiText = relasiLabelMap[m.jenis_relasi] || m.jenis_relasi;
+
+    // Header Meta
+    const penilaiGol = m.golongan_penilai ? ` [${m.golongan_penilai}]` : '';
+    const dinilaiGol = m.golongan_dinilai ? ` [${m.golongan_dinilai}]` : '';
+    document.getElementById("modal-jawaban-title").textContent = `Audit Jawaban: ${m.nama_penilai}${penilaiGol} → ${m.nama_dinilai}${dinilaiGol}`;
+    document.getElementById("modal-jawaban-meta").innerHTML = `
+        <strong>Relasi:</strong> ${escapeHtml(relasiText)} &bull; 
+        <strong>Status:</strong> ${escapeHtml(m.status)} &bull; 
+        <strong>Waktu Submit:</strong> ${formatTanggalJam(m.tanggal_submit)}
+    `;
+
+    // Audit Banner (Kesesuaian Pola)
+    const auditBannerEl = document.getElementById("jawaban-audit-banner");
+    if (sum.is_skor_seragam) {
+        auditBannerEl.innerHTML = `
+            <div style="background:#FEF2F2; border:1px solid #FCA5A5; border-radius:8px; padding:12px 16px; color:#991B1B; font-size:13px; display:flex; align-items:flex-start; gap:10px;">
+                <svg style="width:20px;height:20px;fill:#DC2626;flex-shrink:0;margin-top:1px;" viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+                <div>
+                    <strong>Perhatian: Terdeteksi Pola Skor Seragam (Straight-Lining)!</strong><br>
+                    Penilai memberikan nilai yang sama persis (skor <strong>${sum.rata_rata_skor}</strong>) pada seluruh ${sum.total_pertanyaan} butir pertanyaan. Hal ini mengindikasikan kemungkinan penilai mengisi secara formalitas tanpa mengevaluasi perbedaan setiap indikator kompetensi.
+                </div>
+            </div>
+        `;
+    } else {
+        auditBannerEl.innerHTML = `
+            <div style="background:#ECFDF5; border:1px solid #A7F3D0; border-radius:8px; padding:12px 16px; color:#065F46; font-size:13px; display:flex; align-items:flex-start; gap:10px;">
+                <svg style="width:20px;height:20px;fill:#059669;flex-shrink:0;margin-top:1px;" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                <div>
+                    <strong>Pola Penilaian Objektif &amp; Bervariasi:</strong><br>
+                    Terdapat variasi penilaian (${sum.variasi_skor_count} variasi nilai berbeda) dengan rata-rata <strong>${sum.rata_rata_skor || '-'}</strong> dari ${sum.pertanyaan_terisi} pertanyaan yang dijawab.
+                </div>
+            </div>
+        `;
+    }
+
+    // Catatan Masukan
+    const komentarBoxEl = document.getElementById("jawaban-komentar-box");
+    if (m.komentar_masukan) {
+        komentarBoxEl.innerHTML = `
+            <div style="background:var(--bg); border:1px solid var(--border); border-left:4px solid var(--primary); border-radius:6px; padding:10px 14px; font-size:13px;">
+                <div style="font-weight:700; color:var(--text); margin-bottom:3px;">Catatan &amp; Saran Masukan dari Penilai:</div>
+                <div style="color:var(--text-secondary); font-style:italic;">&ldquo;${escapeHtml(m.komentar_masukan)}&rdquo;</div>
+            </div>
+        `;
+    } else {
+        komentarBoxEl.innerHTML = `
+            <div style="background:var(--bg); border:1px dashed var(--border); border-radius:6px; padding:8px 14px; font-size:12.5px; color:var(--text-muted);">
+                Penilai tidak mengisi catatan / saran masukan umum.
+            </div>
+        `;
+    }
+
+    // Rincian Pertanyaan per Kategori
+    const listEl = document.getElementById("jawaban-kategori-list");
+    listEl.innerHTML = kategoriList.map((kat, katIdx) => {
+        const itemRows = (kat.items || []).map((q, qIdx) => {
+            let skorBadge = '<span class="text-muted">-</span>';
+            if (q.skor !== null) {
+                const s = parseInt(q.skor, 10);
+                skorBadge = `<span class="score-badge-circle score-${s}" title="Skor ${s} dari rentang ${q.skor_min}-${q.skor_max}">${s}</span>`;
+            }
+
+            const komentarButir = q.komentar_jawaban 
+                ? `<div style="font-size:11.5px; color:var(--text-secondary); margin-top:4px; font-style:italic;">Catatan butir: &ldquo;${escapeHtml(q.komentar_jawaban)}&rdquo;</div>`
+                : '';
+
+            return `<tr>
+                <td style="width:36px; text-align:center; color:var(--text-muted); font-size:12px;">${qIdx + 1}</td>
+                <td>
+                    <div style="font-size:13px; color:var(--text); line-height:1.45;">${escapeHtml(q.pertanyaan)}</div>
+                    <div style="font-size:11px; color:var(--text-muted); margin-top:3px;">
+                        Indikator: <strong>${escapeHtml(q.nama_indikator || kat.nama_kategori)}</strong> &bull; Skala: ${q.skor_min} - ${q.skor_max}
+                    </div>
+                    ${komentarButir}
+                </td>
+                <td style="width:80px; text-align:center;">${skorBadge}</td>
+            </tr>`;
+        }).join("");
+
+        return `
+            <div class="q-category-block">
+                <div class="q-category-header">
+                    <div>${katIdx + 1}. ${escapeHtml(kat.nama_kategori)}</div>
+                    <div style="font-size:12px; font-weight:500; color:var(--text-muted);">${(kat.items || []).length} Butir Pertanyaan</div>
+                </div>
+                <table class="table-condensed" style="margin:0; width:100%;">
+                    <tbody>${itemRows}</tbody>
+                </table>
+            </div>
+        `;
+    }).join("");
+
+    document.getElementById("jawaban-footer-summary").textContent = `Total ${sum.pertanyaan_terisi} dari ${sum.total_pertanyaan} pertanyaan telah dinilai (Rata-rata: ${sum.rata_rata_skor || '-'})`;
+    document.getElementById("modal-jawaban-content").style.display = "block";
+}
+
+function tutupModalDetailJawaban() {
+    document.getElementById("modal-detail-jawaban").classList.add("hidden");
+}
+
+/* ========================================================================= */
+/* INISIALISASI HALAMAN */
+/* ========================================================================= */
+(async () => {
+    const user = await initLayout("monitoring", ["super_admin", "admin"]);
+    if (!user) return;
+    await loadDeptFilter();
+    loadPeriodOptions();
+})();
+</script>
+</body>
+</html>

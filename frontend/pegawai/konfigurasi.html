@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Konfigurasi Akun - Sistem Penilaian 360</title>
+    <meta name="description"
+        content="Halaman pengaturan akun dan password pegawai Sistem Penilaian 360 DPU Bina Marga Jatim.">
+    <script>
+        (function () {
+            var t = localStorage.getItem('app_theme');
+            if (t === 'dark' || (!t && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+            var isNav = sessionStorage.getItem('sidebar_nav_open') === '1' || sessionStorage.getItem('sidebar_hovered') === '1';
+            if (isNav && localStorage.getItem('sidebar_pinned') !== '1' && window.innerWidth > 768) {
+                document.documentElement.classList.add('sidebar-nav-open', 'sidebar-hover-persisted');
+                function onMove(e) {
+                    if (e.clientX > 248) {
+                        document.documentElement.classList.remove('sidebar-nav-open', 'sidebar-hover-persisted');
+                        sessionStorage.removeItem('sidebar_nav_open');
+                        sessionStorage.removeItem('sidebar_hovered');
+                        window.removeEventListener('mousemove', onMove);
+                    }
+                }
+                window.addEventListener('mousemove', onMove, { passive: true });
+            }
+        })();
+    </script>
+    <link rel="stylesheet" href="../assets/css/style.css?v=20261125_mobile">
+    <style>
+        /* -- Konfigurasi Page Specific Styles ------------------ */
+        .profile-hero {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 28px 28px 20px;
+            background: linear-gradient(135deg, var(--primary) 0%, #1a6bbf 100%);
+            border-radius: 14px;
+            margin-bottom: 24px;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-hero::before {
+            content: '';
+            position: absolute;
+            top: -30px;
+            right: -30px;
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+        .profile-hero::after {
+            content: '';
+            position: absolute;
+            bottom: -50px;
+            right: 60px;
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .profile-avatar-lg {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            border: 3px solid rgba(255, 255, 255, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            font-weight: 800;
+            color: #fff;
+            flex-shrink: 0;
+            letter-spacing: -1px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .profile-hero-info {
+            position: relative;
+            z-index: 1;
+        }
+
+        .profile-hero-info h2 {
+            margin: 0 0 4px;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .profile-hero-info .h-meta {
+            font-size: 13px;
+            opacity: .85;
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .profile-hero-info .h-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* -- Tabs --------------------------------------------- */
+        .cfg-tabs {
+            display: flex;
+            gap: 4px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 4px;
+            margin-bottom: 20px;
+            width: fit-content;
+        }
+
+        .cfg-tab {
+            padding: 9px 20px;
+            border-radius: 7px;
+            border: none;
+            background: transparent;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.18s ease;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .cfg-tab svg {
+            width: 15px;
+            height: 15px;
+            fill: currentColor;
+        }
+
+        .cfg-tab:hover {
+            color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .cfg-tab.active {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(27, 79, 140, .25);
+        }
+
+        /* -- Panels ------------------------------------------- */
+        .cfg-panel {
+            display: none;
+        }
+
+        .cfg-panel.active {
+            display: block;
+        }
+
+        /* -- Form Label & Row ---------------------------------- */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        @media (max-width: 640px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            margin-bottom: 6px;
+        }
+
+        .form-group input {
+            width: 100%;
+        }
+
+        .form-group .field-hint {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        /* -- Info row (readonly display) ----------------------- */
+        .info-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 640px) {
+            .info-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .info-item {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 14px;
+        }
+
+        .info-item .i-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .info-item .i-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        /* -- Password strength bar ----------------------------- */
+        .pwd-strength {
+            height: 4px;
+            border-radius: 2px;
+            background: var(--border);
+            margin-top: 6px;
+            overflow: hidden;
+        }
+
+        .pwd-strength-bar {
+            height: 100%;
+            border-radius: 2px;
+            width: 0%;
+            transition: width .3s ease, background .3s ease;
+        }
+
+        .pwd-strength-label {
+            font-size: 11.5px;
+            margin-top: 4px;
+            color: var(--text-muted);
+        }
+
+        /* -- Password visibility toggle ------------------------ */
+        .input-password-wrap {
+            position: relative;
+            margin-bottom: 14px;
+        }
+
+        .input-password-wrap input {
+            padding-right: 44px !important;
+            margin-bottom: 0 !important;
+        }
+
+        .pwd-form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 4px;
+        }
+
+        @media (max-width: 640px) {
+            .profile-hero {
+                flex-direction: column;
+                text-align: center;
+                padding: 22px 16px;
+                gap: 12px;
+                margin-bottom: 16px;
+            }
+
+            .profile-avatar-lg {
+                width: 60px;
+                height: 60px;
+                font-size: 22px;
+            }
+
+            .profile-hero-info h2 {
+                font-size: 17px;
+            }
+
+            .profile-hero-info .h-meta {
+                justify-content: center;
+                gap: 8px 14px;
+                font-size: 12px;
+            }
+
+            .last-login-badge {
+                font-size: 11px;
+                padding: 4px 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .cfg-tabs {
+                width: 100%;
+                margin-bottom: 14px;
+            }
+
+            .cfg-tab {
+                flex: 1;
+                justify-content: center;
+                padding: 9px 10px;
+                font-size: 12.5px;
+            }
+
+            .pwd-form-actions {
+                flex-direction: column-reverse;
+            }
+
+            .pwd-form-actions .btn {
+                width: 100%;
+                justify-content: center;
+                padding: 11px 16px;
+            }
+        }
+
+        .btn-eye {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            padding: 4px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            transition: color .15s;
+        }
+
+        .btn-eye:hover {
+            color: var(--primary);
+        }
+
+        .btn-eye svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        /* -- Divider ------------------------------------------- */
+        .section-divider {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 20px 0;
+        }
+
+        /* -- Alert animations ---------------------------------- */
+        .alert {
+            animation: slideInAlert .25s ease;
+        }
+
+        @keyframes slideInAlert {
+            from {
+                opacity: 0;
+                transform: translateY(-6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* -- Card header area ---------------------------------- */
+        .card-section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-section-title svg {
+            width: 17px;
+            height: 17px;
+            fill: var(--primary);
+        }
+
+        /* -- Last login info ----------------------------------- */
+        .last-login-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-muted);
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 4px 12px;
+            margin-top: 8px;
+        }
+
+        .last-login-badge svg {
+            width: 13px;
+            height: 13px;
+            fill: currentColor;
+        }
+    </style>
+    <style>
+        .sidebar-footer,
+        .sidebar-toggle-bottom,
+        button.sidebar-toggle-bottom,
+        aside#sidebar .sidebar-footer,
+        aside#sidebar .sidebar-toggle-bottom {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-shell">
+        <aside class="sidebar" id="sidebar"></aside>
+        <div class="main-content">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <h1 id="page-title">Konfigurasi Akun</h1>
+                </div>
+                <div id="topbar-user"></div>
+            </header>
+            <main class="page">
+
+                <!-- Profile Hero -->
+                <div class="profile-hero" id="profile-hero">
+                    <div class="profile-avatar-lg" id="hero-avatar">-</div>
+                    <div class="profile-hero-info">
+                        <h2 id="hero-nama">Memuat...</h2>
+                        <div class="h-meta">
+                            <span id="hero-golongan">
+                                <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:rgba(255,255,255,.75)">
+                                    <path
+                                        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                </svg>
+                                -
+                            </span>
+                            <span id="hero-jabatan">
+                                <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:rgba(255,255,255,.7)">
+                                    <path
+                                        d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z" />
+                                </svg>
+                                -
+                            </span>
+                            <span id="hero-unit">
+                                <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:rgba(255,255,255,.7)">
+                                    <path
+                                        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+                                </svg>
+                                -
+                            </span>
+                        </div>
+                        <div class="last-login-badge" id="hero-lastlogin">
+                            <svg viewBox="0 0 24 24">
+                                <path
+                                    d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z" />
+                            </svg>
+                            Login terakhir: --
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="cfg-tabs">
+                    <button class="cfg-tab active" id="tab-akun" onclick="switchTab('akun')">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                        </svg>
+                        Pengaturan Akun
+                    </button>
+                    <button class="cfg-tab" id="tab-password" onclick="switchTab('password')">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" />
+                        </svg>
+                        Ganti Password
+                    </button>
+                </div>
+
+                <!-- Panel: Pengaturan Akun -->
+                <div class="cfg-panel active" id="panel-akun">
+                    <div class="card">
+                        <div id="alert-akun"></div>
+                        <div class="card-section-title">
+                            <svg viewBox="0 0 24 24">
+                                <path
+                                    d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                            </svg>
+                            Informasi Pegawai (Hanya Baca)
+                        </div>
+
+                        <!-- Readonly info dari database kepegawaian -->
+                        <div class="info-row">
+                            <div class="info-item">
+                                <div class="i-label">Nama Lengkap</div>
+                                <div class="i-value" id="info-nama">-</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="i-label">NIP</div>
+                                <div class="i-value" id="info-nip">-</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="i-label">Golongan / Ruang</div>
+                                <div class="i-value" id="info-golongan">-</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="i-label">Status Kepegawaian</div>
+                                <div class="i-value" id="info-status">-</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="i-label">Jabatan</div>
+                                <div class="i-value" id="info-jabatan">-</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="i-label">Unit Kerja</div>
+                                <div class="i-value" id="info-unit">-</div>
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+
+                <!-- Panel: Ganti Password -->
+                <div class="cfg-panel" id="panel-password">
+                    <div class="card">
+                        <div class="card-section-title">
+                            <svg viewBox="0 0 24 24">
+                                <path
+                                    d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" />
+                            </svg>
+                            Ganti Password Akun
+                        </div>
+
+                        <div id="alert-password" style="margin-bottom:12px;"></div>
+
+                        <form id="form-password" onsubmit="submitPassword(event)" autocomplete="off">
+                            <div class="form-group">
+                                <label for="input-old-password">Password Lama</label>
+                                <div class="input-password-wrap">
+                                    <input type="password" id="input-old-password" name="old_password"
+                                        placeholder="Masukkan password saat ini" autocomplete="current-password"
+                                        required>
+                                    <button type="button" class="btn-eye"
+                                        onclick="toggleEye('input-old-password', this)" title="Tampilkan/Sembunyikan">
+                                        <svg id="eye-old-off" viewBox="0 0 24 24">
+                                            <path
+                                                d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
+                                        </svg>
+                                        <svg id="eye-old-on" viewBox="0 0 24 24" style="display:none">
+                                            <path
+                                                d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <hr class="section-divider">
+
+                            <div class="form-group">
+                                <label for="input-new-password">Password Baru</label>
+                                <div class="input-password-wrap">
+                                    <input type="password" id="input-new-password" name="new_password"
+                                        placeholder="Minimal 8 karakter" autocomplete="new-password" required
+                                        oninput="checkStrength(this.value)">
+                                    <button type="button" class="btn-eye"
+                                        onclick="toggleEye('input-new-password', this)" title="Tampilkan/Sembunyikan">
+                                        <svg id="eye-new-off" viewBox="0 0 24 24">
+                                            <path
+                                                d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
+                                        </svg>
+                                        <svg id="eye-new-on" viewBox="0 0 24 24" style="display:none">
+                                            <path
+                                                d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div class="pwd-strength">
+                                    <div class="pwd-strength-bar" id="strength-bar"></div>
+                                </div>
+                                <div class="pwd-strength-label" id="strength-label">Masukkan password baru Anda</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="input-confirm-password">Konfirmasi Password Baru</label>
+                                <div class="input-password-wrap">
+                                    <input type="password" id="input-confirm-password" name="confirm_password"
+                                        placeholder="Ulangi password baru" autocomplete="new-password" required
+                                        oninput="checkConfirm()">
+                                    <button type="button" class="btn-eye"
+                                        onclick="toggleEye('input-confirm-password', this)"
+                                        title="Tampilkan/Sembunyikan">
+                                        <svg id="eye-confirm-off" viewBox="0 0 24 24">
+                                            <path
+                                                d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
+                                        </svg>
+                                        <svg id="eye-confirm-on" viewBox="0 0 24 24" style="display:none">
+                                            <path
+                                                d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div class="field-hint" id="confirm-match-hint" style="color:var(--text-muted)">Ulangi
+                                    password baru untuk konfirmasi.</div>
+                            </div>
+
+                            <!-- Checklist requirements -->
+                            <div
+                                style="background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:12px 14px; margin-bottom:16px;">
+                                <div
+                                    style="font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:8px; text-transform:uppercase; letter-spacing:.4px;">
+                                    Persyaratan Password</div>
+                                <div style="display:flex; flex-direction:column; gap:5px;">
+                                    <div class="req-item" id="req-length"
+                                        style="font-size:12.5px; display:flex; align-items:center; gap:7px; color:var(--text-muted);">
+                                        <svg style="width:14px;height:14px;fill:currentColor;flex-shrink:0;"
+                                            viewBox="0 0 24 24">
+                                            <path
+                                                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                                        </svg>
+                                        Minimal 8 karakter
+                                    </div>
+                                    <div class="req-item" id="req-letter"
+                                        style="font-size:12.5px; display:flex; align-items:center; gap:7px; color:var(--text-muted);">
+                                        <svg style="width:14px;height:14px;fill:currentColor;flex-shrink:0;"
+                                            viewBox="0 0 24 24">
+                                            <path
+                                                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                                        </svg>
+                                        Mengandung huruf (a-z / A-Z)
+                                    </div>
+                                    <div class="req-item" id="req-number"
+                                        style="font-size:12.5px; display:flex; align-items:center; gap:7px; color:var(--text-muted);">
+                                        <svg style="width:14px;height:14px;fill:currentColor;flex-shrink:0;"
+                                            viewBox="0 0 24 24">
+                                            <path
+                                                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                                        </svg>
+                                        Mengandung angka (0-9)
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="pwd-form-actions">
+                                <button type="button" class="btn btn-secondary"
+                                    onclick="resetFormPassword()">Reset</button>
+                                <button type="submit" class="btn btn-primary" id="btn-save-password">
+                                    <svg style="width:14px;height:14px;fill:currentColor;vertical-align:middle;margin-right:5px;"
+                                        viewBox="0 0 24 24">
+                                        <path
+                                            d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" />
+                                    </svg>
+                                    Perbarui Password
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <script src="../assets/js/config.js?v=20261126"></script>
+    <script src="../assets/js/api.js?v=20261126"></script>
+    <script src="../assets/js/searchable-select.js?v=20261116_search"></script>
+    <script src="../assets/js/auth.js?v=20261125_mobile"></script>
+    <script>
+        // ----------------------------------------------------------------
+        // STATE
+        // ----------------------------------------------------------------
+        let profileData = null;
+
+        // ----------------------------------------------------------------
+        // INIT
+        // ----------------------------------------------------------------
+        (async () => {
+            const user = await initLayout("konfigurasi", ["pegawai"]);
+            if (!user) return;
+            await loadProfile();
+        })();
+
+        // ----------------------------------------------------------------
+        // ESCAPE HTML UTILITY
+        // ----------------------------------------------------------------
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // ----------------------------------------------------------------
+        // LOAD PROFILE
+        // ----------------------------------------------------------------
+        async function loadProfile() {
+            const res = await apiCall("profile.php?action=get");
+            if (!res.success) {
+                showAlert(document.getElementById("alert-akun"), res.message, "error");
+                return;
+            }
+            profileData = res.data;
+
+            // Hero section
+            const initials = getProfileInitials(profileData.nama_lengkap || profileData.username);
+            document.getElementById("hero-avatar").textContent = initials;
+
+            const namaHtml = escapeHtml(profileData.nama_lengkap || profileData.username);
+            const golBadge = profileData.golongan_ruang
+                ? ` <span class="badge" style="font-size:12px;padding:3px 9px;background:rgba(255,255,255,0.28);color:#fff;border-radius:12px;font-weight:700;vertical-align:middle;box-shadow:0 1px 3px rgba(0,0,0,0.1);">${escapeHtml(profileData.golongan_ruang)}</span>`
+                : '';
+            document.getElementById("hero-nama").innerHTML = `${namaHtml}${golBadge}`;
+
+            const heroGol = document.getElementById("hero-golongan");
+            if (heroGol) {
+                heroGol.innerHTML = `
+            <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:rgba(255,255,255,.75)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            Golongan ${profileData.golongan_ruang ? escapeHtml(profileData.golongan_ruang) : '-'}
+        `;
+            }
+
+            document.getElementById("hero-jabatan").innerHTML = `
+        <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:rgba(255,255,255,.7)"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
+        ${escapeHtml(profileData.jabatan || '-')}
+    `;
+            document.getElementById("hero-unit").innerHTML = `
+        <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:rgba(255,255,255,.7)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+        ${escapeHtml(profileData.unit_kerja || '-')}
+    `;
+            document.getElementById("hero-lastlogin").innerHTML = `
+        <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:currentColor"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
+        Login terakhir: ${formatDateTime(profileData.last_login) || '-'}
+    `;
+
+            // Info readonly
+            document.getElementById("info-nama").textContent = profileData.nama_lengkap || '-';
+            document.getElementById("info-nip").textContent = profileData.nip || '-';
+
+            // Golongan / Ruang
+            const infoGol = document.getElementById("info-golongan");
+            if (infoGol) {
+                if (profileData.golongan_ruang) {
+                    const tmtStr = profileData.tmt_golongan ? ` <span style="font-size:12px;color:var(--text-muted);font-weight:400;margin-left:4px;">(TMT: ${escapeHtml(profileData.tmt_golongan)})</span>` : '';
+                    infoGol.innerHTML = `<span class="badge badge-blue" style="font-size:13px;padding:3px 10px;font-weight:700;">${escapeHtml(profileData.golongan_ruang)}</span>${tmtStr}`;
+                } else {
+                    infoGol.textContent = '-';
+                }
+            }
+
+            // Status Kepegawaian
+            const infoStatus = document.getElementById("info-status");
+            if (infoStatus) {
+                infoStatus.textContent = profileData.status_kepegawaian || 'PNS';
+            }
+
+            document.getElementById("info-jabatan").textContent = profileData.jabatan || '-';
+            document.getElementById("info-unit").textContent = profileData.unit_kerja || '-';
+        }
+
+        function getProfileInitials(nama) {
+            if (!nama) return "-";
+            const parts = nama.trim().split(" ");
+            if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+            return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll(".cfg-tab").forEach(t => t.classList.remove("active"));
+            document.querySelectorAll(".cfg-panel").forEach(p => p.classList.remove("active"));
+            document.getElementById("tab-" + tab).classList.add("active");
+            document.getElementById("panel-" + tab).classList.add("active");
+        }
+
+        // ----------------------------------------------------------------
+        // FORM PASSWORD - Submit
+        // ----------------------------------------------------------------
+        async function submitPassword(e) {
+            e.preventDefault();
+            const alertEl = document.getElementById("alert-password");
+            const btn = document.getElementById("btn-save-password");
+            const oldPassword = document.getElementById("input-old-password").value;
+            const newPassword = document.getElementById("input-new-password").value;
+            const confirmPwd = document.getElementById("input-confirm-password").value;
+
+            // Client-side validation
+            if (newPassword !== confirmPwd) {
+                showAlert(alertEl, "Konfirmasi password baru tidak cocok.", "error");
+                return;
+            }
+
+            const ok = await showConfirmModal({
+                title: "Konfirmasi Perbarui Password",
+                message: "Apakah Anda yakin ingin memperbarui password akun Anda?",
+                confirmText: "Ya, Perbarui Password",
+                cancelText: "Batal",
+                type: "primary",
+                icon: "edit"
+            });
+            if (!ok) return;
+
+            btn.disabled = true;
+            btn.textContent = "Memperbarui...";
+            alertEl.innerHTML = "";
+
+            const res = await apiCall("profile.php?action=password", "POST", {
+                old_password: oldPassword,
+                new_password: newPassword,
+                confirm_password: confirmPwd
+            });
+
+            btn.disabled = false;
+            btn.innerHTML = `<svg style="width:14px;height:14px;fill:currentColor;vertical-align:middle;margin-right:5px;" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>Perbarui Password`;
+
+            if (res.success) {
+                showAlert(alertEl, "Password berhasil diperbarui.", "success");
+                document.getElementById("form-password").reset();
+                resetStrength();
+            } else {
+                showAlert(alertEl, res.message, "error");
+            }
+        }
+
+        function resetFormPassword() {
+            document.getElementById("form-password").reset();
+            document.getElementById("alert-password").innerHTML = "";
+            resetStrength();
+            document.getElementById("confirm-match-hint").textContent = "Ulangi password baru untuk konfirmasi.";
+            document.getElementById("confirm-match-hint").style.color = "var(--text-muted)";
+        }
+
+        // ----------------------------------------------------------------
+        // PASSWORD STRENGTH CHECKER
+        // ----------------------------------------------------------------
+        function checkStrength(val) {
+            const bar = document.getElementById("strength-bar");
+            const label = document.getElementById("strength-label");
+            const reqLength = document.getElementById("req-length");
+            const reqLetter = document.getElementById("req-letter");
+            const reqNumber = document.getElementById("req-number");
+
+            const hasLength = val.length >= 8;
+            const hasLetter = /[A-Za-z]/.test(val);
+            const hasNumber = /[0-9]/.test(val);
+            const hasSpecial = /[^A-Za-z0-9]/.test(val);
+
+            // Update requirement items
+            setReq(reqLength, hasLength);
+            setReq(reqLetter, hasLetter);
+            setReq(reqNumber, hasNumber);
+
+            let score = 0;
+            if (hasLength) score++;
+            if (hasLetter) score++;
+            if (hasNumber) score++;
+            if (hasSpecial) score++;
+            if (val.length >= 12) score++;
+
+            const levels = [
+                { pct: "0%", color: "var(--border)", text: "Masukkan password baru Anda" },
+                { pct: "25%", color: "#ef4444", text: "Sangat Lemah" },
+                { pct: "50%", color: "#f97316", text: "Lemah" },
+                { pct: "70%", color: "#eab308", text: "Sedang" },
+                { pct: "85%", color: "#22c55e", text: "Kuat" },
+                { pct: "100%", color: "#16a34a", text: "Sangat Kuat" },
+            ];
+            const lvl = val.length === 0 ? levels[0] : (levels[score] || levels[levels.length - 1]);
+            bar.style.width = lvl.pct;
+            bar.style.background = lvl.color;
+            label.textContent = lvl.text;
+            label.style.color = val.length === 0 ? "var(--text-muted)" : lvl.color;
+        }
+
+        function setReq(el, met) {
+            el.style.color = met ? "var(--success)" : "var(--text-muted)";
+        }
+
+        function resetStrength() {
+            const bar = document.getElementById("strength-bar");
+            const label = document.getElementById("strength-label");
+            bar.style.width = "0%";
+            label.textContent = "Masukkan password baru Anda";
+            label.style.color = "var(--text-muted)";
+            ["req-length", "req-letter", "req-number"].forEach(id => {
+                document.getElementById(id).style.color = "var(--text-muted)";
+            });
+        }
+
+        function checkConfirm() {
+            const newPwd = document.getElementById("input-new-password").value;
+            const confirm = document.getElementById("input-confirm-password").value;
+            const hint = document.getElementById("confirm-match-hint");
+            if (!confirm) {
+                hint.textContent = "Ulangi password baru untuk konfirmasi.";
+                hint.style.color = "var(--text-muted)";
+                return;
+            }
+            if (newPwd === confirm) {
+                hint.textContent = "✓ Password cocok";
+                hint.style.color = "var(--success)";
+            } else {
+                hint.textContent = "✗ Password belum cocok";
+                hint.style.color = "#ef4444";
+            }
+        }
+
+        // ----------------------------------------------------------------
+        // EYE TOGGLE
+        // ----------------------------------------------------------------
+        function toggleEye(inputId, btn) {
+            const inp = document.getElementById(inputId);
+            if (!inp) return;
+            const isHidden = inp.type === "password";
+            inp.type = isHidden ? "text" : "password";
+            // Swap icons: find the two SVGs in the button
+            const svgs = btn.querySelectorAll("svg");
+            svgs.forEach(s => s.style.display = s.style.display === "none" ? "" : "none");
+        }
+    </script>
+</body>
+
+</html>

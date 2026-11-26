@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Penilaian 360&deg; - DPU Bina Marga Provinsi Jawa Timur</title>
+    <meta name="description"
+        content="Sistem Penilaian 360&deg; Derajat berbasis kompetensi untuk Dinas Pekerjaan Umum Bina Marga Provinsi Jawa Timur. Evaluasi profesional, transparan, dan akuntabel.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        /* -- Reset & Base --------------------------------------- */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary: #1B4F8C;
+            --primary-dark: #123A68;
+            --primary-light: #E8F0FA;
+            --accent: #C9A227;
+            /* gold pemerintahan */
+            --danger: #EF4444;
+            --success: #10B981;
+            --text: #1F2937;
+            --text-muted: #9CA3AF;
+            --border: rgba(255, 255, 255, 0.15);
+            --card-glass: rgba(255, 255, 255, 0.10);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a1628;
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* -- HERO SECTION ---------------------------------------- */
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Background image */
+        .hero-bg {
+            position: absolute;
+            inset: 0;
+            background-image: url('assets/logo/Landingpage.jpeg');
+            background-size: cover;
+            background-position: center 30%;
+            background-repeat: no-repeat;
+            z-index: 0;
+            transform: scale(1.04);
+            animation: heroZoom 18s ease-in-out infinite alternate;
+        }
+
+        @keyframes heroZoom {
+            from {
+                transform: scale(1.04);
+                background-position: center 30%;
+            }
+
+            to {
+                transform: scale(1.08);
+                background-position: center 38%;
+            }
+        }
+
+        /* Overlay gradient - Biru Navy sesuai tema pemerintahan */
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(180deg,
+                    rgba(18, 58, 104, 0.75) 0%,
+                    rgba(18, 58, 104, 0.62) 30%,
+                    rgba(10, 22, 40, 0.78) 70%,
+                    rgba(10, 22, 40, 0.96) 100%);
+            z-index: 1;
+        }
+
+        /* Shimmer light effect */
+        .hero-shimmer {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 70% 50% at 50% 20%, rgba(201, 162, 39, 0.12) 0%, transparent 70%);
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* -- NAVBAR ----------------------------------------------- */
+        .navbar {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 60px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(10, 22, 40, 0.2);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .navbar-logo {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            flex-shrink: 0;
+        }
+
+        .navbar-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #fff;
+        }
+
+        .navbar-brand-text {
+            line-height: 1.25;
+        }
+
+        .navbar-brand-text .brand-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -0.2px;
+        }
+
+        .navbar-brand-text .brand-sub {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.65);
+            font-weight: 400;
+        }
+
+        .navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            padding: 9px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            font-family: inherit;
+            border: none;
+        }
+
+        .nav-btn-outline {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1.5px solid rgba(255, 255, 255, 0.25);
+        }
+
+        .nav-btn-outline:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .nav-btn-primary {
+            background: var(--primary);
+            color: #fff;
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-btn-primary:hover {
+            background: #1a5fa8;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(27, 79, 140, 0.5);
+        }
+
+        /* -- HERO CONTENT ------------------------------------------ */
+        .hero-content {
+            position: relative;
+            z-index: 5;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 60px 40px 80px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(15, 33, 64, 0.85);
+            border: 1px solid rgba(201, 162, 39, 0.45);
+            border-radius: 6px;
+            padding: 6px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #F3C649;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            margin-bottom: 22px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            animation: fadeInUp 0.6s ease 0.1s both;
+        }
+
+        .hero-badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #F3C649;
+            display: inline-block;
+        }
+
+        .hero-title {
+            font-size: clamp(32px, 4.2vw, 56px);
+            font-weight: 800;
+            line-height: 1.18;
+            letter-spacing: -0.015em;
+            color: #FFFFFF;
+            margin-bottom: 16px;
+            text-shadow: 0 3px 12px rgba(0, 0, 0, 0.5);
+            animation: fadeInUp 0.65s ease 0.2s both;
+        }
+
+        .hero-title .title-360 {
+            color: #F3C649;
+            font-weight: 800;
+            display: inline-block;
+            text-shadow: 0 3px 14px rgba(0, 0, 0, 0.6);
+        }
+
+        .hero-subtitle {
+            font-size: clamp(15px, 1.3vw, 17.5px);
+            font-weight: 400;
+            color: #E2E8F0;
+            max-width: 620px;
+            line-height: 1.65;
+            margin-bottom: 14px;
+            text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+            animation: fadeInUp 0.7s ease 0.3s both;
+        }
+
+        .hero-org {
+            font-size: 13.5px;
+            color: #94A3B8;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            margin-bottom: 32px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+            animation: fadeInUp 0.75s ease 0.35s both;
+        }
+
+        .hero-cta-row {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.8s ease 0.4s both;
+        }
+
+        .cta-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 13px 28px;
+            border-radius: 8px;
+            font-size: 14.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            font-family: inherit;
+            border: none;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+        }
+
+        .cta-primary {
+            background: #1B4F8C;
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+        }
+
+        .cta-primary:hover {
+            background: #143F72;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+        }
+
+        .cta-secondary {
+            background: rgba(15, 23, 42, 0.65);
+            color: #F1F5F9;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .cta-secondary:hover {
+            background: rgba(15, 23, 42, 0.85);
+            border-color: rgba(255, 255, 255, 0.35);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        .cta-btn svg {
+            width: 17px;
+            height: 17px;
+            fill: currentColor;
+            flex-shrink: 0;
+        }
+
+        /* Hero stats bar */
+        .hero-stats {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin-top: 44px;
+            background: rgba(11, 23, 44, 0.82);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+            animation: fadeInUp 0.85s ease 0.5s both;
+        }
+
+        .hero-stat-item {
+            padding: 16px 32px;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero-stat-item+.hero-stat-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 22%;
+            bottom: 22%;
+            width: 1px;
+            background: rgba(255, 255, 255, 0.14);
+        }
+
+        .hero-stat-num {
+            font-size: 24px;
+            font-weight: 700;
+            color: #F8FAFC;
+            line-height: 1.1;
+            margin-bottom: 3px;
+            font-feature-settings: "tnum";
+        }
+
+        .hero-stat-num span {
+            color: #F3C649;
+            font-size: 0.85em;
+            font-weight: 700;
+        }
+
+        .hero-stat-label {
+            font-size: 12px;
+            color: #94A3B8;
+            font-weight: 500;
+            letter-spacing: 0.01em;
+        }
+
+        /* Scroll indicator */
+        .scroll-hint {
+            position: absolute;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.45);
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            animation: fadeIn 1.2s ease 1s both;
+        }
+
+        .scroll-mouse {
+            width: 22px;
+            height: 34px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 11px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 5px;
+        }
+
+        .scroll-mouse-dot {
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            animation: scrollDown 2s ease infinite;
+        }
+
+        @keyframes scrollDown {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            60% {
+                transform: translateY(10px);
+                opacity: 0;
+            }
+
+            100% {
+                transform: translateY(0);
+                opacity: 0;
+            }
+        }
+
+        /* -- FEATURES SECTION ------------------------------------- */
+        .features-section {
+            background: #fff;
+            color: var(--text);
+            padding: 80px 60px;
+        }
+
+        .section-label {
+            text-align: center;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: clamp(24px, 3vw, 38px);
+            font-weight: 800;
+            color: var(--text);
+            letter-spacing: -1px;
+            line-height: 1.2;
+            margin-bottom: 14px;
+        }
+
+        .section-desc {
+            text-align: center;
+            font-size: 15px;
+            color: #6B7280;
+            max-width: 560px;
+            margin: 0 auto 56px;
+            line-height: 1.7;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: #F8FAFC;
+            border: 1px solid #E8EDF5;
+            border-radius: 16px;
+            padding: 28px 24px;
+            transition: all 0.22s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), #2E6BB8);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.25s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 36px rgba(27, 79, 140, 0.1);
+            border-color: #C5D5EA;
+        }
+
+        .feature-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .feature-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 18px;
+        }
+
+        .feature-icon svg {
+            width: 26px;
+            height: 26px;
+        }
+
+        .feature-icon.blue {
+            background: #EEF2FF;
+        }
+
+        .feature-icon.blue svg {
+            fill: var(--primary);
+        }
+
+        .feature-icon.green {
+            background: #D1FAE5;
+        }
+
+        .feature-icon.green svg {
+            fill: #059669;
+        }
+
+        .feature-icon.gold {
+            background: #FEF3C7;
+        }
+
+        .feature-icon.gold svg {
+            fill: #D97706;
+        }
+
+        .feature-icon.purple {
+            background: #EDE9FE;
+        }
+
+        .feature-icon.purple svg {
+            fill: #7C3AED;
+        }
+
+        .feature-icon.red {
+            background: #FEE2E2;
+        }
+
+        .feature-icon.red svg {
+            fill: #DC2626;
+        }
+
+        .feature-icon.teal {
+            background: #CCFBF1;
+        }
+
+        .feature-icon.teal svg {
+            fill: #0D9488;
+        }
+
+        .feature-card-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .feature-card-desc {
+            font-size: 13px;
+            color: #6B7280;
+            line-height: 1.65;
+        }
+
+        /* -- ROLES SECTION ---------------------------------------- */
+        .roles-section {
+            background: linear-gradient(135deg, #0F2E52 0%, #1B4F8C 100%);
+            padding: 80px 60px;
+        }
+
+        .roles-section .section-title {
+            color: #fff;
+        }
+
+        .roles-section .section-label {
+            color: #F5D060;
+        }
+
+        .roles-section .section-desc {
+            color: rgba(255, 255, 255, 0.65);
+        }
+
+        .roles-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .role-card {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 14px;
+            padding: 24px 16px;
+            text-align: center;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(8px);
+        }
+
+        .role-card:hover {
+            background: rgba(255, 255, 255, 0.13);
+            transform: translateY(-3px);
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .role-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.12);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 14px;
+        }
+
+        .role-avatar svg {
+            width: 26px;
+            height: 26px;
+            fill: #fff;
+        }
+
+        .role-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+
+        .role-desc {
+            font-size: 11.5px;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.55;
+        }
+
+        /* -- PROCESS SECTION -------------------------------------- */
+        .process-section {
+            background: #F8FAFC;
+            padding: 80px 60px;
+        }
+
+        .process-steps {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0;
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .process-steps::before {
+            content: '';
+            position: absolute;
+            top: 28px;
+            left: calc(12.5% + 28px);
+            right: calc(12.5% + 28px);
+            height: 2px;
+            background: linear-gradient(90deg, #1B4F8C, #2E6BB8);
+            z-index: 0;
+        }
+
+        .process-step {
+            text-align: center;
+            padding: 0 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-circle {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), #2E6BB8);
+            color: #fff;
+            font-size: 18px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 18px;
+            border: 4px solid #F8FAFC;
+            box-shadow: 0 4px 16px rgba(27, 79, 140, 0.3);
+        }
+
+        .step-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .step-desc {
+            font-size: 12.5px;
+            color: #6B7280;
+            line-height: 1.55;
+        }
+
+        /* -- CTA BOTTOM SECTION ----------------------------------- */
+        .cta-section {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #0F2E52 0%, #1B4F8C 60%, #2457A8 100%);
+            padding: 80px 60px;
+            text-align: center;
+        }
+
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.04);
+            top: -200px;
+            right: -200px;
+        }
+
+        .cta-section::after {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.03);
+            bottom: -150px;
+            left: -100px;
+        }
+
+        .cta-section-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-section h2 {
+            font-size: clamp(26px, 3.5vw, 44px);
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -1px;
+            margin-bottom: 14px;
+        }
+
+        .cta-section p {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.72);
+            margin-bottom: 36px;
+            max-width: 520px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-section-buttons {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* -- FOOTER ------------------------------------------------ */
+        footer {
+            background: #070f1c;
+            padding: 28px 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .footer-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footer-logo {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            flex-shrink: 0;
+        }
+
+        .footer-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #fff;
+        }
+
+        .footer-text {
+            font-size: 12.5px;
+            color: rgba(255, 255, 255, 0.45);
+        }
+
+        .footer-copy {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.3);
+            text-align: right;
+        }
+
+        /* -- KEYFRAME ANIMATIONS ----------------------------------- */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(24px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Intersection Observer fade-in */
+        .reveal {
+            opacity: 0;
+            transform: translateY(28px);
+            transition: opacity 0.55s ease, transform 0.55s ease;
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reveal-delay-1 {
+            transition-delay: 0.08s;
+        }
+
+        .reveal-delay-2 {
+            transition-delay: 0.16s;
+        }
+
+        .reveal-delay-3 {
+            transition-delay: 0.24s;
+        }
+
+        .reveal-delay-4 {
+            transition-delay: 0.32s;
+        }
+
+        .reveal-delay-5 {
+            transition-delay: 0.40s;
+        }
+
+        /* -- RESPONSIVE -------------------------------------------- */
+        @media (max-width: 1024px) {
+            .features-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .roles-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .process-steps {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 32px;
+            }
+
+            .process-steps::before {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 14px 20px;
+            }
+
+            .navbar-brand-text .brand-sub {
+                display: none;
+            }
+
+            .hero-content {
+                padding: 40px 20px 60px;
+            }
+
+            .hero-stats {
+                flex-direction: column;
+                border-radius: 12px;
+            }
+
+            .hero-stat-item+.hero-stat-item::before {
+                display: none;
+            }
+
+            .hero-stat-item {
+                padding: 14px 24px;
+            }
+
+            .features-section,
+            .roles-section,
+            .process-section,
+            .cta-section {
+                padding: 52px 20px;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .roles-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .process-steps {
+                grid-template-columns: 1fr;
+            }
+
+            footer {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 20px;
+            }
+
+            .footer-copy {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- --------------------------------------------
+     HERO SECTION
+-------------------------------------------- -->
+    <section class="hero" id="hero">
+        <div class="hero-bg" aria-hidden="true"></div>
+        <div class="hero-overlay" aria-hidden="true"></div>
+        <div class="hero-shimmer" aria-hidden="true"></div>
+
+        <!-- Navbar -->
+        <nav class="navbar" role="navigation" aria-label="Menu utama">
+            <div class="navbar-brand">
+                <div class="navbar-logo">
+                    <img src="assets/logo/OIP.webp" alt="Logo DPU Bina Marga Jawa Timur">
+                </div>
+                <div class="navbar-brand-text">
+                    <div class="brand-title">Penilaian 360&deg;</div>
+                    <div class="brand-sub">DPU Bina Marga Provinsi Jawa Timur</div>
+                </div>
+            </div>
+            <div class="navbar-actions">
+                <a href="index.html">
+                    <button class="nav-btn nav-btn-primary" id="btn-nav-login">
+                        Masuk ke Sistem
+                    </button>
+                </a>
+            </div>
+        </nav>
+
+        <!-- Hero Content -->
+        <div class="hero-content">
+            <div class="hero-badge">
+                <div class="hero-badge-dot"></div>
+                Sistem Manajemen Penilaian Pegawai
+            </div>
+
+            <h1 class="hero-title">
+                Sistem Penilaian <br>
+                <span class="title-360">360&deg; Derajat</span>
+            </h1>
+
+            <p class="hero-subtitle">
+                Platform digital untuk evaluasi kompetensi dan kinerja Pegawai yang objektif, komprehensif, dan
+                terintegrasi.
+            </p>
+
+            <div class="hero-org">
+                Dinas Pekerjaan Umum Bina Marga &bull; Provinsi Jawa Timur
+            </div>
+
+            <div class="hero-cta-row">
+                <a href="index.html">
+                    <button class="cta-btn cta-primary" id="btn-hero-login">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M11 7L9.6 8.4l2.6 2.6H2v2h10.2l-2.6 2.6L11 17l5-5-5-5zm9 12h-8v2h8c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-8v2h8v14z" />
+                        </svg>
+                        Masuk ke Sistem
+                    </button>
+                </a>
+                <button class="cta-btn cta-secondary" id="btn-hero-scroll"
+                    onclick="document.getElementById('proses').scrollIntoView({behavior:'smooth'})">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                    </svg>
+                    Cara Kerja
+                </button>
+            </div>
+
+            <!-- Stat bar -->
+            <div class="hero-stats">
+                <div class="hero-stat-item">
+                    <div class="hero-stat-num">360&deg;</div>
+                    <div class="hero-stat-label">Penilaian Komprehensif</div>
+                </div>
+
+                <div class="hero-stat-item">
+                    <div class="hero-stat-num">4</div>
+                    <div class="hero-stat-label">Dimensi Penilai</div>
+                </div>
+                <div class="hero-stat-item">
+                    <div class="hero-stat-num">100<span>%</span></div>
+                    <div class="hero-stat-label">Berbasis Web & Real-time</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scroll hint -->
+        <div class="scroll-hint" aria-hidden="true">
+            <div class="scroll-mouse">
+                <div class="scroll-mouse-dot"></div>
+            </div>
+            Gulir ke bawah
+        </div>
+    </section>
+
+    <!-- --------------------------------------------
+     FEATURES SECTION
+-------------------------------------------- -->
+    <section class="features-section" id="features" style="display: none;">
+        <div class="section-label">Keunggulan Sistem</div>
+        <h2 class="section-title">Fitur Lengkap & Terintegrasi</h2>
+        <p class="section-desc">Dirancang khusus untuk kebutuhan evaluasi kinerja Pegawai dengan standar tata kelola
+            pemerintahan yang baik.</p>
+
+        <div class="features-grid">
+            <div class="feature-card reveal">
+                <div class="feature-icon blue">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+                    </svg>
+                </div>
+                <div class="feature-card-title">Penilaian Multi Relasi</div>
+                <div class="feature-card-desc">Evaluasi dari 4 dimensi: Diri Sendiri, Atasan, Bawahan, dan Rekan Kerja
+                    &mdash;-
+                    memberikan gambaran kinerja yang komprehensif dan menyeluruh.</div>
+            </div>
+
+            <div class="feature-card reveal reveal-delay-1">
+                <div class="feature-icon green">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" />
+                    </svg>
+                </div>
+                <div class="feature-card-title">Laporan & Analitik Otomatis</div>
+                <div class="feature-card-desc">Hasil penilaian dihitung otomatis dengan bobot terbobot per relasi.
+                    Export laporan ke PDF dan CSV dengan kop surat resmi instansi.</div>
+            </div>
+
+            <div class="feature-card reveal reveal-delay-2">
+                <div class="feature-icon gold">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.73 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .43-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.49-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
+                    </svg>
+                </div>
+                <div class="feature-card-title">Konfigurasi Bobot Fleksibel</div>
+                <div class="feature-card-desc">Admin dapat mengatur bobot penilaian per relasi (atasan, bawahan, rekan)
+                    dan merancang kriteria, indikator, serta pertanyaan sesuai kebutuhan.</div>
+            </div>
+
+            <div class="feature-card reveal">
+                <div class="feature-icon purple">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z" />
+                    </svg>
+                </div>
+                <div class="feature-card-title">Keamanan Berlapis</div>
+                <div class="feature-card-desc">RBAC 5 role, CSRF protection, bcrypt password hash, prepared statement
+                    SQL, session aman HttpOnly/SameSite, dan audit log lengkap setiap aktivitas.</div>
+            </div>
+
+            <div class="feature-card reveal reveal-delay-1">
+                <div class="feature-icon teal">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+                    </svg>
+                </div>
+                <div class="feature-card-title">Monitoring Real-time</div>
+                <div class="feature-card-desc">Pantau progress pengisian penilaian seluruh unit kerja secara real-time.
+                    Admin unit kerja dapat memantau status pegawai di lingkup unitnya masing-masing.</div>
+            </div>
+
+            <div class="feature-card reveal reveal-delay-2">
+                <div class="feature-icon red">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+                    </svg>
+                </div>
+                <div class="feature-card-title">Audit Log Akuntabel</div>
+                <div class="feature-card-desc">Setiap perubahan data dicatat lengkap: siapa, apa, kapan, dan dari IP
+                    mana - memenuhi standar akuntabilitas tata kelola pemerintahan yang baik (GGG).</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- --------------------------------------------
+     ROLES SECTION
+-------------------------------------------- -->
+    <section class="roles-section" id="roles" style="display: none;">
+        <div class="section-label">Manajemen Akses</div>
+        <h2 class="section-title">5 Peran Pengguna</h2>
+        <p class="section-desc" style="color:rgba(255,255,255,0.65);">Setiap aktor memiliki hak akses yang terpisah
+            sesuai fungsi dan tanggung jawabnya dalam organisasi.</p>
+
+        <div class="roles-grid">
+            <div class="role-card reveal">
+                <div class="role-avatar">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" />
+                    </svg>
+                </div>
+                <div class="role-title">Super Admin</div>
+                <div class="role-desc">Akses penuh ke seluruh modul termasuk Audit Log sistem</div>
+            </div>
+
+            <div class="role-card reveal reveal-delay-1">
+                <div class="role-avatar">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+                    </svg>
+                </div>
+                <div class="role-title">Admin Kepegawaian</div>
+                <div class="role-desc">Kelola data pegawai, jabatan, dan unit kerja</div>
+            </div>
+
+            <div class="role-card reveal reveal-delay-2">
+                <div class="role-avatar">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                    </svg>
+                </div>
+                <div class="role-title">Admin Penilaian</div>
+                <div class="role-desc">Kelola periode, rancang kriteria penilaian, mapping, dan bobot</div>
+            </div>
+
+            <div class="role-card reveal reveal-delay-3">
+                <div class="role-avatar">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z" />
+                    </svg>
+                </div>
+                <div class="role-title">Admin Unit Kerja</div>
+                <div class="role-desc">Monitor & lihat hasil penilaian lingkup unit kerjanya</div>
+            </div>
+
+            <div class="role-card reveal reveal-delay-4">
+                <div class="role-avatar">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                    </svg>
+                </div>
+                <div class="role-title">Pegawai</div>
+                <div class="role-desc">Isi formulir penilaian dan lihat hasil evaluasi diri sendiri</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- --------------------------------------------
+     PROCESS SECTION
+-------------------------------------------- -->
+    <section class="process-section" id="proses">
+        <div class="section-label">Alur Sistem</div>
+        <h2 class="section-title">Cara Kerja Penilaian 360&deg;</h2>
+        <p class="section-desc">Proses penilaian yang terstruktur dan sistematis dari perancangan hingga hasil akhir.
+        </p>
+
+        <div class="process-steps">
+            <div class="process-step reveal">
+                <div class="step-circle">1</div>
+                <div class="step-title">Rancang Periode</div>
+                <div class="step-desc">Admin menetapkan periode penilaian, kriteria kompetensi, indikator, dan bobot
+                    masing-masing relasi</div>
+            </div>
+
+            <div class="process-step reveal reveal-delay-1">
+                <div class="step-circle">2</div>
+                <div class="step-title">Mapping Penilai</div>
+                <div class="step-desc">Admin memetakan siapa yang menilai siapa berdasarkan unit kerja dan
+                    relasi kerja</div>
+            </div>
+
+            <div class="process-step reveal reveal-delay-2">
+                <div class="step-circle">3</div>
+                <div class="step-title">Pegawai Mengisi</div>
+                <div class="step-desc">Setiap pegawai mengisi formulir penilaian untuk rekan-rekan yang dipercayakan
+                    kepadanya secara anonim</div>
+            </div>
+
+            <div class="process-step reveal reveal-delay-3">
+                <div class="step-circle">4</div>
+                <div class="step-title">Hasil & Laporan</div>
+                <div class="step-desc">Sistem menghitung skor akhir terbobot secara otomatis dan menghasilkan laporan
+                    PDF/CSV siap cetak</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- --------------------------------------------
+     CTA BOTTOM
+-------------------------------------------- -->
+    <section class="cta-section">
+        <div class="cta-section-content">
+            <h2>Siap Memulai Evaluasi Kinerja?</h2>
+            <p>Masuk ke sistem menggunakan NIP dan password yang telah diberikan.</p>
+            <div class="cta-section-buttons">
+                <a href="index.html">
+                    <button class="cta-btn cta-primary" id="btn-cta-login">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M11 7L9.6 8.4l2.6 2.6H2v2h10.2l-2.6 2.6L11 17l5-5-5-5zm9 12h-8v2h8c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-8v2h8v14z" />
+                        </svg>
+                        Masuk ke Sistem
+                    </button>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- --------------------------------------------
+     FOOTER
+-------------------------------------------- -->
+    <footer>
+        <div class="footer-brand">
+            <div class="footer-logo">
+                <img src="assets/logo/OIP.webp" alt="Logo DPU Bina Marga">
+            </div>
+            <div class="footer-text">
+                <strong style="color:rgba(255,255,255,0.7); font-size:13px;">Sistem Penilaian Kinerja
+                    360&deg;</strong><br>
+                Dinas PU Bina Marga Provinsi Jawa Timur
+            </div>
+        </div>
+        <div class="footer-copy">
+            &copy; 2026 Dinas Pekerjaan Umum Bina Marga<br>
+            Provinsi Jawa Timur. Hak cipta dilindungi.
+        </div>
+    </footer>
+
+    <script src="assets/js/config.js?v=20261126"></script>
+    <script>
+        // -- Intersection Observer untuk animasi reveal ------------------
+        const revealEls = document.querySelectorAll('.reveal');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.12 });
+
+        revealEls.forEach(el => observer.observe(el));
+
+        // -- Auto-redirect jika sudah login -----------------------------
+        (async () => {
+            // Cek session aktif - arahkan langsung ke dashboard jika sudah login
+            const customBackend = (window.APP_CONFIG && window.APP_CONFIG.BACKEND_API_URL)
+                ? String(window.APP_CONFIG.BACKEND_API_URL).trim().replace(/\/+$/, '')
+                : '';
+            const API_BASE = customBackend || '../backend/api';
+            try {
+                const res = await fetch(`${API_BASE}/auth.php?action=me`, {
+                    credentials: 'include'
+                });
+                if (res.ok) {
+                    const json = await res.json();
+                    if (json.success && json.data) {
+                        window.location.href = json.data.role === 'pegawai'
+                            ? 'pegawai/dashboard.html'
+                            : 'admin/dashboard.html';
+                    }
+                }
+            } catch (_) {
+                // Server mungkin belum jalan - diam saja, tetap di landing
+            }
+        })();
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audit Log - Sistem Penilaian 360</title>
+    <script>
+    (function(){
+                var t = localStorage.getItem('app_theme');
+        if (t === 'dark' || (!t && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+        var isNav = sessionStorage.getItem('sidebar_nav_open') === '1' || sessionStorage.getItem('sidebar_hovered') === '1';
+        if (isNav && localStorage.getItem('sidebar_pinned') !== '1') {
+            document.documentElement.classList.add('sidebar-nav-open', 'sidebar-hover-persisted');
+            function onMove(e) {
+                if (e.clientX > 248) {
+                    document.documentElement.classList.remove('sidebar-nav-open', 'sidebar-hover-persisted');
+                    sessionStorage.removeItem('sidebar_nav_open');
+                    sessionStorage.removeItem('sidebar_hovered');
+                    window.removeEventListener('mousemove', onMove);
+                }
+            }
+            window.addEventListener('mousemove', onMove, { passive: true });
+        }
+    })();
+    </script>
+    <link rel="stylesheet" href="../assets/css/style.css?v=20261117_notif">
+    <style>.sidebar-footer, .sidebar-toggle-bottom, button.sidebar-toggle-bottom, aside#sidebar .sidebar-footer, aside#sidebar .sidebar-toggle-bottom { display: none !important; }</style>
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="main-content">
+        <header class="topbar">
+            <div class="topbar-left"><h1 id="page-title">Audit Log</h1></div>
+            <div id="topbar-user"></div>
+        </header>
+        <main class="page">
+            <div class="card">
+                <p class="text-muted" style="font-size:13px;">Jejak audit seluruh aktivitas perubahan data pada sistem (siapa, apa, kapan) untuk keperluan akuntabilitas. Hanya dapat diakses oleh Super Admin.</p>
+                <div class="form-row" style="align-items:flex-end;">
+                    <div>
+                        <label>Filter Modul</label>
+                        <select id="filter-modul">
+                            <option value="">--- Semua Modul ---</option>
+                            <option value="auth">Login/Logout</option>
+                            <option value="pegawai">Pegawai</option>
+                            <option value="users">Akun Pengguna</option>
+                            <option value="unit_kerja">Unit Kerja</option>
+                            <option value="jabatan">Jabatan</option>
+
+                            <option value="periode_penilaian">Periode Penilaian</option>
+                            <option value="mapping_penilai">Mapping Penilai</option>
+                            <option value="jawaban_penilaian">Jawaban Penilaian</option>
+                            <option value="hasil_penilaian">Hasil Penilaian</option>
+                            <option value="konfigurasi_sistem">Konfigurasi Sistem</option>
+                            <option value="reports">Laporan</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div id="alert-box"></div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Waktu</th><th>Pengguna</th><th>Modul</th><th>Aktivitas</th><th>Detail</th></tr></thead>
+                        <tbody id="table-body"><tr><td colspan="5" class="text-muted">Memuat data...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div class="modal-overlay hidden" id="modal">
+    <div class="modal-box">
+        <div class="modal-header"><h3>Detail Perubahan Data</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+        <div id="modal-body" style="font-size:12px;"></div>
+    </div>
+</div>
+
+<script src="../assets/js/config.js?v=20261126"></script>
+<script src="../assets/js/api.js?v=20261126"></script>
+<script src="../assets/js/searchable-select.js?v=20261116_search"></script>
+    <script src="../assets/js/auth.js?v=20261117_notif"></script>
+<script>
+let allLogs = [];
+
+async function loadLogs() {
+    const modul = document.getElementById('filter-modul').value;
+    const tbody = document.getElementById('table-body');
+    tbody.innerHTML = `<tr><td colspan="5" class="text-muted">Memuat data...</td></tr>`;
+    const res = await apiCall(`monitoring.php?action=log${modul ? '&modul=' + modul : ''}`);
+    if (!res.success) { tbody.innerHTML = `<tr><td colspan="5" class="text-muted">${res.message}</td></tr>`; return; }
+    allLogs = res.data;
+    if (res.data.length === 0) { tbody.innerHTML = `<tr><td colspan="5" class="text-muted">Belum ada data audit log.</td></tr>`; return; }
+    tbody.innerHTML = res.data.map((l, i) => `<tr>
+        <td style="white-space:nowrap;">${formatDateTime(l.created_at)}</td>
+        <td>${l.username || '<span class="text-muted">Sistem</span>'}</td>
+        <td><span class="badge badge-blue">${l.modul}</span></td>
+        <td>${l.aktivitas}</td>
+        <td>${(l.data_sebelum || l.data_sesudah) ? `<button class="btn btn-secondary btn-sm" onclick="viewDetail(${i})">Lihat</button>` : '-'}</td>
+    </tr>`).join('');
+}
+
+function formatLogJson(val) {
+    if (!val) return '';
+    try {
+        const parsed = typeof val === 'string' ? JSON.parse(val) : val;
+        return JSON.stringify(parsed, null, 2);
+    } catch (e) {
+        return String(val);
+    }
+}
+
+function viewDetail(idx) {
+    const l = allLogs[idx];
+    document.getElementById('modal-body').innerHTML = `
+        <p><strong>IP:</strong> ${l.ip_address || '-'}</p>
+        <p><strong>User Agent:</strong> ${l.user_agent || '-'}</p>
+        ${l.data_sebelum ? `<p><strong>Data Sebelum:</strong></p><pre style="background:var(--bg); padding:10px; border-radius:6px; overflow-x:auto;">${formatLogJson(l.data_sebelum)}</pre>` : ''}
+        ${l.data_sesudah ? `<p><strong>Data Sesudah:</strong></p><pre style="background:var(--bg); padding:10px; border-radius:6px; overflow-x:auto;">${formatLogJson(l.data_sesudah)}</pre>` : ''}
+    `;
+    document.getElementById('modal').classList.remove('hidden');
+}
+function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+
+document.getElementById('filter-modul').addEventListener('change', loadLogs);
+
+(async () => {
+    const user = await initLayout('audit', ['super_admin']);
+    if (!user) return;
+    loadLogs();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Periode Penilaian - Sistem Penilaian 360</title>
+    <script>
+    (function(){
+                var t = localStorage.getItem('app_theme');
+        if (t === 'dark' || (!t && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+        var isNav = sessionStorage.getItem('sidebar_nav_open') === '1' || sessionStorage.getItem('sidebar_hovered') === '1';
+        if (isNav && localStorage.getItem('sidebar_pinned') !== '1') {
+            document.documentElement.classList.add('sidebar-nav-open', 'sidebar-hover-persisted');
+            function onMove(e) {
+                if (e.clientX > 248) {
+                    document.documentElement.classList.remove('sidebar-nav-open', 'sidebar-hover-persisted');
+                    sessionStorage.removeItem('sidebar_nav_open');
+                    sessionStorage.removeItem('sidebar_hovered');
+                    window.removeEventListener('mousemove', onMove);
+                }
+            }
+            window.addEventListener('mousemove', onMove, { passive: true });
+        }
+    })();
+    </script>
+    <link rel="stylesheet" href="../assets/css/style.css?v=20261126_darkfix">
+<style>
+/* ============================================================
+   Periode Page - Custom Styles
+   ============================================================ */
+
+/* ---- Target Penilaian Selection Cards ---- */
+.target-penilaian-section {
+    margin-bottom: 16px;
+}
+.target-penilaian-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    display: block;
+    margin-bottom: 8px;
+}
+.target-options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+@media (max-width: 580px) {
+    .target-options-grid { grid-template-columns: 1fr; }
+}
+.target-option-card {
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--card-bg);
+    transition: all 0.2s ease;
+    user-select: none;
+    box-sizing: border-box;
+}
+.target-option-card:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+.target-option-card.selected,
+.target-option-card:has(input[type="radio"]:checked) {
+    border-color: var(--primary) !important;
+    background: var(--primary-light) !important;
+    box-shadow: 0 0 0 1px var(--primary);
+}
+.target-option-card input[type="radio"] {
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    min-height: 18px !important;
+    max-width: 18px !important;
+    max-height: 18px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    flex-shrink: 0 !important;
+    cursor: pointer;
+    accent-color: var(--primary);
+    box-shadow: none !important;
+    border: 1.5px solid var(--border) !important;
+    border-radius: 50% !important;
+    background: #fff !important;
+}
+.target-option-card .target-card-body {
+    flex: 1;
+    min-width: 0;
+}
+.target-option-card .target-card-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    display: block;
+    margin-bottom: 2px;
+    white-space: nowrap;
+}
+.target-option-card .target-card-desc {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    display: block;
+    line-height: 1.35;
+}
+[data-theme="dark"] .target-option-card.selected,
+[data-theme="dark"] .target-option-card:has(input[type="radio"]:checked) {
+    background: rgba(59, 130, 246, 0.12) !important;
+    border-color: var(--primary) !important;
+}
+[data-theme="dark"] .target-option-card:hover {
+    background: rgba(59, 130, 246, 0.08);
+}
+[data-theme="dark"] .target-option-card input[type="radio"] {
+    background: #0E162A !important;
+    border-color: #334155 !important;
+}
+
+/* ---- Wizard Steps ---- */
+.wizard-steps {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 28px;
+    padding: 0 4px;
+}
+.wizard-step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+.wizard-step-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--border);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+.wizard-step-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    transition: color 0.3s ease;
+    white-space: nowrap;
+}
+.wizard-step-line {
+    flex: 1;
+    height: 2px;
+    background: var(--border);
+    margin: 0 8px;
+    transition: background 0.3s ease;
+}
+.wizard-step.active .wizard-step-num {
+    background: var(--primary);
+    color: #fff;
+}
+.wizard-step.active .wizard-step-label {
+    color: var(--primary);
+    font-weight: 600;
+}
+.wizard-step.done .wizard-step-num {
+    background: var(--success);
+    color: #fff;
+}
+.wizard-step.done .wizard-step-label {
+    color: var(--success);
+}
+.wizard-step.done + .wizard-step-line,
+.wizard-step-line.done {
+    background: var(--success);
+}
+
+/* ---- Jenis Periode Cards ---- */
+.jenis-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+@media (max-width: 700px) {
+    .jenis-grid { grid-template-columns: repeat(2, 1fr); }
+}
+.jenis-card {
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--card-bg);
+    position: relative;
+}
+.jenis-card:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    transform: translateY(-2px);
+}
+.jenis-card.selected {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    box-shadow: 0 0 0 3px rgba(27, 79, 140, 0.15);
+}
+[data-theme="dark"] .jenis-card.selected {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+.jenis-card.selected::after {
+    content: '\2022';
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--primary);
+}
+.jenis-card .jenis-icon {
+    font-size: 24px;
+    margin-bottom: 6px;
+    display: block;
+}
+.jenis-card .jenis-nama {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    display: block;
+}
+.jenis-card .jenis-desc {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    display: block;
+}
+
+/* ---- Sub-periode Section ---- */
+.sub-periode-section {
+    margin-top: 4px;
+    animation: fadeSlideIn 0.3s ease;
+}
+@keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.sub-periode-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background: var(--primary-light);
+    border-radius: 8px;
+    border-left: 3px solid var(--primary);
+}
+.sub-periode-header .sh-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--primary);
+}
+.sub-periode-header .sh-sub {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 1px;
+}
+
+.sub-item {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 12px;
+    background: var(--bg);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    position: relative;
+}
+.sub-item:hover { border-color: var(--primary); }
+[data-theme="dark"] .sub-item {
+    background: #18233C;
+    border-color: #2A3A5B;
+}
+[data-theme="dark"] .sub-item:hover {
+    border-color: var(--primary);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+}
+[data-theme="dark"] input[type="date"] {
+    color-scheme: dark;
+}
+.sub-item-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+.sub-item-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.sub-item-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+}
+.sub-item-note {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-left: auto;
+}
+.sub-item .form-row { margin-bottom: 0; }
+.sub-item .form-row > div { margin-bottom: 0; }
+.sub-item input[type="date"],
+.sub-item input[type="text"] { margin-bottom: 0; }
+
+/* ---- Section Labels ---- */
+.section-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 0 16px;
+}
+.section-divider span {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+.section-divider::before, .section-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+
+/* ---- Year Selector ---- */
+.year-selector {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+.year-selector .year-btn {
+    width: 36px; height: 36px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    cursor: pointer;
+    font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-secondary);
+    transition: all 0.15s;
+    font-family: inherit;
+    flex-shrink: 0;
+}
+.year-selector .year-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+.year-selector .year-display {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text);
+    min-width: 80px;
+    text-align: center;
+    letter-spacing: -1px;
+}
+.year-selector .year-label {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* ---- Period chips in table ---- */
+.periode-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10.5px;
+    font-weight: 600;
+    background: var(--primary-light);
+    color: var(--primary);
+    margin-bottom: 2px;
+}
+.periode-chip.tahunan { background: #EDE9FE; color: #7C3AED; }
+.periode-chip.semester { background: #D1FAE5; color: #059669; }
+.periode-chip.triwulan { background: #FEF3C7; color: #D97706; }
+.periode-chip.bulanan  { background: #FEE2E2; color: #DC2626; }
+.periode-chip.lainnya  { background: var(--bg); color: var(--text-secondary); }
+[data-theme="dark"] .periode-chip.tahunan  { background: rgba(139, 92, 246, 0.18); color: #C4B5FD; }
+[data-theme="dark"] .periode-chip.semester { background: rgba(16, 185, 129, 0.18); color: #6EE7B7; }
+[data-theme="dark"] .periode-chip.triwulan { background: rgba(245, 158, 11, 0.18); color: #FCD34D; }
+[data-theme="dark"] .periode-chip.bulanan  { background: rgba(239, 68, 68, 0.18);  color: #FCA5A5; }
+
+.target-gol-badge {
+    background: #EEF2FF;
+    color: #4338CA;
+    border: 1px solid #C7D2FE;
+    font-size: 10.5px;
+    padding: 2px 7px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+[data-theme="dark"] .target-gol-badge {
+    background: rgba(99, 102, 241, 0.16);
+    color: #A5B4FC;
+    border-color: rgba(129, 140, 248, 0.35);
+}
+
+.target-aturan-note {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    background: rgba(27, 79, 140, 0.06);
+    padding: 8px 10px;
+    border-radius: 6px;
+    border-left: 3px solid var(--primary);
+    line-height: 1.4;
+}
+[data-theme="dark"] .target-aturan-note {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--text-secondary);
+}
+
+/* ---- Modal wide for periode ---- */
+#modal .modal-box {
+    max-width: 620px;
+}
+
+/* ---- Keterangan lainnya (custom sub-periode) ---- */
+.lainnya-section {
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+}
+.lainnya-section > div { flex: 1; margin-bottom: 0; }
+.lainnya-section input { margin-bottom: 0; }
+.add-lainnya-btn {
+    background: var(--primary-light);
+    color: var(--primary);
+    border: 1px dashed var(--primary);
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+    width: 100%;
+    text-align: center;
+    margin-bottom: 12px;
+}
+.add-lainnya-btn:hover { background: var(--primary); color: #fff; }
+.remove-sub-btn {
+    position: absolute;
+    top: 10px; right: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 16px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.15s;
+}
+.remove-sub-btn:hover { background: #FEE2E2; color: var(--danger); }
+[data-theme="dark"] .remove-sub-btn:hover { background: rgba(239, 68, 68, 0.22); color: #FCA5A5; }
+
+/* table group row */
+.group-row td {
+    background: var(--bg);
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--text-secondary);
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border);
+}
+.group-row td:first-child { padding-left: 14px; }
+</style>
+    <style>.sidebar-footer, .sidebar-toggle-bottom, button.sidebar-toggle-bottom, aside#sidebar .sidebar-footer, aside#sidebar .sidebar-toggle-bottom { display: none !important; }</style>
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="main-content">
+        <header class="topbar">
+            <div class="topbar-left">
+                <h1 id="page-title">Periode Penilaian</h1>
+            </div>
+            <div id="topbar-user"></div>
+        </header>
+        <main class="page">
+            <div class="card">
+                <div class="flex-between mb-16">
+                    <p class="text-muted mb-0" style="font-size:13px;">Kelola periode / jadwal pelaksanaan penilaian 360 derajat.</p>
+                    <button class="btn btn-primary" onclick="openModal()">
+                        <svg style="width:14px;height:14px;fill:currentColor;" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                        Buat Periode Baru
+                    </button>
+                </div>
+                <div id="alert-box"></div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nama Periode</th>
+                                <th>Jenis</th>
+                                <th>Tanggal Mulai</th>
+                                <th>Tanggal Selesai</th>
+                                <th>Progress</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body"><tr><td colspan="7" class="text-muted">Memuat data...</td></tr></tbody>
+                    </table>
+                </div>
+                <div id="pagination-periode"></div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- ============================================================
+     MODAL BUAT / EDIT PERIODE
+     ============================================================ -->
+<div class="modal-overlay hidden" id="modal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div>
+                <h3 id="modal-title">Buat Periode Baru</h3>
+                <p id="modal-subtitle" style="font-size:12px;color:var(--text-muted);margin-top:2px;"></p>
+            </div>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div id="modal-alert"></div>
+
+        <!-- WIZARD STEPS -->
+        <div class="wizard-steps" id="wizard-steps">
+            <div class="wizard-step active" id="ws-1">
+                <div class="wizard-step-num">1</div>
+                <div class="wizard-step-label">Tahun</div>
+            </div>
+            <div class="wizard-step-line" id="wl-1"></div>
+            <div class="wizard-step" id="ws-2">
+                <div class="wizard-step-num">2</div>
+                <div class="wizard-step-label">Jenis Periode</div>
+            </div>
+            <div class="wizard-step-line" id="wl-2"></div>
+            <div class="wizard-step" id="ws-3">
+                <div class="wizard-step-num">3</div>
+                <div class="wizard-step-label">Jadwal & Detail</div>
+            </div>
+        </div>
+
+        <form id="form-periode">
+            <input type="hidden" id="f-id">
+
+            <!-- ====== STEP 1: TAHUN ====== -->
+            <div id="step-1">
+                <div class="section-divider"><span>Pilih Tahun Penilaian</span></div>
+                <div class="year-selector">
+                    <button type="button" class="year-btn" onclick="changeYear(-1)">&lsaquo;</button>
+                    <div>
+                        <div class="year-display" id="year-display">2026</div>
+                        <div class="year-label" style="text-align:center;">Tahun Penilaian</div>
+                    </div>
+                    <button type="button" class="year-btn" onclick="changeYear(1)">&rsaquo;</button>
+                </div>
+                <input type="hidden" id="f-tahun" value="2026">
+                <div style="text-align:right;margin-top:8px;">
+                    <button type="button" class="btn btn-primary" onclick="goStep(2)">Lanjut</button>
+                </div>
+            </div>
+
+            <!-- ====== STEP 2: JENIS PERIODE ====== -->
+            <div id="step-2" class="hidden">
+                <div class="section-divider"><span>Pilih Jenis Periode</span></div>
+                <div class="jenis-grid">
+                    <div class="jenis-card" id="jc-tahunan" onclick="selectJenis('tahunan')">
+                        <span class="jenis-icon">&#128197;</span>
+                        <span class="jenis-nama">Tahunan</span>
+                        <span class="jenis-desc">1 periode / tahun</span>
+                    </div>
+                    <div class="jenis-card" id="jc-semester" onclick="selectJenis('semester')">
+                        <span class="jenis-icon">&#128198;</span>
+                        <span class="jenis-nama">Semester</span>
+                        <span class="jenis-desc">2 periode / tahun</span>
+                    </div>
+                    <div class="jenis-card" id="jc-triwulan" onclick="selectJenis('triwulan')">
+                        <span class="jenis-icon">&#128197;</span>
+                        <span class="jenis-nama">Triwulan</span>
+                        <span class="jenis-desc">4 periode / tahun</span>
+                    </div>
+                    <div class="jenis-card" id="jc-bulanan" onclick="selectJenis('bulanan')">
+                        <span class="jenis-icon">&#128198;</span>
+                        <span class="jenis-nama">Bulanan</span>
+                        <span class="jenis-desc">12 periode / tahun</span>
+                    </div>
+                    <div class="jenis-card" id="jc-lainnya" onclick="selectJenis('lainnya')">
+                        <span class="jenis-icon">&#128197;</span>
+                        <span class="jenis-nama">Lainnya</span>
+                        <span class="jenis-desc">Kustom</span>
+                    </div>
+                </div>
+                <input type="hidden" id="f-jenis" value="">
+                <div class="flex-between" style="margin-top:8px;">
+                    <button type="button" class="btn btn-secondary" onclick="goStep(1)">Kembali</button>
+                    <button type="button" class="btn btn-primary" id="btn-step2-next" onclick="goStep(3)" disabled>Lanjut</button>
+                </div>
+            </div>
+
+            <!-- ====== STEP 3: JADWAL & DETAIL ====== -->
+            <div id="step-3" class="hidden">
+                <div id="sub-periode-container"></div>
+
+                <div class="section-divider"><span>Detail Tambahan</span></div>
+
+                <!-- TARGET PEGAWAI YANG DINILAI -->
+                <div class="target-penilaian-section">
+                    <label class="target-penilaian-title">Target Pegawai yang Dinilai</label>
+                    <div class="target-options-grid">
+                        <label class="target-option-card selected" id="card-target-semua">
+                            <input type="radio" name="f_target_penilaian" value="semua" checked onchange="toggleTargetPenilaianUI('new')">
+                            <div class="target-card-body">
+                                <strong class="target-card-name">Semua Pegawai</strong>
+                                <span class="target-card-desc">Penilaian reguler untuk seluruh pegawai</span>
+                            </div>
+                        </label>
+                        <label class="target-option-card" id="card-target-kustom">
+                            <input type="radio" name="f_target_penilaian" value="golongan_tertentu" onchange="toggleTargetPenilaianUI('new')">
+                            <div class="target-card-body">
+                                <strong class="target-card-name">Khusus Golongan Tertentu</strong>
+                                <span class="target-card-desc">Hanya golongan tertentu yang dinilai</span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Panel Filter Golongan (muncul saat 'golongan_tertentu' dipilih) -->
+                    <div id="panel-target-golongan" class="hidden" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:12px;animation:fadeSlideIn 0.2s ease;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
+                            <span style="font-size:12px;font-weight:600;color:var(--text);">Pilih Golongan yang Dinilai:</span>
+                            <div style="display:flex;gap:6px;">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="setPresetGolongan('34', 'new')" style="font-size:11px;padding:3px 8px;">Golongan III & IV Saja</button>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="setPresetGolongan('all', 'new')" style="font-size:11px;padding:3px 8px;">Semua Golongan</button>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px;">
+                            <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;">
+                                <input type="checkbox" id="tg-I" value="I"> Golongan I
+                            </label>
+                            <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;">
+                                <input type="checkbox" id="tg-II" value="II"> Golongan II
+                            </label>
+                            <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;">
+                                <input type="checkbox" id="tg-III" value="III" checked> <strong>Golongan III</strong>
+                            </label>
+                            <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;">
+                                <input type="checkbox" id="tg-IV" value="IV" checked> <strong>Golongan IV</strong>
+                            </label>
+                        </div>
+                        <div class="target-aturan-note">
+                            <strong>Aturan Khusus:</strong> Pada periode ini, penilaian hanya ditargetkan kepada pegawai Golongan yang dicentang (misal: Golongan III dan IV). Seluruh karyawan (termasuk Golongan I & II) tetap dapat memberikan penilaian asalkan satu lingkup/berelasi, dan pembagian penilai dijamin sama rata.
+                        </div>
+                    </div>
+                </div>
+
+                <label>Keterangan / Catatan <span style="color:var(--text-muted);font-weight:400;">(opsional)</span></label>
+                <textarea id="f-keterangan" placeholder="Catatan tambahan seperti tujuan, referensi SK, dsb."></textarea>
+
+                <label>Status Awal</label>
+                <select id="f-status">
+                    <option value="draft">Draft - Belum aktif, masih bisa diedit</option>
+                    <option value="aktif">Aktif - Langsung dibuka untuk penilaian</option>
+                    <option value="ditutup">Ditutup</option>
+                    <option value="diarsipkan">Diarsipkan</option>
+                </select>
+
+                <div class="flex-between" style="margin-top:10px;">
+                    <button type="button" class="btn btn-secondary" onclick="goStep(2)" id="btn-step3-back">Kembali</button>
+                    <button type="submit" class="btn btn-primary" id="btn-simpan">
+                        <svg style="width:14px;height:14px;fill:currentColor;" viewBox="0 0 24 24"><path d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+                        Simpan Periode
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- EDIT MODAL (untuk edit 1 periode saja) -->
+<div class="modal-overlay hidden" id="modal-edit">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3>Edit Periode</h3>
+            <button class="modal-close" onclick="closeEditModal()">&times;</button>
+        </div>
+        <div id="modal-edit-alert"></div>
+        <form id="form-edit">
+            <input type="hidden" id="fe-id">
+            <label>Nama Periode</label>
+            <input type="text" id="fe-nama" required placeholder="Nama periode penilaian">
+
+            <div class="form-row">
+                <div>
+                    <label>Tanggal Mulai</label>
+                    <input type="date" id="fe-mulai" required>
+                </div>
+                <div>
+                    <label>Tanggal Selesai</label>
+                    <input type="date" id="fe-selesai" required>
+                </div>
+            </div>
+
+            <label>Status</label>
+            <select id="fe-status">
+                <option value="draft">Draft</option>
+                <option value="aktif">Aktif</option>
+                <option value="ditutup">Ditutup</option>
+                <option value="diarsipkan">Diarsipkan</option>
+            </select>
+
+            <!-- TARGET PEGAWAI YANG DINILAI (EDIT) -->
+            <div class="target-penilaian-section">
+                <label class="target-penilaian-title">Target Pegawai yang Dinilai</label>
+                <div class="target-options-grid">
+                    <label class="target-option-card selected" id="card-edit-target-semua">
+                        <input type="radio" name="fe_target_penilaian" value="semua" checked onchange="toggleTargetPenilaianUI('edit')">
+                        <div class="target-card-body">
+                            <strong class="target-card-name">Semua Pegawai</strong>
+                            <span class="target-card-desc">Penilaian reguler untuk seluruh pegawai</span>
+                        </div>
+                    </label>
+                    <label class="target-option-card" id="card-edit-target-kustom">
+                        <input type="radio" name="fe_target_penilaian" value="golongan_tertentu" onchange="toggleTargetPenilaianUI('edit')">
+                        <div class="target-card-body">
+                            <strong class="target-card-name">Khusus Golongan Tertentu</strong>
+                            <span class="target-card-desc">Hanya golongan tertentu yang dinilai</span>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Panel Filter Golongan Edit -->
+                <div id="panel-edit-target-golongan" class="hidden" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:12px;animation:fadeSlideIn 0.2s ease;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
+                        <span style="font-size:12px;font-weight:600;color:var(--text);">Pilih Golongan yang Dinilai:</span>
+                        <div style="display:flex;gap:6px;">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="setPresetGolongan('34', 'edit')" style="font-size:11px;padding:3px 8px;">Golongan III & IV Saja</button>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="setPresetGolongan('all', 'edit')" style="font-size:11px;padding:3px 8px;">Semua Golongan</button>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px;">
+                        <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;">
+                            <input type="checkbox" id="feg-I" value="I"> Golongan I
+                        </label>
+                        <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;">
+                            <input type="checkbox" id="feg-II" value="II"> Golongan II
+                        </label>
+                        <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;">
+                            <input type="checkbox" id="feg-III" value="III"> <strong>Golongan III</strong>
+                        </label>
+                        <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;">
+                            <input type="checkbox" id="feg-IV" value="IV"> <strong>Golongan IV</strong>
+                        </label>
+                    </div>
+                    <div class="target-aturan-note">
+                        <strong>Aturan Khusus:</strong> Pada periode ini, penilaian hanya ditargetkan kepada pegawai Golongan yang dicentang (misal: Golongan III dan IV). Seluruh karyawan tetap dapat memberikan penilaian asalkan satu lingkup/berelasi, dan pembagian penilai dijamin sama rata.
+                    </div>
+                </div>
+            </div>
+
+            <label>Keterangan</label>
+            <textarea id="fe-keterangan" placeholder="Catatan tambahan (opsional)"></textarea>
+
+            <div class="flex-between" style="margin-top:10px;">
+                <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Batal</button>
+                <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="../assets/js/config.js?v=20261126"></script>
+<script src="../assets/js/api.js?v=20261126"></script>
+<script src="../assets/js/searchable-select.js?v=20261116_search"></script>
+    <script src="../assets/js/auth.js?v=20261117_notif"></script>
+<script>
+/* ============================================================
+   Data & State
+   ============================================================ */
+let allPeriods  = [];
+let currentStep = 1;
+let selectedYear = new Date().getFullYear();
+let selectedJenis = '';
+let lainnyaCount = 1;
+let currentPagePeriode = 1;
+const PAGE_LIMIT = 20;
+
+// Definisi sub-periode berdasarkan jenis
+const JENIS_DEF = {
+    tahunan: [
+        { key: 'tahunan_1', label: 'Penilaian Tahunan', hint: 'Jan - Des' }
+    ],
+    semester: [
+        { key: 'sem_1', label: 'Semester 1', hint: 'Jan - Jun' },
+        { key: 'sem_2', label: 'Semester 2', hint: 'Jul - Des' }
+    ],
+    triwulan: [
+        { key: 'twl_1', label: 'Triwulan I',   hint: 'Jan - Mar' },
+        { key: 'twl_2', label: 'Triwulan II',  hint: 'Apr - Jun' },
+        { key: 'twl_3', label: 'Triwulan III', hint: 'Jul - Sep' },
+        { key: 'twl_4', label: 'Triwulan IV',  hint: 'Okt - Des' }
+    ],
+    bulanan: (() => {
+        const bulan = ['Januari','Februari','Maret','April','Mei','Juni',
+                       'Juli','Agustus','September','Oktober','November','Desember'];
+        return bulan.map((b, i) => ({ key: `bln_${i+1}`, label: b, hint: `Bulan ${i+1}` }));
+    })(),
+    lainnya: []
+};
+
+// Default tanggal per sub-periode
+const DEFAULT_DATES = {
+    tahunan: [ ['01-01','12-31'] ],
+    semester: [ ['01-01','06-30'], ['07-01','12-31'] ],
+    triwulan: [ ['01-01','03-31'], ['04-01','06-30'], ['07-01','09-30'], ['10-01','12-31'] ],
+    bulanan: [
+        ['01-01','01-31'],['02-01','02-28'],['03-01','03-31'],
+        ['04-01','04-30'],['05-01','05-31'],['06-01','06-30'],
+        ['07-01','07-31'],['08-01','08-31'],['09-01','09-30'],
+        ['10-01','10-31'],['11-01','11-30'],['12-01','12-31']
+    ]
+};
+
+/* ============================================================
+   Tabel Utama
+   ============================================================ */
+async function loadPeriods(page = 1) {
+    currentPagePeriode = page;
+    const res = await apiCall(`periode.php?limit=${PAGE_LIMIT}&page=${page}`);
+    const tbody = document.getElementById("table-body");
+    if (!res.success) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-muted">${res.message}</td></tr>`;
+        return;
+    }
+    allPeriods = res.data;
+    if (!res.data || res.data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-muted" style="text-align:center;padding:32px;">Belum ada periode. Buat periode pertama Anda!</td></tr>`;
+        renderPagination(null, 'pagination-periode', () => {});
+        return;
+    }
+
+    // Kelompokkan per tahun
+    const grouped = {};
+    res.data.forEach(p => {
+        const yr = p.tahun || '-';
+        if (!grouped[yr]) grouped[yr] = [];
+        grouped[yr].push(p);
+    });
+
+    let html = '';
+    Object.keys(grouped).sort((a,b)=>b-a).forEach(yr => {
+        html += `<tr class="group-row"><td colspan="7">Tahun ${yr}</td></tr>`;
+        grouped[yr].forEach(p => {
+            const pct = p.total_mapping > 0 ? Math.round((p.total_selesai / p.total_mapping) * 100) : 0;
+            const jenis = p.jenis_periode || 'tahunan';
+            const jenisChip = `<span class="periode-chip ${jenis}">${jenisLabel(jenis)}</span>`;
+            const isCustomTarget = p.target_penilaian === 'golongan_tertentu';
+            const targetBadge = isCustomTarget
+                ? `<div style="margin-top:4px;"><span class="badge target-gol-badge" title="Penilaian khusus golongan tertentu">
+                    <svg style="width:10px;height:10px;fill:currentColor;" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    Khusus Gol. ${(p.target_golongan || 'III,IV').replace(/,/g, ' & ')}
+                   </span></div>`
+                : `<div style="margin-top:4px;"><span class="text-muted" style="font-size:10.5px;">Semua Pegawai</span></div>`;
+            html += `<tr>
+                <td>
+                    <strong>${p.nama_periode}</strong>
+                    ${targetBadge}
+                    ${p.keterangan ? `<div class="text-muted" style="font-size:11px;margin-top:2px;">${p.keterangan}</div>` : ''}
+                </td>
+                <td>${jenisChip}${p.semester && p.semester !== 'tahunan' ? `<br><span style="font-size:11px;color:var(--text-muted);">${subLabel(p.jenis_periode, p.semester)}</span>` : ''}</td>
+                <td>${formatDate(p.tanggal_mulai)}</td>
+                <td>${formatDate(p.tanggal_selesai)}</td>
+                <td style="min-width:140px;">
+                    <div class="progress-bar"><div class="progress-bar-fill" style="width:${pct}%;"></div></div>
+                    <div class="text-muted" style="font-size:11px;margin-top:3px;">${p.total_selesai}/${p.total_mapping} (${pct}%)</div>
+                </td>
+                <td>${statusBadge(p.status)}</td>
+                <td>
+                    <button class="btn btn-secondary btn-sm" onclick="editPeriod(${p.id})">Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="deletePeriod(${p.id}, '${p.nama_periode.replace(/'/g,"\\'")}')">Hapus</button>
+                </td>
+            </tr>`;
+        });
+    });
+    tbody.innerHTML = html;
+    renderPagination(res.meta, 'pagination-periode', (p) => loadPeriods(p));
+}
+
+function jenisLabel(jenis) {
+    const map = { tahunan:'Tahunan', semester:'Semester', triwulan:'Triwulan', bulanan:'Bulanan', lainnya:'Lainnya' };
+    return map[jenis] || jenis;
+}
+function subLabel(jenis, semester) {
+    if (jenis === 'semester') return semester === '1' ? 'Semester 1' : 'Semester 2';
+    if (jenis === 'triwulan') return 'Triwulan ' + ['I','II','III','IV'][parseInt(semester)-1];
+    if (jenis === 'bulanan') {
+        const bln = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+        return bln[parseInt(semester)-1] || semester;
+    }
+    return semester;
+}
+
+/* ============================================================
+   Wizard - Modal Buat Baru
+   ============================================================ */
+function openModal() {
+    resetModal();
+    document.getElementById("modal-title").textContent = "Buat Periode Penilaian Baru";
+    document.getElementById("modal-subtitle").textContent = "Ikuti langkah-langkah untuk membuat periode penilaian.";
+    document.getElementById("modal").classList.remove("hidden");
+    goStep(1);
+}
+
+function closeModal() {
+    document.getElementById("modal").classList.add("hidden");
+    resetModal();
+}
+
+function resetModal() {
+    currentStep = 1;
+    selectedJenis = '';
+    lainnyaCount = 1;
+    selectedYear = new Date().getFullYear();
+    document.getElementById("year-display").textContent = selectedYear;
+    document.getElementById("f-tahun").value = selectedYear;
+    document.getElementById("f-id").value = '';
+    document.getElementById("f-jenis").value = '';
+    document.getElementById("f-keterangan").value = '';
+    document.getElementById("f-status").value = 'draft';
+    const rSemua = document.querySelector('input[name="f_target_penilaian"][value="semua"]');
+    if (rSemua) rSemua.checked = true;
+    toggleTargetPenilaianUI('new');
+    setPresetGolongan('34', 'new');
+    document.getElementById("modal-alert").innerHTML = '';
+    // deselect jenis
+    document.querySelectorAll('.jenis-card').forEach(c => c.classList.remove('selected'));
+    document.getElementById('btn-step2-next').disabled = true;
+    document.getElementById('sub-periode-container').innerHTML = '';
+    // hide step 3 back button when in new mode (controlled by jenis)
+    const backBtn = document.getElementById('btn-step3-back');
+    if (backBtn) backBtn.classList.remove('hidden');
+}
+
+function goStep(step) {
+    // Validate
+    if (step === 3 && !selectedJenis) {
+        showAlert(document.getElementById('modal-alert'), 'Pilih jenis periode terlebih dahulu.', 'error');
+        return;
+    }
+    currentStep = step;
+    [1,2,3].forEach(s => {
+        document.getElementById(`step-${s}`).classList.toggle('hidden', s !== step);
+    });
+    updateWizard();
+    if (step === 3) buildSubPeriodeUI();
+}
+
+function updateWizard() {
+    [1,2,3].forEach(s => {
+        const el = document.getElementById(`ws-${s}`);
+        el.classList.remove('active','done');
+        if (s < currentStep) el.classList.add('done');
+        else if (s === currentStep) el.classList.add('active');
+    });
+    [1,2].forEach(l => {
+        const el = document.getElementById(`wl-${l}`);
+        el.classList.toggle('done', l < currentStep);
+    });
+}
+
+/* ---- Tahun ---- */
+function changeYear(delta) {
+    selectedYear = parseInt(document.getElementById('f-tahun').value) + delta;
+    selectedYear = Math.max(2000, Math.min(2100, selectedYear));
+    document.getElementById('year-display').textContent = selectedYear;
+    document.getElementById('f-tahun').value = selectedYear;
+}
+
+/* ---- Jenis ---- */
+function selectJenis(jenis) {
+    selectedJenis = jenis;
+    document.getElementById('f-jenis').value = jenis;
+    document.querySelectorAll('.jenis-card').forEach(c => c.classList.remove('selected'));
+    document.getElementById(`jc-${jenis}`).classList.add('selected');
+    document.getElementById('btn-step2-next').disabled = false;
+    document.getElementById('modal-alert').innerHTML = '';
+}
+
+/* ---- Build Sub Periode UI ---- */
+function buildSubPeriodeUI() {
+    const container = document.getElementById('sub-periode-container');
+    const yr = parseInt(document.getElementById('f-tahun').value);
+    const jenis = selectedJenis;
+    const defs = JENIS_DEF[jenis] || [];
+    const defaults = DEFAULT_DATES[jenis] || [];
+
+    let html = `<div class="sub-periode-header">
+        <div>
+            <div class="sh-title">Tentukan Jadwal ${jenisLabel(jenis)} ${yr}</div>
+            <div class="sh-sub">Isi tanggal mulai dan tanggal berakhir untuk setiap sub-periode di bawah.</div>
+        </div>
+    </div>`;
+
+    if (jenis === 'lainnya') {
+        html += buildLainnyaSection(yr);
+    } else {
+        defs.forEach((def, i) => {
+            const mulai  = defaults[i] ? `${yr}-${defaults[i][0]}` : '';
+            const selesai= defaults[i] ? `${yr}-${defaults[i][1]}` : '';
+            html += buildSubItem(def, mulai, selesai, i);
+        });
+    }
+
+    container.innerHTML = html;
+    // Jika lainnya, init counter
+    if (jenis === 'lainnya') lainnyaCount = 1;
+}
+
+function buildSubItem(def, mulai = '', selesai = '', idx = 0) {
+    return `<div class="sub-item" id="si-${def.key}">
+        <div class="sub-item-header">
+            <span class="sub-item-badge">${idx+1}</span>
+            <div>
+                <div class="sub-item-title">${def.label}</div>
+                ${def.hint ? `<div class="text-muted" style="font-size:11px;">${def.hint}</div>` : ''}
+            </div>
+            <div class="sub-item-note" id="si-note-${def.key}"></div>
+        </div>
+        <div class="form-row">
+            <div>
+                <label>Tanggal Mulai</label>
+                <input type="date" id="si-mulai-${def.key}" value="${mulai}" required onchange="autoNama('${def.key}')">
+            </div>
+            <div>
+                <label>Tanggal Berakhir</label>
+                <input type="date" id="si-selesai-${def.key}" value="${selesai}" required onchange="autoNama('${def.key}')">
+            </div>
+        </div>
+        <div style="margin-top:10px;">
+            <label>Nama Periode <span style="font-weight:400;color:var(--text-muted);">(akan diisi otomatis)</span></label>
+            <input type="text" id="si-nama-${def.key}" value="" placeholder="Nama periode ini..." required>
+        </div>
+    </div>`;
+}
+
+function buildLainnyaSection(yr) {
+    return `<div id="lainnya-list">
+        ${buildLainnyaItem(1, yr)}
+    </div>
+    <button type="button" class="add-lainnya-btn" onclick="addLainnyaItem()">
+        + Tambah Sub Periode Lainnya
+    </button>`;
+}
+
+function buildLainnyaItem(n, yr) {
+    return `<div class="sub-item" id="li-${n}" style="position:relative;">
+        ${n > 1 ? `<button type="button" class="remove-sub-btn" onclick="removeLainnyaItem(${n})">&times;</button>` : ''}
+        <div class="sub-item-header">
+            <span class="sub-item-badge">${n}</span>
+            <div class="sub-item-title">Sub Periode ${n}</div>
+        </div>
+        <div style="margin-bottom:12px;">
+            <label>Nama Sub Periode</label>
+            <input type="text" id="li-nama-${n}" placeholder="Contoh: Periode Khusus, Evaluasi Mid-Year, dll." required>
+        </div>
+        <div class="form-row">
+            <div>
+                <label>Tanggal Mulai</label>
+                <input type="date" id="li-mulai-${n}" required>
+            </div>
+            <div>
+                <label>Tanggal Berakhir</label>
+                <input type="date" id="li-selesai-${n}" required>
+            </div>
+        </div>
+    </div>`;
+}
+
+function addLainnyaItem() {
+    lainnyaCount++;
+    const yr = parseInt(document.getElementById('f-tahun').value);
+    const list = document.getElementById('lainnya-list');
+    const div = document.createElement('div');
+    div.innerHTML = buildLainnyaItem(lainnyaCount, yr);
+    list.appendChild(div.firstElementChild);
+}
+
+function removeLainnyaItem(n) {
+    const el = document.getElementById(`li-${n}`);
+    if (el) el.remove();
+}
+
+function autoNama(key) {
+    const yr = document.getElementById('f-tahun').value;
+    const jenis = selectedJenis;
+    const namaEl = document.getElementById(`si-nama-${key}`);
+    if (!namaEl || namaEl.dataset.userEdited) return;
+    const defs = JENIS_DEF[jenis] || [];
+    const def  = defs.find(d => d.key === key);
+    if (!def) return;
+    namaEl.value = `Penilaian ${def.label} ${yr}`;
+}
+
+// Init nama otomatis saat UI terbentuk
+function initAutoNames() {
+    const yr = document.getElementById('f-tahun').value;
+    const jenis = selectedJenis;
+    (JENIS_DEF[jenis] || []).forEach(def => {
+        const el = document.getElementById(`si-nama-${def.key}`);
+        if (el && !el.value) {
+            el.value = `Penilaian ${def.label} ${yr}`;
+            el.addEventListener('input', () => { el.dataset.userEdited = '1'; });
+        }
+    });
+}
+
+/* Panggil initAutoNames setelah build */
+const origBuild = buildSubPeriodeUI;
+window.buildSubPeriodeUI = function() {
+    origBuild();
+    setTimeout(initAutoNames, 50);
+};
+
+/* ============================================================
+   Submit Form - Buat Baru (banyak sub-periode)
+   ============================================================ */
+document.getElementById("form-periode").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const alertEl = document.getElementById('modal-alert');
+    const tahun   = parseInt(document.getElementById('f-tahun').value);
+    const jenis   = document.getElementById('f-jenis').value;
+    const status  = document.getElementById('f-status').value;
+    const ket     = document.getElementById('f-keterangan').value;
+    const targetPenilaian = document.querySelector('input[name="f_target_penilaian"]:checked')?.value || 'semua';
+    let targetGolongan = [];
+    if (targetPenilaian === 'golongan_tertentu') {
+        ['I','II','III','IV'].forEach(g => {
+            if (document.getElementById(`tg-${g}`)?.checked) targetGolongan.push(g);
+        });
+        if (targetGolongan.length === 0) targetGolongan = ['III', 'IV'];
+    }
+
+    // Kumpulkan sub-periode
+    let subPeriodes = [];
+
+    if (jenis === 'lainnya') {
+        // ambil dari lainnya-list
+        const list = document.getElementById('lainnya-list');
+        if (!list) { showAlert(alertEl, 'Terjadi kesalahan pada form.'); return; }
+        const items = list.querySelectorAll('.sub-item');
+        let valid = true;
+        items.forEach((item, i) => {
+            const n = item.id.replace('li-','');
+            const nama    = document.getElementById(`li-nama-${n}`)?.value?.trim();
+            const mulai   = document.getElementById(`li-mulai-${n}`)?.value;
+            const selesai = document.getElementById(`li-selesai-${n}`)?.value;
+            if (!nama || !mulai || !selesai) { valid = false; return; }
+            if (selesai < mulai) { valid = false; showAlert(alertEl, `Tanggal berakhir "${nama}" tidak boleh sebelum tanggal mulai.`); return; }
+            subPeriodes.push({ nama_periode: nama, semester: String(i+1), tanggal_mulai: mulai, tanggal_selesai: selesai });
+        });
+        if (!valid) return;
+    } else {
+        const defs = JENIS_DEF[jenis] || [];
+        let valid = true;
+        for (const def of defs) {
+            const nama    = document.getElementById(`si-nama-${def.key}`)?.value?.trim();
+            const mulai   = document.getElementById(`si-mulai-${def.key}`)?.value;
+            const selesai = document.getElementById(`si-selesai-${def.key}`)?.value;
+            if (!nama || !mulai || !selesai) {
+                showAlert(alertEl, `Lengkapi semua field untuk "${def.label}".`);
+                valid = false; break;
+            }
+            if (selesai < mulai) {
+                showAlert(alertEl, `Tanggal berakhir "${def.label}" tidak boleh sebelum tanggal mulai.`);
+                valid = false; break;
+            }
+            // index sub-periode
+            const semIdx = String(defs.indexOf(def) + 1);
+            subPeriodes.push({ nama_periode: nama, semester: semIdx, tanggal_mulai: mulai, tanggal_selesai: selesai });
+        }
+        if (!valid) return;
+    }
+
+    if (subPeriodes.length === 0) {
+        showAlert(alertEl, 'Minimal 1 sub-periode harus diisi.');
+        return;
+    }
+
+    const ok = await showConfirmModal({
+        title: "Konfirmasi Buat Periode",
+        message: `Apakah Anda yakin ingin membuat ${subPeriodes.length} periode penilaian baru untuk tahun ${tahun}?`,
+        confirmText: "Ya, Buat Periode",
+        cancelText: "Batal",
+        type: "primary",
+        icon: "add"
+    });
+    if (!ok) return;
+
+    const btn = document.getElementById('btn-simpan');
+    btn.disabled = true;
+    btn.textContent = 'Menyimpan...';
+
+    let successCount = 0;
+    let failMsg = '';
+    for (const sp of subPeriodes) {
+        const payload = {
+            nama_periode:    sp.nama_periode,
+            tahun:           tahun,
+            jenis_periode:   jenis,
+            semester:        sp.semester,
+            tanggal_mulai:   sp.tanggal_mulai,
+            tanggal_selesai: sp.tanggal_selesai,
+            status:          status,
+            keterangan:      ket,
+            target_penilaian: targetPenilaian,
+            target_golongan:  targetGolongan.join(',')
+        };
+        const res = await apiCall('periode.php', 'POST', payload);
+        if (res.success) successCount++;
+        else { failMsg = res.message; }
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = `<svg style="width:14px;height:14px;fill:currentColor;" viewBox="0 0 24 24"><path d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg> Simpan Periode`;
+
+    if (successCount > 0) {
+        closeModal();
+        showAlert(document.getElementById('alert-box'),
+            `${successCount} periode berhasil dibuat!${failMsg ? ' (' + failMsg + ')' : ''}`, 'success');
+        loadPeriods();
+    } else {
+        showAlert(alertEl, failMsg || 'Gagal menyimpan periode.', 'error');
+    }
+});
+
+/* ============================================================
+   Edit Periode (satu per satu)
+   ============================================================ */
+function editPeriod(id) {
+    const p = allPeriods.find(x => x.id == id);
+    if (!p) return;
+    document.getElementById('fe-id').value     = p.id;
+    document.getElementById('fe-nama').value   = p.nama_periode;
+    document.getElementById('fe-mulai').value  = p.tanggal_mulai;
+    document.getElementById('fe-selesai').value= p.tanggal_selesai;
+    document.getElementById('fe-status').value = p.status;
+    document.getElementById('fe-keterangan').value = p.keterangan || '';
+    const isCustom = p.target_penilaian === 'golongan_tertentu';
+    const rVal = isCustom ? 'golongan_tertentu' : 'semua';
+    const rEl = document.querySelector(`input[name="fe_target_penilaian"][value="${rVal}"]`);
+    if (rEl) rEl.checked = true;
+    toggleTargetPenilaianUI('edit');
+    const activeGols = (p.target_golongan || 'III,IV').split(',');
+    ['I', 'II', 'III', 'IV'].forEach(g => {
+        const el = document.getElementById(`feg-${g}`);
+        if (el) el.checked = activeGols.includes(g);
+    });
+    document.getElementById('modal-edit-alert').innerHTML = '';
+    document.getElementById('modal-edit').classList.remove('hidden');
+}
+
+function closeEditModal() {
+    document.getElementById('modal-edit').classList.add('hidden');
+}
+
+document.getElementById("form-edit").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('fe-id').value;
+    const namaPeriode = document.getElementById('fe-nama').value.trim();
+    const mulai   = document.getElementById('fe-mulai').value;
+    const selesai = document.getElementById('fe-selesai').value;
+    if (selesai < mulai) {
+        showAlert(document.getElementById('modal-edit-alert'), 'Tanggal berakhir tidak boleh sebelum tanggal mulai.');
+        return;
+    }
+
+    const ok = await showConfirmModal({
+        title: "Konfirmasi Simpan Perubahan",
+        message: `Apakah Anda yakin ingin menyimpan perubahan data periode "${namaPeriode}"?`,
+        confirmText: "Ya, Simpan Perubahan",
+        cancelText: "Batal",
+        type: "primary",
+        icon: "edit"
+    });
+    if (!ok) return;
+
+    const feTargetPenilaian = document.querySelector('input[name="fe_target_penilaian"]:checked')?.value || 'semua';
+    let feTargetGolongan = [];
+    if (feTargetPenilaian === 'golongan_tertentu') {
+        ['I', 'II', 'III', 'IV'].forEach(g => {
+            if (document.getElementById(`feg-${g}`)?.checked) feTargetGolongan.push(g);
+        });
+        if (feTargetGolongan.length === 0) feTargetGolongan = ['III', 'IV'];
+    }
+
+    const payload = {
+        nama_periode:    document.getElementById('fe-nama').value,
+        tanggal_mulai:   mulai,
+        tanggal_selesai: selesai,
+        status:          document.getElementById('fe-status').value,
+        keterangan:      document.getElementById('fe-keterangan').value,
+        target_penilaian: feTargetPenilaian,
+        target_golongan:  feTargetGolongan.join(',')
+    };
+    const res = await apiCall(`periode.php?id=${id}`, 'PUT', payload);
+    if (!res.success) { showAlert(document.getElementById('modal-edit-alert'), res.message); return; }
+    closeEditModal();
+    showAlert(document.getElementById('alert-box'), res.message, 'success');
+    loadPeriods();
+});
+
+/* ============================================================
+   Hapus
+   ============================================================ */
+async function deletePeriod(id, nama) {
+    const ok = await showConfirmModal({
+        title: "Konfirmasi Hapus Periode",
+        message: `Apakah Anda yakin ingin menghapus periode "${nama}"?\nSemua mapping penilaian dan data jawaban terkait akan terhapus. Tindakan ini tidak dapat dibatalkan.`,
+        confirmText: "Ya, Hapus Periode",
+        cancelText: "Batal",
+        type: "danger",
+        icon: "delete"
+    });
+    if (!ok) return;
+
+    const res = await apiCall(`periode.php?id=${id}`, "DELETE");
+    showAlert(document.getElementById("alert-box"), res.message, res.success ? "success" : "error");
+    if (res.success) loadPeriods();
+}
+
+/* ============================================================
+   Tutup modal saat klik overlay
+   ============================================================ */
+document.getElementById('modal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+document.getElementById('modal-edit').addEventListener('click', function(e) {
+    if (e.target === this) closeEditModal();
+});
+
+/* ============================================================
+   Init
+   ============================================================ */
+(async () => {
+    const user = await initLayout("periode", ["super_admin", "admin"]);
+    if (!user) return;
+    loadPeriods();
+})();
+
+function toggleTargetPenilaianUI(mode = 'new') {
+    const isNew = mode === 'new';
+    const val = document.querySelector(`input[name="${isNew ? 'f_target_penilaian' : 'fe_target_penilaian'}"]:checked`)?.value;
+    const panel = document.getElementById(isNew ? 'panel-target-golongan' : 'panel-edit-target-golongan');
+    const cardSemua = document.getElementById(isNew ? 'card-target-semua' : 'card-edit-target-semua');
+    const cardKustom = document.getElementById(isNew ? 'card-target-kustom' : 'card-edit-target-kustom');
+
+    if (!panel || !cardSemua || !cardKustom) return;
+
+    if (val === 'golongan_tertentu') {
+        panel.classList.remove('hidden');
+        cardKustom.classList.add('selected');
+        cardSemua.classList.remove('selected');
+    } else {
+        panel.classList.add('hidden');
+        cardSemua.classList.add('selected');
+        cardKustom.classList.remove('selected');
+    }
+}
+
+function setPresetGolongan(preset, mode = 'new') {
+    const prefix = mode === 'new' ? 'tg-' : 'feg-';
+    if (preset === '34') {
+        ['I', 'II'].forEach(g => { const el = document.getElementById(prefix + g); if (el) el.checked = false; });
+        ['III', 'IV'].forEach(g => { const el = document.getElementById(prefix + g); if (el) el.checked = true; });
+    } else if (preset === 'all') {
+        ['I', 'II', 'III', 'IV'].forEach(g => { const el = document.getElementById(prefix + g); if (el) el.checked = true; });
+    }
+}
+</script>
+</body>
+</html>

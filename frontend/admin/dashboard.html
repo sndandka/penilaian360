@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - Sistem Penilaian 360</title>
+    <script>
+    (function(){
+                var t = localStorage.getItem('app_theme');
+        if (t === 'dark' || (!t && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+        var isNav = sessionStorage.getItem('sidebar_nav_open') === '1' || sessionStorage.getItem('sidebar_hovered') === '1';
+        if (isNav && localStorage.getItem('sidebar_pinned') !== '1') {
+            document.documentElement.classList.add('sidebar-nav-open', 'sidebar-hover-persisted');
+            function onMove(e) {
+                if (e.clientX > 248) {
+                    document.documentElement.classList.remove('sidebar-nav-open', 'sidebar-hover-persisted');
+                    sessionStorage.removeItem('sidebar_nav_open');
+                    sessionStorage.removeItem('sidebar_hovered');
+                    window.removeEventListener('mousemove', onMove);
+                }
+            }
+            window.addEventListener('mousemove', onMove, { passive: true });
+        }
+    })();
+    </script>
+    <link rel="stylesheet" href="../assets/css/style.css?v=20261117_notif">
+    <style>
+        .sidebar-footer, .sidebar-toggle-bottom, button.sidebar-toggle-bottom, aside#sidebar .sidebar-footer, aside#sidebar .sidebar-toggle-bottom { display: none !important; }
+
+        .dash-stat-tabs {
+            display: inline-flex;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 3px;
+            gap: 2px;
+        }
+        .dash-stat-tab {
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 11.5px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: inherit;
+        }
+        .dash-stat-tab:hover {
+            color: var(--text);
+        }
+        .dash-stat-tab.active {
+            background: var(--primary);
+            color: #ffffff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+        }
+        .dash-stat-chart-wrap {
+            position: relative;
+            height: 210px;
+            width: 100%;
+        }
+        .dash-stat-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .dash-stat-chip {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 10px;
+            text-align: center;
+        }
+        .dash-stat-chip .chip-lbl {
+            font-size: 10.5px;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+        .dash-stat-chip .chip-val {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .dash-stat-legend-pills {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 6px 12px;
+            margin-top: 10px;
+            font-size: 11.5px;
+            color: var(--text-secondary);
+        }
+        .dash-stat-legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .dash-stat-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+        @media (max-width: 640px) {
+            .dash-stat-chart-wrap {
+                height: 200px;
+            }
+            .dash-stat-summary {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="main-content">
+        <header class="topbar">
+            <div class="topbar-left">
+                <h1 id="page-title">Dashboard</h1>
+            </div>
+            <div id="topbar-user"></div>
+        </header>
+        <main class="page">
+
+            <!-- KPI Metric Cards Grid -->
+            <div class="dash-kpi-grid">
+                <!-- 1. Total Pegawai -->
+                <div class="dash-kpi-card">
+                    <div>
+                        <div class="dash-kpi-top">
+                            <span class="dash-kpi-label">Total Pegawai</span>
+                            <div class="dash-kpi-icon blue">
+                                <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                            </div>
+                        </div>
+                        <div class="dash-kpi-val" id="stat-pegawai">-</div>
+                        <div class="dash-kpi-sub" id="stat-pegawai-sub">Pegawai aktif terdaftar</div>
+                    </div>
+                    <div class="dash-kpi-footer">
+                        <a href="pegawai.html" class="dash-kpi-link">
+                            <span>Kelola Data Pegawai</span>
+                            <svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 2. Periode Berjalan -->
+                <div class="dash-kpi-card">
+                    <div>
+                        <div class="dash-kpi-top">
+                            <span class="dash-kpi-label">Periode Berjalan</span>
+                            <div class="dash-kpi-icon orange">
+                                <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7v-5z"/></svg>
+                            </div>
+                        </div>
+                        <div class="dash-kpi-val" id="stat-periode-val" style="font-size:18px; line-height:1.3; min-height:30px;">-</div>
+                        <div class="dash-kpi-sub" id="stat-periode-sub">Memuat status...</div>
+                    </div>
+                    <div class="dash-kpi-footer">
+                        <a href="periode.html" class="dash-kpi-link">
+                            <span>Atur Periode Penilaian</span>
+                            <svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 3. Tingkat Keterisian -->
+                <div class="dash-kpi-card">
+                    <div>
+                        <div class="dash-kpi-top">
+                            <span class="dash-kpi-label">Tingkat Keterisian</span>
+                            <div class="dash-kpi-icon purple">
+                                <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+                            </div>
+                        </div>
+                        <div class="dash-kpi-val" id="stat-progress-val">-</div>
+                        <div class="dash-kpi-bar-wrap">
+                            <div class="dash-kpi-bar-fill" id="stat-progress-fill" style="width: 0%;"></div>
+                        </div>
+                        <div class="dash-kpi-sub" id="stat-progress-sub">Berdasarkan periode aktif</div>
+                    </div>
+                    <div class="dash-kpi-footer">
+                        <a href="monitoring.html" class="dash-kpi-link">
+                            <span>Buka Monitoring</span>
+                            <svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 4. Penilaian Selesai -->
+                <div class="dash-kpi-card">
+                    <div>
+                        <div class="dash-kpi-top">
+                            <span class="dash-kpi-label">Penilaian Selesai</span>
+                            <div class="dash-kpi-icon green">
+                                <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                            </div>
+                        </div>
+                        <div class="dash-kpi-val" id="stat-selesai-val">-</div>
+                        <div class="dash-kpi-sub" id="stat-selesai-sub">Tugas dinilai lengkap</div>
+                    </div>
+                    <div class="dash-kpi-footer">
+                        <a href="monitoring.html" class="dash-kpi-link">
+                            <span>Pantau Penilai</span>
+                            <svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Two-Column Grid -->
+            <div class="dash-main-grid">
+                <!-- Left Column: Recent Periods Table -->
+                <div class="card" style="margin-bottom:0;">
+                    <div class="card-header-actions">
+                        <div class="card-title">
+                            <svg style="width:18px;height:18px;fill:var(--primary);" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7v-5z"/></svg>
+                            Periode Penilaian Terkini
+                        </div>
+                        <a href="periode.html" class="btn btn-secondary btn-sm">Lihat Semua</a>
+                    </div>
+                    <div id="periode-list" class="table-wrap">
+                        <div class="empty-state" style="padding:24px 16px;"><p>Memuat data periode...</p></div>
+                    </div>
+                    <a href="periode.html" class="card-footer-action">Kelola Seluruh Periode di Manajemen Periode →</a>
+                </div>
+
+                <!-- Right Column: Statistical Charts Card + Master Summary -->
+                <div style="display:flex; flex-direction:column; gap:20px;">
+                    <!-- Statistical Overview Card -->
+                    <div class="card" style="margin-bottom:0; flex:1; display:flex; flex-direction:column;">
+                        <div class="card-header-actions" style="flex-wrap:wrap; gap:8px;">
+                            <div>
+                                <div class="card-title" id="side-card-title">
+                                    <svg style="width:18px;height:18px;fill:var(--primary);" viewBox="0 0 24 24"><path d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2 0v8.99h8.99C21.48 5.83 17.66 2.5 13 2zm0 11v9c4.66-.5 8.48-3.83 8.99-9H13z"/></svg>
+                                    Statistik Penilaian 360°
+                                </div>
+                                <div id="stat-chart-subtitle" style="font-size:11.5px; color:var(--text-muted); margin-top:2px;">Memuat periode...</div>
+                            </div>
+                            <div class="dash-stat-tabs" id="dash-stat-tabs" role="tablist">
+                                <button type="button" class="dash-stat-tab active" data-tab="predikat">Predikat</button>
+                                <button type="button" class="dash-stat-tab" data-tab="relasi">Relasi</button>
+                                <button type="button" class="dash-stat-tab" data-tab="kriteria">Kriteria</button>
+                            </div>
+                        </div>
+                        <div id="side-card-body" style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+                            <div class="dash-stat-chart-wrap" id="dash-stat-chart-wrap">
+                                <canvas id="dashStatChart"></canvas>
+                            </div>
+                            <div id="stat-chart-legend"></div>
+                            <div id="stat-chart-summary"></div>
+                        </div>
+                        <div id="side-card-footer">
+                            <a href="hasil.html" class="card-footer-action" id="stat-chart-footer-link">Lihat Rekapitulasi Hasil Penilaian →</a>
+                        </div>
+                    </div>
+
+                    <!-- Master Data Mini Summary -->
+                    <div class="card" style="margin-bottom:0;">
+                        <div class="card-header-actions" style="margin-bottom:4px;">
+                            <div class="card-title" style="font-size:13.5px;">
+                                <svg style="width:16px;height:16px;fill:var(--primary);" viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/></svg>
+                                Ringkasan Struktur Organisasi
+                            </div>
+                        </div>
+                        <div class="dash-mini-stat-grid">
+                            <a href="master.html" class="dash-mini-stat" title="Kelola Unit Kerja">
+                                <div class="val" id="mini-unit">-</div>
+                                <div class="lbl">Unit Kerja</div>
+                            </a>
+                            <a href="master.html" class="dash-mini-stat" title="Kelola Jabatan">
+                                <div class="val" id="mini-jabatan">-</div>
+                                <div class="lbl">Jabatan</div>
+                            </a>
+                            <a href="pegawai.html" class="dash-mini-stat" title="Kelola Pegawai">
+                                <div class="val" id="mini-pegawai">-</div>
+                                <div class="lbl">Pegawai ASN</div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script src="../assets/js/config.js?v=20261126"></script>
+<script src="../assets/js/api.js?v=20261126"></script>
+<script src="../assets/js/searchable-select.js?v=20261116_search"></script>
+    <script src="../assets/js/auth.js?v=20261117_notif"></script>
+<script>
+let dashStatData = null;
+let dashActiveTab = 'predikat';
+let dashStatChartInstance = null;
+
+(async () => {
+    const user = await initLayout("dashboard", ["super_admin", "admin"]);
+    if (!user) return;
+
+    // Pasang handler tab diagram statistik
+    document.querySelectorAll('#dash-stat-tabs .dash-stat-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+            dashActiveTab = btn.dataset.tab || 'predikat';
+            document.querySelectorAll('#dash-stat-tabs .dash-stat-tab').forEach(b => b.classList.toggle('active', b === btn));
+            renderDashboardStatChart();
+        });
+    });
+
+    new MutationObserver(() => {
+        if (dashStatData) renderDashboardStatChart();
+    }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+    // 1. Muat Total Pegawai
+    let totalPegawai = 0;
+    try {
+        const emp = await apiCall("pegawai.php");
+        if (emp.success && Array.isArray(emp.data)) {
+            totalPegawai = emp.data.length;
+            const pEl = document.getElementById("stat-pegawai");
+            if (pEl) pEl.textContent = totalPegawai.toLocaleString("id-ID");
+            const miniP = document.getElementById("mini-pegawai");
+            if (miniP) miniP.textContent = totalPegawai.toLocaleString("id-ID");
+        }
+    } catch (e) {
+        console.error("Gagal memuat pegawai:", e);
+    }
+
+    // 2. Muat Master Data Unit Kerja & Jabatan
+    try {
+        const unitRes = await apiCall("unit_kerja.php");
+        if (unitRes.success && Array.isArray(unitRes.data)) {
+            const el = document.getElementById("mini-unit");
+            if (el) el.textContent = unitRes.data.length;
+        }
+        const jabRes = await apiCall("jabatan.php");
+        if (jabRes.success && Array.isArray(jabRes.data)) {
+            const el = document.getElementById("mini-jabatan");
+            if (el) el.textContent = jabRes.data.length;
+        }
+    } catch (e) {
+        console.error("Gagal memuat master data:", e);
+    }
+
+    // 3. Muat Periode Penilaian
+    let activePeriode = null;
+    let periodsData = [];
+    try {
+        const periods = await apiCall("periode.php");
+        if (periods.success && Array.isArray(periods.data)) {
+            periodsData = periods.data;
+            activePeriode = periodsData.find(p => p.status === 'aktif');
+
+            // Render KPI Periode
+            const statPeriodeVal = document.getElementById("stat-periode-val");
+            const statPeriodeSub = document.getElementById("stat-periode-sub");
+            if (activePeriode) {
+                if (statPeriodeVal) statPeriodeVal.textContent = activePeriode.nama_periode;
+                const daysBadge = getDaysRemainingText(activePeriode.tanggal_selesai);
+                if (statPeriodeSub) statPeriodeSub.textContent = `Aktif • ${daysBadge}`;
+            } else {
+                if (statPeriodeVal) statPeriodeVal.textContent = "Tidak Ada";
+                if (statPeriodeSub) statPeriodeSub.textContent = "Tidak ada periode aktif";
+            }
+
+            // Render Tabel Periode Terkini
+            renderPeriodsTable(periodsData);
+        }
+    } catch (e) {
+        console.error("Gagal memuat periode:", e);
+    }
+
+    // 4. Muat Statistik Monitoring untuk Periode Aktif
+    if (activePeriode) {
+        try {
+            const mon = await apiCall(`monitoring.php?periode_id=${activePeriode.id}`);
+            if (mon.success && mon.data && mon.data.statistik) {
+                const s = mon.data.statistik;
+                const total = parseInt(s.total_mapping) || 0;
+                const selesai = parseInt(s.total_selesai) || 0;
+                const belum = parseInt(s.total_belum) || 0;
+                const pct = s.persentase_selesai !== undefined ? parseFloat(s.persentase_selesai) : (total > 0 ? ((selesai / total) * 100).toFixed(1) : 0);
+
+                // Update KPI Progres
+                const statProgressVal = document.getElementById("stat-progress-val");
+                const statProgressFill = document.getElementById("stat-progress-fill");
+                const statProgressSub = document.getElementById("stat-progress-sub");
+                if (statProgressVal) statProgressVal.textContent = pct + "%";
+                if (statProgressFill) statProgressFill.style.width = Math.min(pct, 100) + "%";
+                if (statProgressSub) statProgressSub.textContent = `${selesai.toLocaleString("id-ID")} dari ${total.toLocaleString("id-ID")} tugas dinilai`;
+
+                // Update KPI Selesai
+                const statSelesaiVal = document.getElementById("stat-selesai-val");
+                const statSelesaiSub = document.getElementById("stat-selesai-sub");
+                if (statSelesaiVal) statSelesaiVal.textContent = `${selesai.toLocaleString("id-ID")} / ${total.toLocaleString("id-ID")}`;
+                if (statSelesaiSub) statSelesaiSub.textContent = `${belum.toLocaleString("id-ID")} tugas belum mulai`;
+            }
+        } catch (e) {
+            console.error("Gagal memuat monitoring:", e);
+        }
+    }
+
+    // 5. Muat Statistik Penilaian Berbasis Diagram
+    try {
+        const statQuery = activePeriode ? `monitoring.php?action=dashboard_stats&periode_id=${activePeriode.id}` : `monitoring.php?action=dashboard_stats`;
+        const statRes = await apiCall(statQuery);
+        if (statRes.success && statRes.data) {
+            dashStatData = statRes.data;
+            const subEl = document.getElementById("stat-chart-subtitle");
+            if (subEl) {
+                subEl.textContent = dashStatData.periode
+                    ? `${dashStatData.periode.nama_periode} (${dashStatData.periode.status === 'aktif' ? 'Aktif' : 'Selesai'})`
+                    : 'Belum ada periode penilaian aktif/selesai';
+            }
+            // Jika skor predikat belum dihitung sama sekali, otomatis arahkan ke tab Relasi agar diagram tetap informatif
+            const totalDihitung = dashStatData.summary ? (dashStatData.summary.total_dihitung || 0) : 0;
+            if (totalDihitung === 0 && dashStatData.relasi && dashStatData.relasi.length > 0) {
+                dashActiveTab = 'relasi';
+                document.querySelectorAll('#dash-stat-tabs .dash-stat-tab').forEach(b => {
+                    b.classList.toggle('active', b.dataset.tab === 'relasi');
+                });
+            }
+            renderDashboardStatChart();
+        }
+    } catch (e) {
+        console.error("Gagal memuat statistik diagram:", e);
+        const body = document.getElementById("side-card-body");
+        if (body) body.innerHTML = `<div class="empty-state" style="padding:24px 16px;"><p>Gagal memuat statistik penilaian.</p></div>`;
+    }
+})();
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>"']/g, function(m) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+    });
+}
+
+function getDaysRemainingText(endDateStr) {
+    if (!endDateStr) return '';
+    const end = new Date(endDateStr);
+    const today = new Date();
+    end.setHours(23, 59, 59, 999);
+    today.setHours(0, 0, 0, 0);
+    const diffDays = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+    if (diffDays > 0) {
+        return `Tersisa ${diffDays} hari`;
+    } else if (diffDays === 0) {
+        return `Hari terakhir`;
+    } else {
+        return `Telah berakhir`;
+    }
+}
+
+function renderPeriodsTable(periods) {
+    const container = document.getElementById("periode-list");
+    if (!container) return;
+    if (!periods || periods.length === 0) {
+        container.innerHTML = `<div class="empty-state" style="padding:24px 16px;"><p>Belum ada periode penilaian.</p></div>`;
+        return;
+    }
+
+    let html = `
+        <table>
+            <thead>
+                <tr>
+                    <th>Nama Periode</th>
+                    <th>Jadwal Pelaksanaan</th>
+                    <th>Status</th>
+                    <th style="text-align:right;">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    periods.slice(0, 5).forEach(p => {
+        let actionBtn = '';
+        if (p.status === 'aktif') {
+            actionBtn = `<a href="monitoring.html?periode_id=${p.id}" class="btn btn-secondary btn-sm" style="padding:3px 8px;font-size:11px;">Monitoring</a>`;
+        } else if (p.status === 'ditutup') {
+            actionBtn = `<a href="hasil.html?periode_id=${p.id}" class="btn btn-secondary btn-sm" style="padding:3px 8px;font-size:11px;">Hasil</a>`;
+        } else {
+            actionBtn = `<a href="periode.html" class="btn btn-secondary btn-sm" style="padding:3px 8px;font-size:11px;">Detail</a>`;
+        }
+
+        const jenisLabel = p.jenis_periode ? p.jenis_periode.charAt(0).toUpperCase() + p.jenis_periode.slice(1) : (p.semester ? p.semester : '-');
+
+        html += `
+            <tr>
+                <td>
+                    <div style="font-weight:600; color:var(--text);">${escapeHtml(p.nama_periode)}</div>
+                    <div style="font-size:11px; color:var(--text-muted);">${jenisLabel} ${p.tahun || ''}</div>
+                </td>
+                <td style="color:var(--text-secondary); font-size:12px; white-space:nowrap;">
+                    ${formatDate(p.tanggal_mulai)} – ${formatDate(p.tanggal_selesai)}
+                </td>
+                <td>${statusBadge(p.status)}</td>
+                <td style="text-align:right;">${actionBtn}</td>
+            </tr>
+        `;
+    });
+
+    html += `</tbody></table>`;
+    container.innerHTML = html;
+}
+
+function renderDashboardStatChart() {
+    const wrap = document.getElementById("dash-stat-chart-wrap");
+    const legendEl = document.getElementById("stat-chart-legend");
+    const summaryEl = document.getElementById("stat-chart-summary");
+    const footerLink = document.getElementById("stat-chart-footer-link");
+    if (!wrap || !dashStatData) return;
+
+    if (dashStatChartInstance) {
+        dashStatChartInstance.destroy();
+        dashStatChartInstance = null;
+    }
+
+    if (!dashStatData.periode) {
+        wrap.innerHTML = `<div class="empty-state" style="padding:30px 16px;"><p>Belum ada data periode aktif maupun selesai untuk ditampilkan.</p></div>`;
+        if (legendEl) legendEl.innerHTML = '';
+        if (summaryEl) summaryEl.innerHTML = '';
+        return;
+    }
+
+    wrap.innerHTML = `<canvas id="dashStatChart"></canvas>`;
+    const ctx = document.getElementById("dashStatChart");
+    if (!ctx || typeof Chart === "undefined") return;
+
+    const style = getComputedStyle(document.body);
+    const primary = style.getPropertyValue('--primary').trim() || '#1B4F8C';
+    const success = style.getPropertyValue('--success').trim() || '#10B981';
+    const warning = style.getPropertyValue('--warning').trim() || '#F59E0B';
+    const danger = style.getPropertyValue('--danger').trim() || '#EF4444';
+    const purple = style.getPropertyValue('--purple').trim() || '#8B5CF6';
+    const textColor = style.getPropertyValue('--text').trim() || '#1F2937';
+    const textMuted = style.getPropertyValue('--text-muted').trim() || '#9CA3AF';
+    const border = style.getPropertyValue('--border').trim() || '#E3E7ED';
+    const pid = dashStatData.periode.id;
+
+    if (dashActiveTab === 'predikat') {
+        if (footerLink) {
+            footerLink.href = `hasil.html?periode_id=${pid}`;
+            footerLink.textContent = 'Lihat Rekapitulasi Hasil Penilaian →';
+        }
+        const sum = dashStatData.summary || {};
+        const predList = [...(dashStatData.predikat || [])];
+        if ((sum.belum_dihitung || 0) > 0) {
+            predList.push({ predikat: 'Belum Dihitung', jumlah: sum.belum_dihitung, rata_skor: null });
+        }
+
+        if (predList.length === 0) {
+            wrap.innerHTML = `<div class="empty-state" style="padding:36px 16px;"><p>Belum ada hasil penilaian yang dihitung pada periode ini.</p></div>`;
+            if (legendEl) legendEl.innerHTML = '';
+            if (summaryEl) summaryEl.innerHTML = '';
+            return;
+        }
+
+        const colorMap = {
+            'Sangat Baik': success,
+            'Baik': primary,
+            'Cukup': warning,
+            'Kurang': '#F97316',
+            'Sangat Kurang': danger,
+            'Belum Dihitung': '#94A3B8'
+        };
+
+        const labels = predList.map(p => p.predikat);
+        const counts = predList.map(p => p.jumlah);
+        const colors = predList.map(p => colorMap[p.predikat] || purple);
+        const totalAll = counts.reduce((a, b) => a + b, 0);
+
+        const centerTextPlugin = {
+            id: 'dashDoughnutCenter',
+            afterDraw(chart) {
+                const { ctx: c, chartArea } = chart;
+                if (!chartArea) return;
+                const cx = (chartArea.left + chartArea.right) / 2;
+                const cy = (chartArea.top + chartArea.bottom) / 2;
+                c.save();
+                c.textAlign = 'center';
+                c.textBaseline = 'middle';
+                c.fillStyle = textMuted;
+                c.font = '500 11px Inter, system-ui, sans-serif';
+                c.fillText(sum.rata_skor_dinas !== null ? 'Rata-rata Dinas' : 'Total Pegawai', cx, cy - 11);
+                c.fillStyle = textColor;
+                c.font = '800 20px Inter, system-ui, sans-serif';
+                c.fillText(sum.rata_skor_dinas !== null ? Number(sum.rata_skor_dinas).toFixed(2) : String(totalAll), cx, cy + 11);
+                c.restore();
+            }
+        };
+
+        dashStatChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: counts,
+                    backgroundColor: colors,
+                    borderColor: style.getPropertyValue('--card-bg').trim() || '#ffffff',
+                    borderWidth: 2,
+                    hoverOffset: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '66%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (item) => {
+                                const val = item.raw || 0;
+                                const pct = totalAll > 0 ? ((val / totalAll) * 100).toFixed(1) : '0.0';
+                                return ` ${item.label}: ${val.toLocaleString('id-ID')} pegawai (${pct}%)`;
+                            }
+                        }
+                    }
+                }
+            },
+            plugins: [centerTextPlugin]
+        });
+
+        if (legendEl) {
+            legendEl.innerHTML = `<div class="dash-stat-legend-pills">${predList.map((p, i) => {
+                const pct = totalAll > 0 ? ((p.jumlah / totalAll) * 100).toFixed(1) : '0.0';
+                return `<span class="dash-stat-legend-item"><span class="dash-stat-dot" style="background:${colors[i]};"></span><span>${escapeHtml(p.predikat)}: <strong>${p.jumlah}</strong> (${pct}%)</span></span>`;
+            }).join('')}</div>`;
+        }
+        if (summaryEl) {
+            summaryEl.innerHTML = `
+                <div class="dash-stat-summary">
+                    <div class="dash-stat-chip">
+                        <div class="chip-lbl">Sudah Dihitung</div>
+                        <div class="chip-val">${(sum.total_dihitung || 0).toLocaleString('id-ID')} / ${(sum.total_dinilai || 0).toLocaleString('id-ID')}</div>
+                    </div>
+                    <div class="dash-stat-chip">
+                        <div class="chip-lbl">Skor Tertinggi</div>
+                        <div class="chip-val" style="color:${success};">${sum.skor_tertinggi !== null ? Number(sum.skor_tertinggi).toFixed(2) : '-'}</div>
+                    </div>
+                    <div class="dash-stat-chip">
+                        <div class="chip-lbl">Skor Terendah</div>
+                        <div class="chip-val" style="color:${warning};">${sum.skor_terendah !== null ? Number(sum.skor_terendah).toFixed(2) : '-'}</div>
+                    </div>
+                </div>
+            `;
+        }
+    } else if (dashActiveTab === 'relasi') {
+        if (footerLink) {
+            footerLink.href = `monitoring.html?periode_id=${pid}`;
+            footerLink.textContent = 'Buka Monitoring Progres Penilai →';
+        }
+        const relRows = dashStatData.relasi || [];
+        if (relRows.length === 0) {
+            wrap.innerHTML = `<div class="empty-state" style="padding:36px 16px;"><p>Belum ada data mapping penilai pada periode ini.</p></div>`;
+            if (legendEl) legendEl.innerHTML = '';
+            if (summaryEl) summaryEl.innerHTML = '';
+            return;
+        }
+
+        const relMap = { atasan: 'Atasan', rekan: 'Rekan Kerja', bawahan: 'Bawahan', diri: 'Diri Sendiri' };
+        const labels = relRows.map(r => relMap[r.jenis_relasi] || r.jenis_relasi);
+        const dataSelesai = relRows.map(r => r.selesai);
+        const dataProses = relRows.map(r => r.proses);
+        const dataBelum = relRows.map(r => r.belum);
+
+        dashStatChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Selesai', data: dataSelesai, backgroundColor: success, borderRadius: 4, barThickness: 20 },
+                    { label: 'Proses', data: dataProses, backgroundColor: warning, borderRadius: 4, barThickness: 20 },
+                    { label: 'Belum Mulai', data: dataBelum, backgroundColor: '#CBD5E1', borderRadius: 4, barThickness: 20 }
+                ]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { stacked: true, grid: { color: border }, ticks: { color: textMuted, font: { size: 10.5 } } },
+                    y: { stacked: true, grid: { display: false }, ticks: { color: textColor, font: { family: 'Inter, system-ui, sans-serif', size: 11.5, weight: '600' } } }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: { color: textColor, font: { size: 11 }, usePointStyle: true, boxWidth: 8, padding: 12 }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (item) => {
+                                const row = relRows[item.dataIndex];
+                                const val = item.raw || 0;
+                                const pct = row && row.total > 0 ? ((val / row.total) * 100).toFixed(1) : '0.0';
+                                return ` ${item.dataset.label}: ${val.toLocaleString('id-ID')} (${pct}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        const totAll = relRows.reduce((a, r) => a + r.total, 0);
+        const totSelesai = relRows.reduce((a, r) => a + r.selesai, 0);
+        const totProses = relRows.reduce((a, r) => a + r.proses, 0);
+        const totBelum = relRows.reduce((a, r) => a + r.belum, 0);
+
+        if (legendEl) legendEl.innerHTML = '';
+        if (summaryEl) {
+            summaryEl.innerHTML = `
+                <div class="dash-stat-summary">
+                    <div class="dash-stat-chip">
+                        <div class="chip-lbl">Total Selesai</div>
+                        <div class="chip-val" style="color:${success};">${totSelesai.toLocaleString('id-ID')}</div>
+                    </div>
+                    <div class="dash-stat-chip">
+                        <div class="chip-lbl">Dalam Proses</div>
+                        <div class="chip-val" style="color:${warning};">${totProses.toLocaleString('id-ID')}</div>
+                    </div>
+                    <div class="dash-stat-chip">
+                        <div class="chip-lbl">Belum Mulai</div>
+                        <div class="chip-val">${totBelum.toLocaleString('id-ID')} / ${totAll.toLocaleString('id-ID')}</div>
+                    </div>
+                </div>
+            `;
+        }
+    } else if (dashActiveTab === 'kriteria') {
+        if (footerLink) {
+            footerLink.href = `hasil.html?periode_id=${pid}`;
+            footerLink.textContent = 'Lihat Rincian Skor Kriteria Pegawai →';
+        }
+        const katRows = dashStatData.kriteria || [];
+        if (katRows.length === 0) {
+            wrap.innerHTML = `<div class="empty-state" style="padding:36px 16px;"><p>Belum ada jawaban penilaian yang masuk pada periode ini.</p></div>`;
+            if (legendEl) legendEl.innerHTML = '';
+            if (summaryEl) summaryEl.innerHTML = '';
+            return;
+        }
+
+        const labels = katRows.map(k => (k.nama_kategori.length > 14 && k.nama_kategori.includes(' ')) ? k.nama_kategori.split(' ') : k.nama_kategori);
+        const fullLabels = katRows.map(k => k.nama_kategori);
+        const values = katRows.map(k => Number(k.rata_skor || 0));
+
+        const valueLabelPlugin = {
+            id: 'dashKriteriaLabels',
+            afterDatasetsDraw(chart) {
+                const { ctx: c } = chart;
+                const meta = chart.getDatasetMeta(0);
+                if (!meta || !meta.data) return;
+                c.save();
+                c.textAlign = 'center';
+                c.textBaseline = 'bottom';
+                c.fillStyle = textColor;
+                c.font = '600 10.5px Inter, system-ui, sans-serif';
+                meta.data.forEach((bar, idx) => {
+                    const v = values[idx];
+                    if (v !== undefined) c.fillText(v.toFixed(2), bar.x, bar.y - 4);
+                });
+                c.restore();
+            }
+        };
+
+        dashStatChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Rata-rata Skor',
+                    data: values,
+                    backgroundColor: primary,
+                    borderRadius: 5,
+                    borderSkipped: false,
+                    maxBarThickness: 36
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: { padding: { top: 18 } },
+                scales: {
+                    y: { min: 0, max: 5, ticks: { stepSize: 1, color: textMuted, font: { size: 10.5 } }, grid: { color: border } },
+                    x: { grid: { display: false }, ticks: { color: textColor, maxRotation: 0, autoSkip: false, font: { size: 10, weight: '500' } } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            title: (items) => fullLabels[items[0].dataIndex] || '',
+                            label: (item) => {
+                                const v = values[item.dataIndex];
+                                const pct = ((v / 5) * 100).toFixed(0);
+                                return ` Rata-rata: ${v.toFixed(2)} / 5.00 (${pct}%)`;
+                            }
+                        }
+                    }
+                }
+            },
+            plugins: [valueLabelPlugin]
+        });
+
+        const sortedKat = [...katRows].sort((a, b) => b.rata_skor - a.rata_skor);
+        const topKat = sortedKat[0];
+        const avgAllKat = katRows.reduce((s, k) => s + k.rata_skor, 0) / katRows.length;
+        const totalJawab = katRows.reduce((s, k) => s + k.total_jawaban, 0);
+
+        if (legendEl) legendEl.innerHTML = '';
+        if (summaryEl) {
+            summaryEl.innerHTML = `
+                <div class="dash-stat-summary">
+                    <div class="dash-stat-chip">
+                        <div class="chip-lbl">Rata-rata Kriteria</div>
+                        <div class="chip-val">${avgAllKat.toFixed(2)} / 5.00</div>
+                    </div>
+                    <div class="dash-stat-chip">
+                        <div class="chip-lbl">Kriteria Tertinggi</div>
+                        <div class="chip-val" style="color:${success}; font-size:12.5px;">${escapeHtml(topKat.nama_kategori)} (${topKat.rata_skor.toFixed(2)})</div>
+                    </div>
+                    <div class="dash-stat-chip">
+                        <div class="chip-lbl">Total Respons</div>
+                        <div class="chip-val">${totalJawab.toLocaleString('id-ID')}</div>
+                    </div>
+                </div>
+            `;
+        }
+    }
+}
+</script>
+</body>
+</html>

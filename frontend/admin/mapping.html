@@ -1,0 +1,1714 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapping Penilai - Sistem Penilaian 360</title>
+    <meta name="description" content="Kelola pemetaan penilai (siapa menilai siapa) dalam periode penilaian 360 derajat.">
+    <script>
+    (function(){
+                var t = localStorage.getItem('app_theme');
+        if (t === 'dark' || (!t && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+        var isNav = sessionStorage.getItem('sidebar_nav_open') === '1' || sessionStorage.getItem('sidebar_hovered') === '1';
+        if (isNav && localStorage.getItem('sidebar_pinned') !== '1') {
+            document.documentElement.classList.add('sidebar-nav-open', 'sidebar-hover-persisted');
+            function onMove(e) {
+                if (e.clientX > 248) {
+                    document.documentElement.classList.remove('sidebar-nav-open', 'sidebar-hover-persisted');
+                    sessionStorage.removeItem('sidebar_nav_open');
+                    sessionStorage.removeItem('sidebar_hovered');
+                    window.removeEventListener('mousemove', onMove);
+                }
+            }
+            window.addEventListener('mousemove', onMove, { passive: true });
+        }
+    })();
+    </script>
+    <link rel="stylesheet" href="../assets/css/style.css?v=20261126_darkfix">
+    <style>
+        /* -- Top Controls & Stat Cards -- */
+        .mapping-control-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            margin-bottom: 20px;
+        }
+
+        .periode-control-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            padding-bottom: 18px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 18px;
+        }
+
+        .periode-selector-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .periode-selector-wrap label {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0;
+            white-space: nowrap;
+        }
+
+        .periode-selector-wrap select {
+            padding: 8px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text);
+            background: var(--card-bg);
+            min-width: 260px;
+        }
+
+        .periode-selector-wrap select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(27, 79, 140, 0.1);
+        }
+
+        /* -- Metric Stats Grid -- */
+        .mapping-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 14px;
+        }
+
+        .mapping-stat-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 16px;
+            background: var(--bg);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .mapping-stat-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        }
+
+        .stat-icon-box {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .stat-icon-box svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        .stat-blue   { background: #EEF2FF; color: var(--primary); }
+        .stat-purple { background: #F3E8FF; color: #7C3AED; }
+        .stat-green  { background: #ECFDF5; color: #059669; }
+        .stat-amber  { background: #FEF3C7; color: #D97706; }
+
+        .stat-content {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .stat-content .stat-number {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1.2;
+        }
+
+        .stat-content .stat-title {
+            font-size: 11.5px;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        /* -- Filter & Search Bar -- */
+        .mapping-filter-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            margin-bottom: 16px;
+        }
+
+        .filter-flex-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .search-input-wrap {
+            position: relative;
+            flex: 1;
+            min-width: 240px;
+        }
+
+        .search-input-wrap svg {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            fill: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .search-input-wrap input {
+            width: 100%;
+            padding: 8px 12px 8px 36px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 13.5px;
+            background: var(--card-bg);
+            color: var(--text);
+            transition: all 0.2s;
+        }
+
+        .search-input-wrap input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(27, 79, 140, 0.1);
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 13px;
+            background: var(--card-bg);
+            color: var(--text);
+            min-width: 140px;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* -- Mapping Card (Accordion Node) -- */
+        .mapping-card {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--card-bg);
+            margin-bottom: 12px;
+            overflow: hidden;
+            transition: box-shadow 0.2s, border-color 0.2s;
+        }
+
+        .mapping-card:hover {
+            border-color: rgba(27, 79, 140, 0.25);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+        }
+
+        .mapping-card-header {
+            padding: 14px 18px;
+            background: var(--card-bg);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            user-select: none;
+            transition: background 0.15s;
+        }
+
+        .mapping-card-header:hover {
+            background: var(--table-hover, #FAFBFC);
+        }
+
+        .mapping-card.expanded > .mapping-card-header {
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .person-info-side {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .person-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #1B4F8C, #2563EB);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            flex-shrink: 0;
+            text-transform: uppercase;
+            box-shadow: 0 2px 6px rgba(27, 79, 140, 0.15);
+        }
+
+        .person-text {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .person-name-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 3px;
+        }
+
+        .person-name {
+            font-size: 14.5px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .person-nip {
+            font-size: 11px;
+            padding: 2px 6px;
+            background: #EEF2FF;
+            color: var(--primary);
+            border-radius: 4px;
+            font-family: inherit;
+            font-weight: 600;
+        }
+
+        .person-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .person-meta-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .person-meta-item svg {
+            width: 12px;
+            height: 12px;
+            fill: currentColor;
+            opacity: 0.7;
+        }
+
+        /* Relationship tags & quick action */
+        .card-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .relasi-chips {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .rel-chip {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .rel-chip-diri    { background: #F1F5F9; color: #475569; }
+        .rel-chip-atasan  { background: #DBEAFE; color: #1D4ED8; }
+        .rel-chip-rekan   { background: #EDE9FE; color: #6D28D9; }
+        .rel-chip-bawahan { background: #FEF3C7; color: #B45309; }
+
+        .btn-add-penilai {
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            background: #F1F5F9;
+            color: var(--primary);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s;
+        }
+
+        .btn-add-penilai:hover {
+            background: var(--primary-light);
+            border-color: var(--primary);
+        }
+
+        .toggle-arrow {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .toggle-arrow svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        .mapping-card.expanded .toggle-arrow {
+            transform: rotate(180deg);
+            color: var(--primary);
+        }
+
+        /* -- Card Body Table -- */
+        .mapping-card-body {
+            display: none;
+            padding: 0;
+            background: var(--card-bg);
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .mapping-card.expanded > .mapping-card-body {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .eval-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .eval-table th {
+            background: #F8FAFC;
+            padding: 10px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .eval-table td {
+            padding: 11px 16px;
+            border-bottom: 1px solid #F1F5F9;
+            color: var(--text);
+            vertical-align: middle;
+        }
+
+        .eval-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .eval-table tr:hover td {
+            background: #FAFCFE;
+        }
+
+        .evaluator-col {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .evaluator-name {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .evaluator-nip {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .btn-action-del {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            border: 1px solid #FECACA;
+            background: #FEF2F2;
+            color: #DC2626;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+        }
+
+        .btn-action-del:hover {
+            background: #DC2626;
+            color: #fff;
+            border-color: #DC2626;
+        }
+
+        .btn-action-del svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+
+        /* -- Empty State -- */
+        .mapping-empty {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--text-muted);
+        }
+
+        .mapping-empty svg {
+            width: 48px;
+            height: 48px;
+            fill: var(--border);
+            margin-bottom: 12px;
+        }
+
+
+
+        /* -- Rules Info Card & Modal Styles -- */
+        .rules-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 14px 0;
+            max-height: 44vh;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .rule-card {
+            background: #F8FAFC;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            transition: all 0.2s;
+        }
+
+        .rule-card:hover {
+            border-color: #CBD5E1;
+            background: #F1F5F9;
+        }
+
+        .rule-card-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .rule-card-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 999px;
+            display: inline-block;
+        }
+
+        .rule-badge-1 { background: #E0E7FF; color: #4338CA; }
+        .rule-badge-2 { background: #FEF3C7; color: #B45309; }
+        .rule-badge-3 { background: #DBEAFE; color: #1D4ED8; }
+        .rule-badge-4 { background: #DCFCE7; color: #15803D; }
+        .rule-badge-5 { background: #FCE7F3; color: #BE185D; }
+
+        .rule-card-title {
+            font-weight: 600;
+            font-size: 13.5px;
+            color: var(--text);
+        }
+
+        .rule-card-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .rule-card-list {
+            margin: 6px 0 0 0;
+            padding-left: 20px;
+            font-size: 12px;
+            color: #334155;
+            line-height: 1.55;
+        }
+
+        .rule-card-list li {
+            margin-bottom: 3px;
+        }
+
+        .rule-checkbox-box {
+            background: #FFFBEB;
+            border: 1px solid #FDE68A;
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-top: 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .rule-checkbox-box input[type="checkbox"] {
+            margin-top: 2px;
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+            accent-color: #D97706;
+        }
+
+        .rule-checkbox-box label {
+            margin: 0;
+            cursor: pointer;
+            font-size: 12.5px;
+            color: #92400E;
+            font-weight: 500;
+            line-height: 1.45;
+        }
+
+        .auto-target-banner {
+            background: #F8FAFC;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: var(--text);
+            font-size: 12.5px;
+            line-height: 1.45;
+        }
+
+        .auto-target-banner.is-custom {
+            background: #EEF2FF;
+            border-color: #C7D2FE;
+            color: #3730A3;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .periode-target-badge {
+            font-size: 11px;
+            padding: 3px 9px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .periode-target-badge.is-all {
+            background: #F1F5F9;
+            color: #475569;
+        }
+
+        .periode-target-badge.is-custom {
+            background: #EEF2FF;
+            color: #4338CA;
+            border: 1px solid #C7D2FE;
+            font-weight: 600;
+        }
+
+        /* ============================================================
+           MAPPING PENILAIAN - DARK MODE STYLES
+           ============================================================ */
+        [data-theme="dark"] .mapping-card {
+            background: var(--card-bg);
+            border-color: var(--border);
+        }
+
+        [data-theme="dark"] .mapping-card:hover {
+            border-color: rgba(59, 130, 246, 0.4);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        [data-theme="dark"] .mapping-card-header {
+            background: var(--card-bg);
+        }
+
+        [data-theme="dark"] .mapping-card-header:hover {
+            background: rgba(255, 255, 255, 0.04) !important;
+        }
+
+        [data-theme="dark"] .mapping-card.expanded > .mapping-card-header {
+            background: #0E162A !important;
+            border-bottom-color: var(--border) !important;
+        }
+
+        [data-theme="dark"] .person-name {
+            color: #F1F5F9;
+        }
+
+        [data-theme="dark"] .person-nip {
+            background: rgba(59, 130, 246, 0.16);
+            color: #93C5FD;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        [data-theme="dark"] .person-meta {
+            color: var(--text-muted);
+        }
+
+        [data-theme="dark"] .rel-chip-diri {
+            background: rgba(148, 163, 184, 0.16);
+            color: #CBD5E1;
+            border: 1px solid rgba(148, 163, 184, 0.25);
+        }
+
+        [data-theme="dark"] .rel-chip-atasan {
+            background: rgba(59, 130, 246, 0.18);
+            color: #93C5FD;
+            border: 1px solid rgba(59, 130, 246, 0.35);
+        }
+
+        [data-theme="dark"] .rel-chip-rekan {
+            background: rgba(139, 92, 246, 0.18);
+            color: #C4B5FD;
+            border: 1px solid rgba(139, 92, 246, 0.35);
+        }
+
+        [data-theme="dark"] .rel-chip-bawahan {
+            background: rgba(245, 158, 11, 0.18);
+            color: #FCD34D;
+            border: 1px solid rgba(245, 158, 11, 0.35);
+        }
+
+        [data-theme="dark"] .btn-add-penilai {
+            background: rgba(59, 130, 246, 0.12);
+            color: #60A5FA;
+            border-color: rgba(59, 130, 246, 0.35);
+        }
+
+        [data-theme="dark"] .btn-add-penilai:hover {
+            background: rgba(59, 130, 246, 0.24);
+            color: #93C5FD;
+            border-color: #3B82F6;
+        }
+
+        [data-theme="dark"] .toggle-arrow {
+            color: var(--text-muted);
+        }
+
+        [data-theme="dark"] .mapping-card.expanded .toggle-arrow {
+            color: #60A5FA;
+        }
+
+        [data-theme="dark"] .mapping-card-body {
+            background: var(--card-bg);
+        }
+
+        [data-theme="dark"] .eval-table th {
+            background: #0E162A;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        [data-theme="dark"] .eval-table td {
+            border-bottom: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        [data-theme="dark"] .eval-table tr:hover td {
+            background: rgba(255, 255, 255, 0.035);
+        }
+
+        [data-theme="dark"] .evaluator-name {
+            color: #F1F5F9;
+        }
+
+        [data-theme="dark"] .evaluator-nip {
+            color: var(--text-muted);
+        }
+
+        [data-theme="dark"] .btn-action-del {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #F87171;
+        }
+
+        [data-theme="dark"] .btn-action-del:hover {
+            background: #EF4444;
+            border-color: #EF4444;
+            color: #FFFFFF;
+        }
+
+        [data-theme="dark"] .mapping-stat-card {
+            background: var(--card-bg);
+            border-color: var(--border);
+        }
+
+        [data-theme="dark"] .stat-blue {
+            background: rgba(59, 130, 246, 0.16);
+            color: #60A5FA;
+        }
+
+        [data-theme="dark"] .stat-purple {
+            background: rgba(139, 92, 246, 0.16);
+            color: #A78BFA;
+        }
+
+        [data-theme="dark"] .stat-green {
+            background: rgba(16, 185, 129, 0.16);
+            color: #34D399;
+        }
+
+        [data-theme="dark"] .stat-amber {
+            background: rgba(245, 158, 11, 0.16);
+            color: #FBBF24;
+        }
+
+        [data-theme="dark"] .rule-card {
+            background: #0E162A;
+            border-color: var(--border);
+        }
+
+        [data-theme="dark"] .rule-card:hover {
+            background: #131E38;
+            border-color: #3B82F6;
+        }
+
+        [data-theme="dark"] .rule-card-list {
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .rule-checkbox-box {
+            background: rgba(245, 158, 11, 0.12);
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        [data-theme="dark"] .rule-checkbox-box input[type="checkbox"] {
+            color-scheme: dark;
+            accent-color: #F59E0B;
+        }
+
+        [data-theme="dark"] .rule-checkbox-box label {
+            color: #FCD34D;
+        }
+
+        [data-theme="dark"] .auto-target-banner {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.28);
+            color: var(--text);
+        }
+
+        [data-theme="dark"] .auto-target-banner.is-custom {
+            background: rgba(99, 102, 241, 0.16);
+            border-color: rgba(129, 140, 248, 0.35);
+            color: #C7D2FE;
+        }
+
+        [data-theme="dark"] .periode-target-badge.is-all {
+            background: rgba(148, 163, 184, 0.16);
+            color: #CBD5E1;
+        }
+
+        [data-theme="dark"] .periode-target-badge.is-custom {
+            background: rgba(99, 102, 241, 0.16);
+            color: #A5B4FC;
+            border-color: rgba(129, 140, 248, 0.35);
+        }
+
+        [data-theme="dark"] .rule-badge-1 { background: rgba(99, 102, 241, 0.2); color: #A5B4FC; }
+        [data-theme="dark"] .rule-badge-2 { background: rgba(245, 158, 11, 0.2); color: #FCD34D; }
+        [data-theme="dark"] .rule-badge-3 { background: rgba(59, 130, 246, 0.2); color: #93C5FD; }
+        [data-theme="dark"] .rule-badge-4 { background: rgba(16, 185, 129, 0.2); color: #6EE7B7; }
+        [data-theme="dark"] .rule-badge-5 { background: rgba(236, 72, 153, 0.2); color: #F472B6; }
+
+    </style>
+    <style>.sidebar-footer, .sidebar-toggle-bottom, button.sidebar-toggle-bottom, aside#sidebar .sidebar-footer, aside#sidebar .sidebar-toggle-bottom { display: none !important; }</style>
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="main-content">
+        <header class="topbar">
+            <div class="topbar-left">
+                <h1 id="page-title">Mapping Penilai</h1>
+            </div>
+            <div id="topbar-user"></div>
+        </header>
+
+        <main class="page">
+            <!-- -- Top Controls & Summary Cards -- -->
+            <div class="mapping-control-card">
+                <div class="periode-control-row">
+                    <div class="periode-selector-wrap">
+                        <label for="select-periode">Periode Penilaian:</label>
+                        <select id="select-periode"></select>
+                        <span id="periode-status-badge"></span>
+                    </div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <button class="btn btn-secondary" onclick="generateAuto()" title="Generate otomatis hubungan penilai sesuai aturan">
+                            <svg style="width:14px;height:14px;fill:currentColor;margin-right:4px;" viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
+                            Generate Otomatis
+                        </button>
+                        <button class="btn btn-danger" onclick="resetMapping()" title="Hapus semua mapping periode ini">
+                            <svg style="width:14px;height:14px;fill:currentColor;margin-right:4px;" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                            Reset Keseluruhan
+                        </button>
+                        <button class="btn btn-primary" onclick="openModal()">
+                            <svg style="width:14px;height:14px;fill:currentColor;margin-right:4px;" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                            Tambah Manual
+                        </button>
+                    </div>
+                </div>
+
+                <!-- -- Metric Stat Cards -- -->
+                <div class="mapping-stats-grid">
+                    <div class="mapping-stat-card">
+                        <div class="stat-icon-box stat-blue">
+                            <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-number" id="stat-pegawai">-</span>
+                            <span class="stat-title">Pegawai Dinilai</span>
+                        </div>
+                    </div>
+
+                    <div class="mapping-stat-card">
+                        <div class="stat-icon-box stat-purple">
+                            <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-number" id="stat-mappings">-</span>
+                            <span class="stat-title">Total Hubungan Penilai</span>
+                        </div>
+                    </div>
+
+                    <div class="mapping-stat-card">
+                        <div class="stat-icon-box stat-green">
+                            <svg viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-number" id="stat-selesai">-</span>
+                            <span class="stat-title">Penilaian Selesai</span>
+                        </div>
+                    </div>
+
+                    <div class="mapping-stat-card">
+                        <div class="stat-icon-box stat-amber">
+                            <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-number" id="stat-belum">-</span>
+                            <span class="stat-title">Belum Mulai / Proses</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- -- Filter & Search Toolbar -- -->
+            <div class="mapping-filter-card">
+                <div class="filter-flex-row">
+                    <div class="search-input-wrap">
+                        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                        <input type="text" id="filter-search" placeholder="Cari nama, NIP, atau jabatan..." oninput="onSearchInput()">
+                    </div>
+
+                    <select class="filter-select" id="filter-unit-induk" onchange="onFilterUnitIndukChange()">
+                        <option value="">Semua Unit Induk</option>
+                    </select>
+
+                    <select class="filter-select" id="filter-unit" onchange="applyFilters()" disabled>
+                        <option value="">Semua Sub Unit / Seksi</option>
+                    </select>
+
+                    <select class="filter-select" id="filter-golongan" onchange="applyFilters()">
+                        <option value="">Semua Golongan/Ruang</option>
+                        <optgroup label="Golongan IV">
+                            <option value="IV">Semua Golongan IV</option>
+                            <option value="IV/e">IV/e</option>
+                            <option value="IV/d">IV/d</option>
+                            <option value="IV/c">IV/c</option>
+                            <option value="IV/b">IV/b</option>
+                            <option value="IV/a">IV/a</option>
+                        </optgroup>
+                        <optgroup label="Golongan III">
+                            <option value="III">Semua Golongan III</option>
+                            <option value="III/d">III/d</option>
+                            <option value="III/c">III/c</option>
+                            <option value="III/b">III/b</option>
+                            <option value="III/a">III/a</option>
+                        </optgroup>
+                        <optgroup label="Golongan II">
+                            <option value="II">Semua Golongan II</option>
+                            <option value="II/d">II/d</option>
+                            <option value="II/c">II/c</option>
+                            <option value="II/b">II/b</option>
+                            <option value="II/a">II/a</option>
+                        </optgroup>
+                        <optgroup label="Golongan I">
+                            <option value="I">Semua Golongan I</option>
+                            <option value="I/d">I/d</option>
+                            <option value="I/c">I/c</option>
+                            <option value="I/b">I/b</option>
+                            <option value="I/a">I/a</option>
+                        </optgroup>
+                    </select>
+
+                    <button class="btn btn-secondary btn-sm" id="btn-toggle-all" onclick="toggleAllMappings()" style="padding:7px 12px;margin-left:auto;">
+                        Buka Semua
+                    </button>
+                </div>
+            </div>
+
+            <div id="alert-box"></div>
+
+            <!-- -- Mapping Cards Container -- -->
+            <div id="mapping-container" class="mapping-list">
+                <div class="mapping-empty">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    <p>Memuat data mapping penilaian...</p>
+                </div>
+            </div>
+
+            <!-- -- Pagination -- -->
+            <div id="pagination-mapping" style="margin-top:16px;"></div>
+        </main>
+    </div>
+</div>
+
+<!-- -- Modal Tambah Mapping Manual -- -->
+<div class="modal-overlay hidden" id="modal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3 id="modal-title">Tambah Mapping Penilaian</h3>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div id="modal-alert"></div>
+        <form id="form-mapping">
+            <label for="f-dinilai">Pegawai yang Dinilai</label>
+            <select id="f-dinilai" required></select>
+
+            <label for="f-penilai" style="margin-top:12px;">Pegawai Penilai (Evaluator)</label>
+            <select id="f-penilai" required></select>
+
+            <label for="f-relasi" style="margin-top:12px;">Jenis Relasi</label>
+            <select id="f-relasi" required>
+                <option value="atasan">Atasan (Menilai Bawahan)</option>
+                <option value="bawahan">Bawahan (Menilai Atasan)</option>
+                <option value="rekan">Rekan Kerja (Setara / Se-Unit)</option>
+                <option value="diri">Diri Sendiri (Self Assessment)</option>
+            </select>
+
+            <div class="flex-between" style="margin-top:18px;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
+                <button type="submit" class="btn btn-primary">Simpan Mapping</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- -- Modal Generate Otomatis / Aturan Mapping -- -->
+<div class="modal-overlay hidden" id="modal-auto-generate">
+    <div class="modal-box wide">
+        <div class="modal-header">
+            <h3 id="modal-auto-title">Generate Otomatis Mapping Penilaian 360&deg;</h3>
+            <button class="modal-close" onclick="closeAutoModal()">&times;</button>
+        </div>
+        <div id="modal-auto-alert"></div>
+        <div id="modal-auto-target-info" style="margin-bottom:12px;"></div>
+        <p style="font-size:13px;color:var(--text-muted);margin:0 0 12px 0;">
+            Sistem akan secara otomatis membentuk relasi penilai dan yang dinilai <strong>terdistribusi secara sama rata</strong> untuk seluruh pegawai aktif berdasarkan ketentuan resmi berikut:
+        </p>
+
+        <div class="rules-container">
+            <!-- Aturan 1 -->
+            <div class="rule-card">
+                <div class="rule-card-header">
+                    <span class="rule-card-badge rule-badge-1">Aturan 1</span>
+                    <span class="rule-card-title">Untuk Eselon 2 / Level 1 (Kepala Dinas)</span>
+                </div>
+                <p class="rule-card-desc">Penilaian oleh Eselon 2 meliputi :</p>
+                <ul class="rule-card-list">
+                    <li><strong>Menilai bawahan:</strong> Eselon 3 dan Eselon 4 (serta staf langsung pimpinan)</li>
+                    <li><strong>Menilai diri sendiri</strong> (Self-Assessment)</li>
+                </ul>
+            </div>
+
+            <!-- Aturan 2 -->
+            <div class="rule-card">
+                <div class="rule-card-header">
+                    <span class="rule-card-badge rule-badge-2">Aturan 2</span>
+                    <span class="rule-card-title">Untuk Eselon 3 / Level 2 (Kabid / Sekretaris / Ka-UPT)</span>
+                </div>
+                <p class="rule-card-desc">Penilaian oleh Eselon 3 meliputi :</p>
+                <ul class="rule-card-list">
+                    <li><strong>Menilai bawahan:</strong> Eselon 4 pada UPT/BIDANG yang sama</li>
+                    <li><strong>Menilai bawahan:</strong> Jabatan Fungsional pada UPT/BIDANG yang sama</li>
+                    <li><strong>Menilai atasan langsung:</strong> Eselon 2 (Kepala Dinas)</li>
+                    <li><strong>Menilai rekan kerja:</strong> sesama Eselon 3 (maksimal 10 orang)</li>
+                    <li><strong>Menilai diri sendiri</strong> (Self-Assessment)</li>
+                </ul>
+            </div>
+
+            <!-- Aturan 3 -->
+            <div class="rule-card">
+                <div class="rule-card-header">
+                    <span class="rule-card-badge rule-badge-3">Aturan 3</span>
+                    <span class="rule-card-title">Untuk Eselon 4 / Level 3 (Kasi / Kasubbag TU)</span>
+                </div>
+                <p class="rule-card-desc">Penilaian oleh Eselon 4 meliputi :</p>
+                <ul class="rule-card-list">
+                    <li><strong>Menilai semua bawahan:</strong> Jabatan Pelaksana</li>
+                    <li><strong>Menilai atasan langsung:</strong> Eselon 3</li>
+                    <li><strong>Menilai atasan banding:</strong> Eselon 2 (Kepala Dinas)</li>
+                    <li><strong>Menilai rekan kerja:</strong> sesama Eselon 4 (total 10 orang) diambil dari UPT/BIDANG yang sama, sisanya dari beda UPT/BIDANG</li>
+                    <li><strong>Menilai diri sendiri</strong> (Self-Assessment)</li>
+                </ul>
+            </div>
+
+            <!-- Aturan 4 -->
+            <div class="rule-card">
+                <div class="rule-card-header">
+                    <span class="rule-card-badge rule-badge-4">Aturan 4</span>
+                    <span class="rule-card-title">Untuk Pegawai Jabatan Fungsional / Level 4 (Atasan langsung Eselon 3)</span>
+                </div>
+                <p class="rule-card-desc">Penilaian oleh Pegawai Jabatan Fungsional meliputi :</p>
+                <ul class="rule-card-list">
+                    <li><strong>Menilai atasan langsung:</strong> Eselon 3 pada UPT/BIDANG yang sama</li>
+                    <li><strong>Menilai atasan banding:</strong> Eselon 2 (Kepala Dinas)</li>
+                    <li><strong>Menilai rekan kerja:</strong> sesama seksi/sub.bidang (5 orang)</li>
+                    <li><strong>Menilai rekan kerja:</strong> beda seksi/sub.bidang di UPT yang sama (5 orang &mdash; <em>jika terdapat 3 seksi di UPT, 5 orang dibagi merata dari 2 seksi berbeda [3 dan 2]</em>)</li>
+                    <li><strong>Menilai diri sendiri</strong> (Self-Assessment)</li>
+                </ul>
+            </div>
+
+            <!-- Aturan 5 -->
+            <div class="rule-card">
+                <div class="rule-card-header">
+                    <span class="rule-card-badge rule-badge-5">Aturan 5</span>
+                    <span class="rule-card-title">Untuk Pegawai Jabatan Pelaksana / Level 4 (Atasan langsung Eselon 4)</span>
+                </div>
+                <p class="rule-card-desc">Penilaian oleh Pegawai Jabatan Pelaksana meliputi :</p>
+                <ul class="rule-card-list">
+                    <li><strong>Menilai atasan langsung:</strong> Eselon 4 pada UPT/BIDANG yang sama</li>
+                    <li><strong>Menilai atasan banding:</strong> Eselon 3</li>
+                    <li><strong>Menilai rekan kerja:</strong> sesama seksi/sub.bidang (5 orang)</li>
+                    <li><strong>Menilai rekan kerja:</strong> beda seksi/sub.bidang di UPT yang sama (5 orang &mdash; <em>jika terdapat 3 seksi di UPT, 5 orang dibagi merata dari 2 seksi berbeda [3 dan 2]</em>)</li>
+                    <li><strong>Menilai diri sendiri</strong> (Self-Assessment)</li>
+                </ul>
+            </div></div>
+
+        <div class="rule-checkbox-box">
+            <input type="checkbox" id="chk-reset-first">
+            <label for="chk-reset-first">
+                <strong>Reset/Bersihkan mapping sebelumnya</strong> pada periode ini sebelum digenerate ulang.<br>
+                <span style="font-size:11.5px;font-weight:normal;opacity:0.9;">Centang opsi ini jika Anda ingin memastikan seluruh susunan penilai bersih dan tepat mengikuti aturan terbaru. Jika tidak dicentang, sistem hanya akan menyisipkan mapping baru yang belum ada.</span>
+            </label>
+        </div>
+
+        <div class="flex-between" style="margin-top:20px;">
+            <button type="button" class="btn btn-secondary" onclick="closeAutoModal()">Batal</button>
+            <div style="display:flex;gap:8px;">
+                <button type="button" class="btn btn-primary" id="btn-do-generate" onclick="executeAutoGenerate()">
+                    <svg style="width:14px;height:14px;fill:currentColor;margin-right:4px;" viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
+                    Mulai Generate Otomatis
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="../assets/js/config.js?v=20261126"></script>
+<script src="../assets/js/api.js?v=20261126"></script>
+<script src="../assets/js/searchable-select.js?v=20261116_search"></script>
+    <script src="../assets/js/auth.js?v=20261117_notif"></script>
+<script>
+let allEmployees = [];
+let allUnits = [];
+let currentMappingPage = 1;
+let currentMappingPeriode = null;
+let searchDebounceTimeout = null;
+let allExpanded = false;
+
+/** Ambil inisial nama untuk avatar */
+function getInitials(name) {
+    if (!name) return '-';
+    const clean = name.replace(/(Ir\.|Dr\.|Drs\.|Dra\.|H\.|Hj\.|S\.T|M\.T|S\.Kom|M\.Kom|S\.Sos|S\.E|M\.M|MM|MT|M\.Si|A\.Md|A\.Md\.T|,|\.)/gi, '').trim();
+    const parts = clean.split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return name.slice(0, 2).toUpperCase();
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+/** Muat daftar periode penilaian */
+async function loadPeriodOptions() {
+    const res = await apiCall("periode.php");
+    const select = document.getElementById("select-periode");
+    if (!res.success || !res.data || res.data.length === 0) {
+        select.innerHTML = `<option value="">Belum ada periode</option>`;
+        document.getElementById("mapping-container").innerHTML = `
+            <div class="mapping-empty">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                <p>Belum ada data periode penilaian. Buat periode terlebih dahulu di menu Periode Penilaian.</p>
+            </div>`;
+        return;
+    }
+
+    select.innerHTML = res.data.map(p => {
+        const isSelected = p.status === 'aktif' ? 'selected' : '';
+        return `<option value="${p.id}" ${isSelected} data-status="${p.status}" data-target="${p.target_penilaian || 'semua'}" data-gol="${p.target_golongan || ''}">${p.nama_periode} (${p.status})</option>`;
+    }).join("");
+
+    updatePeriodeStatusBadge();
+    select.addEventListener("change", () => {
+        updatePeriodeStatusBadge();
+        currentMappingPage = 1;
+        loadMapping(select.value, 1);
+    });
+
+    loadMapping(select.value, 1);
+}
+
+function updatePeriodeStatusBadge() {
+    const select = document.getElementById("select-periode");
+    const selectedOption = select.options[select.selectedIndex];
+    if (!selectedOption) return;
+    const status = selectedOption.dataset.status || '';
+    const target = selectedOption.dataset.target || 'semua';
+    const gol = selectedOption.dataset.gol || '';
+    const badgeWrap = document.getElementById("periode-status-badge");
+
+    let targetHtml = '';
+    if (target === 'golongan_tertentu') {
+        targetHtml = `<span class="badge periode-target-badge is-custom" title="Periode ini hanya menilai pegawai golongan tertentu">
+            <svg style="width:11px;height:11px;fill:currentColor;" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+            Khusus Gol. ${gol.replace(/,/g, ' & ')}
+        </span>`;
+    } else {
+        targetHtml = `<span class="badge periode-target-badge is-all">Semua Pegawai</span>`;
+    }
+    badgeWrap.innerHTML = statusBadge(status) + ' ' + targetHtml;
+}
+
+function buildUnitIndukHtml(units, placeholder = "Semua Unit Induk") {
+    const indukList = units.filter(u => u.parent_id === null || u.parent_id == 1 || ['dinas','sekretariat','bidang','upt','upt_lab'].includes(u.jenis_unit));
+    const dinas = indukList.filter(u => ['dinas', 'sekretariat'].includes(u.jenis_unit));
+    const bidang = indukList.filter(u => u.jenis_unit === 'bidang');
+    const upt = indukList.filter(u => ['upt', 'upt_lab'].includes(u.jenis_unit));
+
+    let html = `<option value="">${placeholder}</option>`;
+    if (dinas.length) {
+        html += `<optgroup label="Dinas & Sekretariat">` +
+            dinas.map(u => `<option value="${u.id}">${u.nama_unit}</option>`).join('') +
+            `</optgroup>`;
+    }
+    if (bidang.length) {
+        html += `<optgroup label="Bidang">` +
+            bidang.map(u => `<option value="${u.id}">${u.nama_unit}</option>`).join('') +
+            `</optgroup>`;
+    }
+    if (upt.length) {
+        html += `<optgroup label="Unit Pelaksana Teknis (UPT)">` +
+            upt.map(u => `<option value="${u.id}">${u.nama_unit}</option>`).join('') +
+            `</optgroup>`;
+    }
+    return html;
+}
+
+function onFilterUnitIndukChange() {
+    const indukId = document.getElementById('filter-unit-induk').value;
+    const subSelect = document.getElementById('filter-unit');
+    if (!indukId) {
+        subSelect.innerHTML = '<option value="">Semua Sub Unit / Seksi</option>';
+        subSelect.disabled = true;
+        subSelect.value = '';
+    } else {
+        const parentUnit = allUnits.find(u => u.id == indukId);
+        const children = allUnits.filter(u => u.parent_id == indukId);
+        let html = `<option value="${indukId}">Semua di ${parentUnit ? parentUnit.nama_unit : ''}</option>`;
+        html += `<option value="${indukId}">-- Hanya Kantor Induk --</option>`;
+        children.forEach(c => {
+            html += `<option value="${c.id}">${c.nama_unit}</option>`;
+        });
+        subSelect.innerHTML = html;
+        subSelect.disabled = false;
+        subSelect.value = indukId;
+    }
+    applyFilters();
+}
+
+/** Muat dropdown unit kerja untuk filter */
+async function loadUnitOptions() {
+    const res = await apiCall("unit_kerja.php");
+    if (res.success && res.data) {
+        allUnits = res.data;
+        const selectInduk = document.getElementById("filter-unit-induk");
+        if (selectInduk) {
+            selectInduk.innerHTML = buildUnitIndukHtml(allUnits, "Semua Unit Induk");
+        }
+    }
+}
+
+/** Muat data pegawai untuk form modal */
+async function loadEmployeeOptions() {
+    const res = await apiCall("pegawai.php");
+    if (res.success && res.data) {
+        allEmployees = res.data;
+        renderEmployeeSelectOptions('f-dinilai', allEmployees);
+        renderEmployeeSelectOptions('f-penilai', allEmployees);
+    }
+}
+
+function renderEmployeeSelectOptions(selectId, list) {
+    const select = document.getElementById(selectId);
+    select.innerHTML = list.map(e => {
+        const gol = e.golongan_ruang ? ` [${e.golongan_ruang}]` : '';
+        const jab = e.nama_jabatan ? ` (${e.nama_jabatan})` : '';
+        return `<option value="${e.id}">${e.nama_lengkap}${gol}${jab}</option>`;
+    }).join("");
+    if (window.SearchableSelect && window.SearchableSelect.sync) {
+        window.SearchableSelect.sync(select);
+    }
+}
+
+/** Debounce input pencarian */
+function onSearchInput() {
+    clearTimeout(searchDebounceTimeout);
+    searchDebounceTimeout = setTimeout(() => {
+        currentMappingPage = 1;
+        loadMapping(document.getElementById("select-periode").value, 1);
+    }, 300);
+}
+
+function applyFilters() {
+    currentMappingPage = 1;
+    loadMapping(document.getElementById("select-periode").value, 1);
+}
+
+/** Muat data mapping terkelompok dengan pagination */
+async function loadMapping(periodeId, page = 1) {
+    const container = document.getElementById("mapping-container");
+    if (!periodeId) {
+        container.innerHTML = `<div class="mapping-empty"><p>Pilih periode terlebih dahulu.</p></div>`;
+        return;
+    }
+
+    currentMappingPage = page;
+    currentMappingPeriode = periodeId;
+    container.innerHTML = `
+        <div class="mapping-empty">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+            <p>Memuat data mapping penilaian...</p>
+        </div>`;
+
+    const search = document.getElementById("filter-search").value.trim();
+    const unitId = document.getElementById("filter-unit").value || document.getElementById("filter-unit-induk").value;
+    const gol = document.getElementById("filter-golongan") ? document.getElementById("filter-golongan").value : '';
+    const limit = 10;
+
+    let url = `mapping.php?mode=grouped&periode_id=${periodeId}&page=${page}&limit=${limit}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+    if (unitId) url += `&unit_kerja_id=${unitId}`;
+    if (gol) url += `&golongan_ruang=${encodeURIComponent(gol)}`;
+
+    const res = await apiCall(url);
+    if (!res.success) {
+        container.innerHTML = `<div class="mapping-empty"><p class="text-danger">${res.message}</p></div>`;
+        renderPagination(null, 'pagination-mapping', () => {});
+        return;
+    }
+
+    // Update Summary Stats
+    if (res.meta && res.meta.summary) {
+        const s = res.meta.summary;
+        document.getElementById("stat-pegawai").textContent = (s.total_pegawai_dinilai || 0).toLocaleString('id-ID');
+        document.getElementById("stat-mappings").textContent = (s.total_mappings || 0).toLocaleString('id-ID');
+        document.getElementById("stat-selesai").textContent = (s.total_selesai || 0).toLocaleString('id-ID');
+        const pending = (parseInt(s.total_belum) || 0) + (parseInt(s.total_proses) || 0);
+        document.getElementById("stat-belum").textContent = pending.toLocaleString('id-ID');
+    }
+
+    const items = res.data || [];
+    if (items.length === 0) {
+        container.innerHTML = `
+            <div class="mapping-empty">
+                <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                <p>Tidak ada data mapping penilai yang sesuai filter.</p>
+            </div>`;
+        renderPagination(null, 'pagination-mapping', () => {});
+        return;
+    }
+
+    // Render cards
+    let html = "";
+    items.forEach((p, idx) => {
+        const initials = getInitials(p.nama_dinilai);
+        const stats = p.stats || {};
+        const total = stats.total || 0;
+        const selesai = stats.selesai || 0;
+        const progressPercent = total > 0 ? Math.round((selesai / total) * 100) : 0;
+        const progressClass = progressPercent === 100 ? 'badge-green' : (progressPercent > 0 ? 'badge-yellow' : 'badge-gray');
+
+        let rowsHtml = "";
+        if (p.penilai && p.penilai.length > 0) {
+            p.penilai.forEach((ev, i) => {
+                const escapedDinilai = p.nama_dinilai.replace(/'/g, "\\'");
+                const escapedPenilai = ev.nama_penilai.replace(/'/g, "\\'");
+                rowsHtml += `<tr>
+                    <td style="width:40px;text-align:center;color:var(--text-muted);font-size:12px;">${i + 1}</td>
+                    <td>
+                        <div class="evaluator-col">
+                            <span class="evaluator-name">${ev.nama_penilai}${ev.golongan_penilai && ev.golongan_penilai !== '-' ? ` <span class="badge" style="font-size:10px;padding:1px 6px;background:var(--primary-light);color:var(--primary);border-radius:10px;font-weight:600;">${ev.golongan_penilai}</span>` : ''}</span>
+                            <span class="evaluator-nip">NIP. ${ev.nip_penilai || '-'}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-size:12.5px;">${ev.jabatan_penilai || '-'}</div>
+                        <div style="font-size:11.5px;color:var(--text-muted);">${ev.unit_penilai || '-'}</div>
+                    </td>
+                    <td>
+                        <span class="rel-chip rel-chip-${ev.jenis_relasi}">
+                            ${relasiLabel(ev.jenis_relasi)}
+                        </span>
+                    </td>
+                    <td>${statusBadge(ev.status)}</td>
+                    <td style="width:50px;text-align:center;">
+                        <button class="btn-action-del" title="Hapus Mapping" onclick="deleteMapping(${ev.id}, '${escapedDinilai}', '${escapedPenilai}')">
+                            <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                        </button>
+                    </td>
+                </tr>`;
+            });
+        } else {
+            rowsHtml = `<tr>
+                <td colspan="6" style="text-align:center;padding:24px;color:var(--text-muted);">
+                    Belum ada penilai untuk pegawai ini.
+                    <button class="btn btn-sm btn-primary" style="margin-left:8px;" onclick="openModalForEmployee(${p.pegawai_dinilai_id})">+ Tambah Penilai</button>
+                </td>
+            </tr>`;
+        }
+
+        html += `
+        <div class="mapping-card ${allExpanded ? 'expanded' : ''}" data-id="${p.pegawai_dinilai_id}">
+            <div class="mapping-card-header" onclick="toggleMapping(this)">
+                <div class="person-info-side">
+                    <div class="person-avatar">${initials}</div>
+                    <div class="person-text">
+                        <div class="person-name-row">
+                            <span class="person-name">${p.nama_dinilai}</span>
+                            ${p.golongan_dinilai && p.golongan_dinilai !== '-' ? `<span class="badge" style="font-size:10.5px;padding:2px 7px;background:var(--primary-light);color:var(--primary);border-radius:10px;font-weight:600;margin-right:4px;">${p.golongan_dinilai}</span>` : ''}
+                            <span class="person-nip">NIP. ${p.nip_dinilai || '-'}</span>
+                        </div>
+                        <div class="person-meta">
+                            <span class="person-meta-item">
+                                <svg viewBox="0 0 24 24"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg>
+                                ${p.jabatan_dinilai}
+                            </span>
+                            <span class="person-meta-item">
+                                <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                                ${p.unit_dinilai}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-header-actions" onclick="event.stopPropagation()">
+                    <div class="relasi-chips">
+                        ${stats.diri > 0 ? `<span class="rel-chip rel-chip-diri" title="${stats.diri} Penilai Diri Sendiri">${stats.diri} Diri</span>` : ''}
+                        ${stats.atasan > 0 ? `<span class="rel-chip rel-chip-atasan" title="${stats.atasan} Penilai Atasan">${stats.atasan} Atasan</span>` : ''}
+                        ${stats.rekan > 0 ? `<span class="rel-chip rel-chip-rekan" title="${stats.rekan} Penilai Rekan Kerja">${stats.rekan} Rekan</span>` : ''}
+                        ${stats.bawahan > 0 ? `<span class="rel-chip rel-chip-bawahan" title="${stats.bawahan} Penilai Bawahan">${stats.bawahan} Bawahan</span>` : ''}
+                        <span class="badge ${progressClass}" style="margin-left:4px;">${selesai}/${total} Selesai</span>
+                    </div>
+
+                    <button class="btn-add-penilai" title="Tambah penilai untuk ${p.nama_dinilai}" onclick="openModalForEmployee(${p.pegawai_dinilai_id})">
+                        <svg style="width:13px;height:13px;fill:currentColor;" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                        + Penilai
+                    </button>
+
+                    <div class="toggle-arrow" onclick="toggleMapping(this.closest('.mapping-card-header'))" title="Buka / Tutup Rincian">
+                        <svg viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mapping-card-body">
+                <table class="eval-table">
+                    <thead>
+                        <tr>
+                            <th style="width:40px;text-align:center;">#</th>
+                            <th>Pegawai Penilai (Evaluator)</th>
+                            <th>Jabatan & Unit Kerja Penilai</th>
+                            <th>Jenis Relasi</th>
+                            <th>Status Penilaian</th>
+                            <th style="width:50px;text-align:center;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rowsHtml}
+                    </tbody>
+                </table>
+            </div>
+        </div>`;
+    });
+
+    container.innerHTML = html;
+
+    // Render Pagination
+    renderPagination(res.meta, 'pagination-mapping', (p) => {
+        loadMapping(periodeId, p);
+        window.scrollTo({ top: 180, behavior: 'smooth' });
+    });
+}
+
+/** Buka / tutup satu card */
+function toggleMapping(headerEl) {
+    const card = headerEl.closest('.mapping-card');
+    card.classList.toggle('expanded');
+}
+
+/** Buka / tutup semua card pada halaman aktif */
+function toggleAllMappings() {
+    allExpanded = !allExpanded;
+    const cards = document.querySelectorAll('.mapping-card');
+    cards.forEach(c => {
+        if (allExpanded) {
+            c.classList.add('expanded');
+        } else {
+            c.classList.remove('expanded');
+        }
+    });
+    document.getElementById('btn-toggle-all').textContent = allExpanded ? 'Tutup Semua' : 'Buka Semua';
+}
+
+/** Buka modal tambah mapping */
+function openModal() {
+    const periodeId = document.getElementById("select-periode").value;
+    if (!periodeId) { showCenterFeedback("Pilih periode terlebih dahulu.", "warning"); return; }
+    document.getElementById("modal-title").textContent = "Tambah Mapping Penilaian";
+    document.getElementById("form-mapping").reset();
+    document.getElementById("modal-alert").innerHTML = "";
+    document.getElementById("modal").classList.remove("hidden");
+}
+
+/** Buka modal tambah mapping dengan pegawai dinilai sudah terisi */
+function openModalForEmployee(dinilaiId) {
+    openModal();
+    const select = document.getElementById("f-dinilai");
+    select.value = dinilaiId;
+}
+
+function closeModal() {
+    document.getElementById("modal").classList.add("hidden");
+}
+
+/** Buka modal generate otomatis & aturan mapping */
+function generateAuto() {
+    const select = document.getElementById("select-periode");
+    const periodeId = select.value;
+    if (!periodeId) return showCenterFeedback("Pilih periode terlebih dahulu.", "warning");
+    document.getElementById("modal-auto-alert").innerHTML = "";
+    document.getElementById("chk-reset-first").checked = false;
+
+    const opt = select.options[select.selectedIndex];
+    const isCustom = opt && opt.dataset.target === 'golongan_tertentu';
+    const gol = opt ? opt.dataset.gol : '';
+    const infoEl = document.getElementById("modal-auto-target-info");
+    if (infoEl) {
+        if (isCustom) {
+            infoEl.innerHTML = `<div class="auto-target-banner is-custom">
+                <svg style="width:16px;height:16px;fill:currentColor;flex-shrink:0;margin-top:2px;" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                <div>
+                    <strong>Periode Penilaian Khusus:</strong> Pada periode ini, penilaian <strong>hanya ditargetkan kepada pegawai Golongan ${gol.replace(/,/g, ' & ')} saja</strong> yang dinilai.<br>
+                    <span style="font-size:11.5px;opacity:0.9;">Seluruh karyawan (termasuk Golongan I & II) tetap berpartisipasi memberikan penilaian bagi atasan/rekan satu lingkup kerja dengan distribusi beban penilai yang sama rata.</span>
+                </div>
+            </div>`;
+        } else {
+            infoEl.innerHTML = `<div class="auto-target-banner">
+                <strong>Target Penilaian:</strong> Periode ini berlaku untuk seluruh pegawai aktif di lingkungan DPU Bina Marga Jawa Timur.
+            </div>`;
+        }
+    }
+
+    document.getElementById("modal-auto-generate").classList.remove("hidden");
+}
+
+function closeAutoModal() {
+    document.getElementById("modal-auto-generate").classList.add("hidden");
+}
+
+/** Eksekusi API generate mapping otomatis */
+async function executeAutoGenerate() {
+    const periodeId = document.getElementById("select-periode").value;
+    if (!periodeId) return showCenterFeedback("Pilih periode terlebih dahulu.", "warning");
+
+    const resetFirst = document.getElementById("chk-reset-first").checked;
+    const ok = await showConfirmModal({
+        title: "Konfirmasi Generate Otomatis",
+        message: (() => {
+            const opt = document.getElementById("select-periode").selectedOptions[0];
+            const isCust = opt && opt.dataset.target === "golongan_tertentu";
+            const g = opt ? opt.dataset.gol : "";
+            const targetScope = isCust ? `khusus Golongan ${g.replace(/,/g, " & ")} saja yang dinilai` : "untuk seluruh pegawai";
+            return resetFirst
+                ? `Opsi reset aktif: Seluruh data pemetaan lama pada periode ini akan dibersihkan sebelum generate ulang (${targetScope}). Lanjutkan proses generate?`
+                : `Apakah Anda yakin ingin menjalankan generate otomatis mapping penilaian ${targetScope} pada periode ini?`;
+        })(),
+        confirmText: "Ya, Generate",
+        cancelText: "Batal",
+        type: resetFirst ? "warning" : "primary",
+        icon: "add"
+    });
+    if (!ok) return;
+
+    const btn = document.getElementById("btn-do-generate");
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner-sm" style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 0.6s linear infinite;margin-right:6px;vertical-align:middle;"></span> Memproses...`;
+
+    try {
+        const res = await apiCall("mapping.php?action=auto", "POST", { 
+            periode_id: periodeId,
+            reset_first: resetFirst 
+        });
+
+        if (res.success) {
+            closeAutoModal();
+            showAlert(document.getElementById("alert-box"), res.message, "success");
+            currentMappingPage = 1;
+            loadMapping(periodeId, 1);
+        } else {
+            showAlert(document.getElementById("modal-auto-alert"), res.message, "error");
+        }
+    } catch (err) {
+        showAlert(document.getElementById("modal-auto-alert"), "Terjadi kesalahan saat memproses generate: " + err.message, "error");
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+}
+
+/** Reset semua mapping untuk periode ini */
+async function resetMapping() {
+    const periodeId = document.getElementById("select-periode").value;
+    if (!periodeId) { showCenterFeedback("Pilih periode terlebih dahulu.", "warning"); return; }
+    const ok = await showConfirmModal({
+        title: "Konfirmasi Reset Semua Mapping",
+        message: "Apakah Anda yakin ingin MENGHAPUS SEMUA mapping penilaian pada periode ini?\n\nSeluruh relasi mapping dan jawaban penilaian yang sudah masuk akan dihapus permanen. Tindakan ini tidak dapat dibatalkan!",
+        confirmText: "Ya, Hapus Semua",
+        cancelText: "Batal",
+        type: "danger",
+        icon: "delete"
+    });
+    if (!ok) return;
+
+    const res = await apiCall(`mapping.php?action=reset&periode_id=${periodeId}`, "DELETE");
+    showAlert(document.getElementById("alert-box"), res.message, res.success ? "success" : "error");
+    if (res.success) {
+        currentMappingPage = 1;
+        loadMapping(periodeId, 1);
+    }
+}
+
+/** Hapus 1 mapping penilai */
+async function deleteMapping(id, dinilaiName, penilaiName) {
+    const ok = await showConfirmModal({
+        title: "Konfirmasi Hapus Relasi",
+        message: `Hapus mapping relasi penilaian:\nPenilai: ${penilaiName}\nMenilai: ${dinilaiName}?\n\nJawaban penilaian terkait juga akan terhapus jika sudah ada.`,
+        confirmText: "Ya, Hapus",
+        cancelText: "Batal",
+        type: "danger",
+        icon: "delete"
+    });
+    if (!ok) return;
+
+    const res = await apiCall(`mapping.php?id=${id}`, "DELETE");
+    showAlert(document.getElementById("alert-box"), res.message, res.success ? "success" : "error");
+    if (res.success) {
+        loadMapping(currentMappingPeriode, currentMappingPage);
+    }
+}
+
+/** Submit form tambah mapping manual */
+document.getElementById("form-mapping").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const dinilaiId = document.getElementById("f-dinilai").value;
+    const penilaiId = document.getElementById("f-penilai").value;
+    const relasi = document.getElementById("f-relasi").value;
+
+    if (relasi === 'diri' && dinilaiId !== penilaiId) {
+        showAlert(document.getElementById("modal-alert"), "Untuk relasi 'Diri Sendiri', pegawai yang dinilai dan penilai harus sama.");
+        return;
+    }
+
+    if (relasi !== 'diri' && dinilaiId === penilaiId) {
+        showAlert(document.getElementById("modal-alert"), "Pegawai yang dinilai dan penilai tidak boleh sama untuk relasi selain 'Diri Sendiri'.");
+        return;
+    }
+
+    const ok = await showConfirmModal({
+        title: "Konfirmasi Tambah Relasi Penilai",
+        message: "Apakah Anda yakin ingin menambahkan relasi penilai baru ini?",
+        confirmText: "Ya, Tambahkan",
+        cancelText: "Batal",
+        type: "primary",
+        icon: "add"
+    });
+    if (!ok) return;
+
+    const payload = {
+        periode_id: document.getElementById("select-periode").value,
+        pegawai_dinilai_id: dinilaiId,
+        pegawai_penilai_id: penilaiId,
+        jenis_relasi: relasi
+    };
+
+    const res = await apiCall("mapping.php", "POST", payload);
+    if (!res.success) {
+        showAlert(document.getElementById("modal-alert"), res.message);
+        return;
+    }
+
+    closeModal();
+    showAlert(document.getElementById("alert-box"), res.message, "success");
+    loadMapping(payload.periode_id, currentMappingPage);
+});
+
+// Inisialisasi
+(async () => {
+    const user = await initLayout("mapping", ["super_admin", "admin"]);
+    if (!user) return;
+    await Promise.all([
+        loadEmployeeOptions(),
+        loadUnitOptions()
+    ]);
+    await loadPeriodOptions();
+})();
+</script>
+</body>
+</html>
+
